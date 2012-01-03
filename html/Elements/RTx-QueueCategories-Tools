@@ -1,0 +1,133 @@
+<%method GroupHeader>
+	<tr>
+		<th colspan="<%$Span+1%>">&nbsp;</th>
+	</tr>
+	
+	<tr>
+		<th style="line-height: 20px; background-color: #48C; color: #fff;" class="collection-as-table" colspan="<%$Span+1%>"><%$headerId%></th>
+	</tr>
+	<%init>
+	
+		if (exists($struct->{$Queue})) {
+	
+			my $groupName = $struct->{$Queue};
+			if ($headerId && $headerId eq $groupName) {
+				return;
+			} else {
+				$headerId = $groupName;
+			}
+		
+		} else {
+			return;
+		}
+	</%init>
+	<%args>
+		$Queue => ''
+		$Span => 4
+	</%args>
+</%method>
+
+<%method GroupLabel>
+%	if ($headerId) {
+	</optgroup>
+% 	}
+	<optgroup label="<%$headerId%>">
+	<%init>
+	
+		if (exists($struct->{$Queue})) {
+	
+			my $groupName = $struct->{$Queue};
+			if ($headerId && $headerId eq $groupName) {
+				return;
+			} else {
+				$headerId = $groupName;
+			}
+		
+		} else {
+			return;
+		}
+	</%init>
+	<%args>
+		$Queue => ''
+		$Span => 4
+	</%args>
+</%method>
+
+<%method SortQueueArray>
+	<%init>
+		my @new = ();
+		my %seen = ();
+		
+		return unless (ref($ref) eq 'ARRAY');
+		
+		foreach my $item(@{$ref}) {
+			foreach my $id(@{ $item->{'items'} }) {
+				
+				foreach my $queue (@{ $Queues }) {
+				
+					my $queueName = undef;
+				
+					if (ref($queue) eq 'RT::Queue') {
+						$queueName = $queue->Name;
+					} elsif (ref($queue) eq 'HASH') {
+						$queueName = $queue->{Name};
+					}
+					
+					if ($queueName eq $id) {
+						push @new, $queue;
+						$seen{$queueName} = 1;
+					}
+				}
+				
+			}
+		}
+		
+		foreach my $queue (@{ $Queues }) {
+			my $queueName = undef;
+			
+			if (ref($queue) eq 'RT::Queue') {
+				$queueName = $queue->Name;
+			} elsif (ref($queue) eq 'HASH') {
+				$queueName = $queue->{Name};
+			}
+			
+			unless (exists($seen{$queueName})) {
+				splice(@new, 0, 0, $queue);
+			}
+		}
+		
+		@{ $Queues } = @new;
+	</%init>
+	<%args>
+		$Queues => ()
+	</%args>
+</%method>
+
+<%method Reset>
+	<%init>
+		$headerId = undef;
+	</%init>
+</%method>
+
+<%once>
+	use Data::Dumper;
+	use subs qw(BuildQueueStruct);
+
+	my $ref = RT->Config->Get('RTx_QueueCategories_Map');
+	
+	my $struct = {};
+	
+	my $headerId = undef;
+	
+	BuildQueueStruct($ref, $struct);
+	
+	sub BuildQueueStruct {
+		my $ref = shift;
+		my $struct = shift;
+		foreach my $item(@{$ref}) {
+			foreach my $id(@{ $item->{'items'} }) {
+				$struct->{$id} = $item->{'name'};
+			}
+		}
+	}
+</%once>
