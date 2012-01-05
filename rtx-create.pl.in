@@ -1,6 +1,118 @@
 #!/usr/bin/perl -w
 
 use strict;
-use lib qw(@PERL_LIBDIR@);
 
+BEGIN {
+    require File::Spec;
+    my @libs = ("./lib", "./local/lib");
+    my $bin_path;
+
+    for my $lib (@libs) {
+        unless ( File::Spec->file_name_is_absolute($lib) ) {
+            unless ($bin_path) {
+                if ( File::Spec->file_name_is_absolute(__FILE__) ) {
+                    $bin_path = ( File::Spec->splitpath(__FILE__) )[1];
+                }
+                else {
+                    require FindBin;
+                    no warnings "once";
+                    $bin_path = $FindBin::Bin;
+                }
+            }
+            $lib = File::Spec->catfile( $bin_path, File::Spec->updir, $lib );
+        }
+        unshift @INC, $lib;
+    }
+
+}
+
+use Getopt::Long;
+use RT::Interface::CLI qw(CleanEnv GetCurrentUser GetMessageContent loc);
+use File::Basename;
 use RT;
+
+use subs qw(
+	print_help
+);
+
+my ($opt_template, $opt_ticket, $opt_help, $opt_log, $PROGNAME);
+
+$PROGNAME=basename($0);
+
+GetOptions(
+	"template=s"	=> \$opt_template,
+	"ticket=s"		=> \$opt_ticket,
+	"log=s"			=> \$opt_log,
+	"help|h"		=> \$opt_help
+);
+
+if ($opt_help) {
+	print_help();
+}
+
+if (!$opt_template || !$opt_ticket) {
+	print_help();
+}
+
+# Load the config file
+RT::LoadConfig();
+
+# adjust logging to the screen according to options
+RT->Config->Set( LogToScreen => $opt_log ) if $opt_log;
+
+#Connect to the database and get RT::SystemUser and RT::Nobody loaded
+RT::Init();
+
+#Get the current user all loaded
+my $CurrentUser = RT->SystemUser;
+
+use RT::Template;
+use RT::Ticket;
+use RT::Transaction;
+use RT::Action::CreateTickets;
+
+my $Ticket = RT::Ticket->new($CurrentUser);
+$Ticket->Load($opt_ticket);
+
+if (!$Ticket->Id) {
+	die("Could not load ticket: $opt_ticket");
+}
+
+my $Template = RT::Template->new($CurrentUser);
+$Template->Load($opt_template);
+
+if (!$Template->Id) {
+	die("Could not load template: $opt_template");
+}
+
+my $Transaction = RT::Transaction->new(
+	Type			=> 'CreateLinkedTicket',
+	ObjectType 		=> ref($Ticket),
+	ObjectId		=> $Ticket->Id
+);
+
+my $Action = RT::Action::CreateTickets->new(
+	CurrentUser	=> $CurrentUser,
+	TemplateObj	=> $Template,
+	TicketObj	=> $Ticket
+);
+
+unless ($Action->Prepare()) {
+	die("Could not prepare ticket creation");
+}
+	
+unless ($Action->Commit()) {
+	die("Could not commit ticket creation");
+}
+
+print "OK: Ticket created!\n";
+
+exit(0);
+
+####
+# SUBS
+####
+
+sub print_help {
+	print "Usage: $PROGNAME --ticket=<ID> --template=<NAME|ID> [--help|-h]\n\n";
+}
