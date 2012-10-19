@@ -1,0 +1,2 @@
+ALTER TABLE `project` 
+ADD INDEX `rt-select-1` USING BTREE (`name_lower` ASC) ;

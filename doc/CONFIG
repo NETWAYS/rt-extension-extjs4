@@ -1,0 +1,39 @@
+1. Database configuration
+
+Set($RTx_Actitime_DB_DSN, 'DBI:mysql:database=actitime;host=localhost;port=3306;mysql_enable_utf8=1');
+Set($RTx_Actitime_DB_USER, 'actitime');
+Set($RTx_Actitime_DB_PASS, 'actitime');
+
+2. Webinterface
+
+Set($RTx_Actitime_HTTP_URL, 'https://fqdn-ofmy-timesheet.local/actitime');
+
+3. Misc options
+
+Field name to query for ticket identification
+Set($RTx_Actitime_FIELD_NAME, 'p.name_lower');
+
+Query part of the field (used sprintf to create the part)
+
+1st argument is the ticketid
+Set($RTx_Actitime_FIELD_QUERY, '[netways #%d]: %%');
+
+Default warning and critical ranges in percent (if budget is set)
+
+Set($RTx_Actitime_BUDGET_WARNING_PERCENT, 60);
+Set($RTx_Actitime_BUDGET_CRITICAL_PERCENT, 90);
+
+If you want to include all other tasks not configured as groups
+
+Set($RTx_Actitime_TASK_SHOW_ALL, 1);
+
+Group configuration. You can combine multiple tasks into on view item
+
+Set($RTx_Actitime_TASK_CONFIGURATION, [{
+    'name'      => 'Group1',
+    'active'    => ['my-task1', 'my-task2'],
+    'inactive'  => ['my-not-billing'],
+    
+    'budget_warning_percent'    => 60,
+    'budget_critical_percent'   => 90,
+}]);

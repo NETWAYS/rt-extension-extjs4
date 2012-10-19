@@ -1,0 +1,22 @@
+<%init>
+
+    $builder->setTicketId($ticketid);
+    $builder->buildData();
+    
+    $r->content_type('application/json; charset=utf-8');
+    $m->out($coder->encode($builder->getStruct())); 
+    $m->abort();
+</%init>
+<%once>
+    use Data::Dumper;
+    use JSON::XS;
+    use RTx::Actitime::Database;
+    use RTx::Actitime::Builder;
+    
+    my $connection = RTx::Actitime::Database->new();
+    my $builder = RTx::Actitime::Builder->new($connection);
+    my $coder = JSON::XS->new->ascii->pretty->allow_nonref->allow_blessed;
+</%once>
+<%args>
+    $ticketid => undef
+</%args>

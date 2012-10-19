@@ -1,0 +1,3 @@
+<&| /Widgets/TitleBox, title => loc('Actitime') &>
+    <h1>TEST</h1>
+</&>
