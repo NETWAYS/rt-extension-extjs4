@@ -84,21 +84,35 @@ sub getConnection {
 
 sub getField {
     my $self = shift;
-    return RT->Config->Get('RTx_Actitime_FIELD_NAME');
+    my $type = shift;
+    
+    return RT->Config->Get('RTx_Actitime_'. $type. '_NAME');
 }
 
 sub getFieldValue {
     my $self = shift;
     my $ticketid = shift;
-    my $query = RT->Config->Get('RTx_Actitime_FIELD_QUERY');
+    my $type = shift;
+    my $query = RT->Config->Get('RTx_Actitime_'. $type. '_QUERY');
     return sprintf($query, $ticketid);
 }
 
 sub getTasksStatement {
     my $self = shift;
     my $ticketid = shift;
+    my $customerid = shift;
     
-    unless (defined($self->{'sth_tasks'})) {
+    my $type = 'PROJECT';
+    my $id = $ticketid;
+    
+    if (defined($customerid) && $customerid > 0) {
+        $type = 'CUSTOMER';
+        $id = $customerid
+    }
+    
+    my $sth_name = 'sth_tasks_'. $type;
+    
+    unless (defined($self->{$sth_name})) {
         my $query = qq{
             SELECT
                 c.name as `customer`,
@@ -114,7 +128,7 @@ sub getTasksStatement {
             WHERE p.archiving_timestamp is NULL
         };
         
-        my $field = $self->getField();
+        my $field = $self->getField($type);
         
         if ($field) {
             $query .= ' AND '. $field. ' LIKE ?';
@@ -124,12 +138,12 @@ sub getTasksStatement {
             croak("Field and value not properly configured");
         }
         
-        $self->{'sth_tasks'} = $self->getConnection()->prepare($query);
+        $self->{$sth_name} = $self->getConnection()->prepare($query);
     }
     
-    $self->{'sth_tasks'}->bind_param(1, $self->getFieldValue($ticketid));
+    $self->{$sth_name}->bind_param(1, $self->getFieldValue($id, $type));
     
-    return $self->{'sth_tasks'};
+    return $self->{$sth_name};
 }
 
 sub getActualsStatement {
@@ -191,8 +205,9 @@ sub getActuals {
 sub getDataArrayRef {
     my $self = shift;
     my $ticketid = shift;
+    my $customerid = shift;
     
-    my $tasks = $self->getTasksStatement($ticketid);
+    my $tasks = $self->getTasksStatement($ticketid, $customerid);
     $tasks->execute();
     
     my(@data);

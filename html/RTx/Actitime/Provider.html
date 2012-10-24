@@ -1,6 +1,8 @@
 <%init>
 
     $builder->setTicketId($ticketid);
+    $builder->setCustomerId($customerid);
+    
     $builder->buildData();
     
     $r->content_type('application/json; charset=utf-8');
@@ -19,4 +21,5 @@
 </%once>
 <%args>
     $ticketid => undef
+    $customerid => undef
 </%args>

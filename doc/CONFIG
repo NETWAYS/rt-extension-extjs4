@@ -11,12 +11,14 @@ Set($RTx_Actitime_HTTP_URL, 'https://fqdn-ofmy-timesheet.local/actitime');
 3. Misc options
 
 Field name to query for ticket identification
-Set($RTx_Actitime_FIELD_NAME, 'p.name_lower');
+Set($RTx_Actitime_PROJECT_NAME, 'p.name_lower');
+Set($RTx_Actitime_CUSTOMER_NAME, 'c.name_lower');
 
 Query part of the field (used sprintf to create the part)
 
 1st argument is the ticketid
-Set($RTx_Actitime_FIELD_QUERY, '[netways #%d]: %%');
+Set($RTx_Actitime_PROJECT_QUERY, '[netways #%d]: %%');
+Set($RTx_Actitime_CUSTOMER_QUERY, '%%[%d]%%');
 
 Default warning and critical ranges in percent (if budget is set)
 
