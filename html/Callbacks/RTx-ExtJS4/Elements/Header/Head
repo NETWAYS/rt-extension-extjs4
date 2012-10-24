@@ -1,0 +1,16 @@
+<link rel="stylesheet" type="text/css" href="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/resources/css/ext-all-scoped.css">
+<script type="text/javascript" src="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/ext-all.js"></script>
+<script type="text/javascript">
+Ext.scopeResetCSS = true;
+</script>
+
+<style type="text/css">
+	.extjs-frame * {		
+		/* Fix for custom clearing */
+		overflow: hidden;
+	}
+	
+	.metadata {
+		min-height: 20px;
+	}
+</style>
