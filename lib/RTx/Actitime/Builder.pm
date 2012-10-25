@@ -187,7 +187,7 @@ sub buildData {
         'ticket'    => $self->getTicketId(),
         'customer'  => $self->getCustomerId(),
         'type'      => defined($self->getCustomerId()) ? 'CUSTOMER' : 'PROJECT',
-        'tasks'     => {}
+        'tasks'     => []
     };
     
     foreach my $data(@{$ref}) {
@@ -201,10 +201,12 @@ sub buildData {
         
         my $record = {};
         
-        if (exists($tasks->{$taskid})) {
-            $record = $tasks->{$taskid}
+        if (grep($_->{'taskid_str'} eq $taskid, @{ $tasks->{'tasks'} })) {
+            my @test = grep($_->{'taskid_str'} eq $taskid, @{ $tasks->{'tasks'} });
+            $record = $test[0];
         } else {
             $record = $self->generateTaskRecord($taskid, $data);
+            push(@{$tasks->{'tasks'}}, $record);
         }
         
         my $type = 'active';
@@ -218,9 +220,10 @@ sub buildData {
         
         $record->{'sum'} += $data->{'actuals'}->{'sum'};
         
-        push(@{ $record->{'labels'} }, $data->{'task'});
+        $record->{'taskid_str'} = $taskid;
         
-        $tasks->{'tasks'}->{$taskid} = $record;
+        push(@{ $record->{'labels'} }, $data->{'task'});
+
     }
     
     $self->{'struct'} = $tasks;

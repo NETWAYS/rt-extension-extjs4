@@ -1,0 +1,19 @@
+<%init>
+
+my $type;
+my $file = $m->base_comp->source_file;
+
+if ($file =~ /\.(gif|png|jpe?g)$/i) {
+    my $relfile = $m->base_comp->path;
+    RT::Interface::Web->SendStaticFile( File => $file, RelativeFile => $relfile );
+} elsif ($file =~ /\.(css)$/i) {
+    &RT::Interface::Web::StaticFileHeaders();
+    $r->content_type('text/css');
+    $m->call_next();
+} else {
+    &RT::Interface::Web::StaticFileHeaders();
+    $r->content_type('application/x-javascript');
+    $m->call_next();
+    return();
+}
+</%init>

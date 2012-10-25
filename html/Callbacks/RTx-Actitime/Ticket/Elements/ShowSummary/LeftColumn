@@ -1,3 +1,8 @@
 <&| /Widgets/TitleBox, title => loc('Actitime') &>
-    <h1>TEST</h1>
+    <div class="extjs-frame" id="<% $id %>">
+    
+    </div>
 </&>
+<%args>
+    $id => 'actitime-application-container'
+</%args>
