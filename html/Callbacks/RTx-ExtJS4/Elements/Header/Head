@@ -7,7 +7,7 @@ Ext.scopeResetCSS = true;
 <style type="text/css">
 	.extjs-frame * {		
 		/* Fix for custom clearing */
-		overflow: hidden;
+		/* overflow: hidden; */
 	}
 	
 	.metadata {
