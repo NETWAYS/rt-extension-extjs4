@@ -58,6 +58,8 @@ sub getTasks() {
         
         $struct->{'taskid'} = $taskid;
         
+        $struct->{'taskname'} = $task->{'name'};
+        
         $struct->{'budget_warning_percent'} = 
             exists($task->{'budget_warning_percent'}) ?
             $task->{'budget_warning_percent'} :
@@ -168,10 +170,27 @@ sub mergeTaskRecord {
     my $part = shift;
     my $data = shift;
     
-    $part->{'sum'} += $data->{'actuals'}->{'sum'};
+    $part->{'sum'} += $data->{'sum'};
     $part->{'budget'} += $data->{'budget'};
     
     push(@{$part->{'labels'}}, $data->{'task'});
+}
+
+sub normalizeDataRecord {
+    my $self = shift;
+    my $data = shift;
+    
+    my %hash = %{ $data }; # DEREF
+    
+    $hash{'people'} = $hash{'actuals'}{'people'};
+    delete($hash{'actuals'}{'people'});
+    
+    $hash{'sum'} = $hash{'actuals'}{'sum'};
+    delete($hash{'actuals'}{'sum'});
+    
+    delete($hash{'actuals'});
+    
+    return \%hash;
 }
 
 sub buildData {
@@ -193,10 +212,12 @@ sub buildData {
     foreach my $data(@{$ref}) {
         
         my $taskid = $self->generateTaskId($data->{'task'});
+        my $name  = $data->{'task'};
         my $config = $self->getTask($data->{'task'});
         
         if ($config) {
             $taskid = $config->{'taskid'};
+            $name = $config->{'taskname'};
         }
         
         my $record = {};
@@ -214,13 +235,17 @@ sub buildData {
             $type = 'inactive';
         }
         
+        $data = $self->normalizeDataRecord($data);
+        
         push(@{$record->{'tasks'}}, $data);
         
         $self->mergeTaskRecord($record->{$type}, $data);
         
-        $record->{'sum'} += $data->{'actuals'}->{'sum'};
+        $record->{'sum'} += $data->{'sum'};
         
         $record->{'taskid_str'} = $taskid;
+        
+        $record->{'taskname'} = $name;
         
         push(@{ $record->{'labels'} }, $data->{'task'});
 

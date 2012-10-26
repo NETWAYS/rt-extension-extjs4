@@ -40,7 +40,12 @@ Returns 1 if the connection is initialized
 sub isApplicable {
     my $self = shift;
     if (defined($self->{'connection'})) {
-        return 1;
+        my $rc = $self->{'connection'}->ping();
+        if ($rc) {
+            return 1;
+        } else {
+            $self->{'connection'}->disconnect();
+        }
     }
     
     return;
@@ -56,7 +61,7 @@ sub doConnect {
     my $self = shift;
     if (!$self->isApplicable()) {
         
-        RT->Logger->info('RTx::Actitime: Create DBI connection');
+        RT->Logger->debug('RTx::Actitime: Create DBI connection');
         
         $self->{'connection'} = DBI->connect(
            RT->Config->Get('RTx_Actitime_DB_DSN'),
@@ -65,7 +70,7 @@ sub doConnect {
         );
         
         if ($self->getConnection()->ping()) {
-            RT->Logger->info('RTx::Actitime: DB server pinged successfully');
+            RT->Logger->debug('RTx::Actitime: DB server pinged successfully');
         }
     }
 }

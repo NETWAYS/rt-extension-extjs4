@@ -5,7 +5,6 @@ Set($RTx_Actitime_DB_USER, 'actitime');
 Set($RTx_Actitime_DB_PASS, 'actitime');
 
 2. Webinterface
-
 Set($RTx_Actitime_HTTP_URL, 'https://fqdn-ofmy-timesheet.local/actitime');
 
 3. Misc options
@@ -19,6 +18,9 @@ Query part of the field (used sprintf to create the part)
 1st argument is the ticketid
 Set($RTx_Actitime_PROJECT_QUERY, '[netways #%d]: %%');
 Set($RTx_Actitime_CUSTOMER_QUERY, '%%[%d]%%');
+
+Name of the client customfield
+Set($RTx_Actitime_CUSTOMER_FIELD_NAME, 'Client');
 
 Default warning and critical ranges in percent (if budget is set)
 

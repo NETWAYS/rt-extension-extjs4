@@ -1,7 +1,18 @@
 <%init>
-
-    $builder->setTicketId($ticketid);
-    $builder->setCustomerId($customerid);
+    
+    if (!$filter) {
+        die("No filter given");
+    }
+    
+    $filter = $coder->decode($filter);
+    
+    if ($filter->[0]->{'property'} eq 'ticketid') {
+        $builder->setTicketId($filter->[0]->{'value'});
+    }
+    
+    if ($filter->[0]->{'property'} eq 'customerid') {
+        $builder->setCustomerId($filter->[0]->{'value'});
+    }
     
     $builder->buildData();
     
@@ -20,6 +31,5 @@
     my $coder = JSON::XS->new->ascii->pretty->allow_nonref->allow_blessed;
 </%once>
 <%args>
-    $ticketid => undef
-    $customerid => undef
+    $filter => undef
 </%args>
