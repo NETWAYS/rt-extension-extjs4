@@ -12,6 +12,9 @@ Ext.define("Actitime.model.Provider", {
         name: "sum",
         type: "int"
     }, {
+        name: "budget",
+        type: "int"
+    }, {
         name: "task",
         type: "string"
     }, {

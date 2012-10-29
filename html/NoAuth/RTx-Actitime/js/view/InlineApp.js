@@ -1,6 +1,7 @@
 Ext.define("Actitime.view.InlineApp",{
     extend: "Ext.panel.Panel",
     alias: ["widget.actitime-inline-app"],
+    requires: ["Actitime.view.SingleTask"],
     
     autoScroll: true,
     layout: {
@@ -11,25 +12,53 @@ Ext.define("Actitime.view.InlineApp",{
         dock: "top",
         xtype: "toolbar",
         items: [{
-            text: 'Reload',
-            itemid: 'tb-reload'
+            text: "Reload",
+            itemId: "tb-reload"
+        }, {
+            text: "Context",
+            menu: [{
+                xtype: "menucheckitem",
+                text: "Use customer id for tasks",
+                itemId: "tb-customer",
+                checked: false
+            }]
         }]
     }],
     
+    bodyStyle: {
+        padding: '5px'
+    },
+    
+    minHeight: 100,
+    maxHeight: 400,
+    
+    initComponent: function() {
+        
+        this.addEvents({
+            beforeupdate: true,
+            update: true,
+        })
+        
+        this.callParent();
+    },
+    
     update: function(records) {
-        this.removeAll(true);
         
-        Ext.iterate(records, function(record) {
-            var p = Ext.create("Ext.panel.Panel", {
-                title: record.get("taskname"),
-                html: "<h1>TEST<h1><br />lalala",
-                height: 80
-            });
-            
-            this.add(p);
-            
-        }, this);
+        if (this.fireEvent("beforeupdate", this) === true) {
         
-        this.doLayout();
+            this.removeAll(true);
+            
+            Ext.iterate(records, function(record) {
+                this.add({
+                    xtype: 'actitime-singletask',
+                    task: record
+                });
+                
+            }, this);
+            
+            this.doLayout();
+            
+            this.fireEvent("update", this);
+        }
     }
 });

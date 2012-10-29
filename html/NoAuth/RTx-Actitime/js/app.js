@@ -26,7 +26,7 @@ Ext.application({
             
             var container = Ext.create("Actitime.view.Container", {
                 renderTo: el,
-                height: 400
+                maxHeight: 400
             });
             
             container.doLayout();

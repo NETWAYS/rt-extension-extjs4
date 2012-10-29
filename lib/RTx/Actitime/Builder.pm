@@ -161,7 +161,8 @@ sub generateTaskRecord {
             'labels'    => []
         },
         'tasks'         => [],
-        'sum'           => 0
+        'sum'           => 0,
+        'budget'        => 0
     }
 }
 
@@ -196,10 +197,12 @@ sub normalizeDataRecord {
 sub buildData {
     my $self = shift;
     $self->reset();
+    
     my $ref = $self->{'connection'}->getDataArrayRef(
         $self->getTicketId(),
         $self->getCustomerId()
     );
+    
     
     my $tasks = {
         'success'   => scalar(@{ $ref }) ? 1 : 0,
@@ -242,6 +245,8 @@ sub buildData {
         $self->mergeTaskRecord($record->{$type}, $data);
         
         $record->{'sum'} += $data->{'sum'};
+        
+        $record->{'sum'} += $data->{'budget'};
         
         $record->{'taskid_str'} = $taskid;
         

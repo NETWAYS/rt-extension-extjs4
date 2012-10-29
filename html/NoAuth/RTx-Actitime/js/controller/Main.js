@@ -2,7 +2,7 @@ Ext.define("Actitime.controller.Main", {
     extend: "Ext.app.Controller",
     
     refs: [{
-        selector: 'container',
+        selector: 'app-container',
         ref: 'container'
     }, {
         selector: 'actitime-inline-app',
@@ -25,10 +25,18 @@ Ext.define("Actitime.controller.Main", {
                 afterrender: this.containerAfterRender
             },
             
-            'actitime-inline-app > toolbar > button[itemid=tb-reload]': {
+            'actitime-inline-app > toolbar > button[itemId=tb-reload]': {
                 click: this.toolbarReload
+            },
+            
+            'actitime-inline-app > toolbar > button > menucheckitem[itemId=tb-customer]': {
+                checkchange: this.toolbarCustomerChange
             }
         });
+        
+        // DEBUG
+        this.setType('ticket');
+        this.setTicketId(138612);
         
         this.getTimesStore().on("load", this.renderView, this);
     },
@@ -61,11 +69,27 @@ Ext.define("Actitime.controller.Main", {
         return this.type;
     },
     
+    createMask: function() {
+        this.loadingMask = new Ext.LoadMask(this.getContainer(), {
+            msg: "Loading tasks, please wait . . ."
+        });
+        
+        this.loadingMask.show();
+        
+        return true;
+    },
+    
+    
+    hideMask: function() {
+        if (this.loadingMask) {
+            this.loadingMask.hide();
+            this.loadingMask.destroy();
+            this.loadingMask = null;
+        }
+    },
+    
     reloadView: function() {
-        
-        this.setType('ticket');
-        this.setTicketId(138612);
-        
+
         var type = this.getType();
         var store = this.getTimesStore();
         
@@ -81,7 +105,21 @@ Ext.define("Actitime.controller.Main", {
     },
     
     renderView: function(store, records) {
-        this.getPanel().update(records);
+        
+        this.getPanel().removeAll(true);
+        
+        this.createMask();
+
+        this.getPanel().on("update", function() {
+            this.hideMask();
+        }, this, { single: true});
+        
+        var task = new Ext.util.DelayedTask(function() {
+            this.getPanel().update(records);
+            this.getPanel().doLayout();
+        }, this);
+        
+        task.delay(200);
     },
     
     containerBeforeRender: function() {
@@ -93,6 +131,16 @@ Ext.define("Actitime.controller.Main", {
     },
     
     toolbarReload: function() {
+        this.reloadView();
+    },
+    
+    toolbarCustomerChange: function(box, value) {
+        if (value === true) {
+            this.setType("customer");
+        } else {
+            this.setType("ticket");
+        }
+        
         this.reloadView();
     }
 });
