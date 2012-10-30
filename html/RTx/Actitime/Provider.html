@@ -1,8 +1,11 @@
 <%init>
-    
     if (!$filter) {
         die("No filter given");
     }
+    
+    my $connection = RTx::Actitime::Database->new();
+    my $builder = RTx::Actitime::Builder->new($connection);
+    my $coder = JSON::XS->new->ascii->pretty->allow_nonref->allow_blessed;
     
     $filter = $coder->decode($filter);
     
@@ -25,10 +28,6 @@
     use JSON::XS;
     use RTx::Actitime::Database;
     use RTx::Actitime::Builder;
-    
-    my $connection = RTx::Actitime::Database->new();
-    my $builder = RTx::Actitime::Builder->new($connection);
-    my $coder = JSON::XS->new->ascii->pretty->allow_nonref->allow_blessed;
 </%once>
 <%args>
     $filter => undef

@@ -39,14 +39,15 @@ Ext.define("Actitime.controller.Main", {
             }
         });
         
-        // DEBUG
-        this.setType('ticket');
-        this.setTicketId(138612);
-        
         this.getTimesStore().on("load", this.renderView, this);
     },
     
     onLaunch: function() {
+        
+        if (!this.getTicketId() && !this.getCustomerId()) {
+            Ext.Error.raise("Need a ticketid and customerid");
+        }
+        
         this.reloadView();
     },
     
@@ -131,11 +132,11 @@ Ext.define("Actitime.controller.Main", {
     },
     
     containerBeforeRender: function() {
-        console.log("Container: Creating");
+        // console.log("Container: Creating");
     },
     
     containerAfterRender: function() {
-        console.log("Container: Ready to use");
+        // console.log("Container: Ready to use");
     },
     
     toolbarReload: function() {
