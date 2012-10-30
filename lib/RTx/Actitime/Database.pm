@@ -122,6 +122,7 @@ sub getTasksStatement {
             SELECT
                 c.name as `customer`,
                 p.name as `project`,
+                p.id as `projectid`,
                 t.name as `task`,
                 t.budget as `budget`,
                 t.deadline_date as `deadline`,
@@ -218,9 +219,12 @@ sub getDataArrayRef {
     my(@data);
     
     while(my $row = $tasks->fetchrow_hashref()) {
-        unless (defined $row->{budged}) {
-            $row->{budget} = 0;
+        
+        unless ($row->{'budget'}) {
+            $row->{'budget'} = 0;
         }
+        
+        $row->{'budget'} = $row->{'budget'} + 0;
         
         $row->{'taskid'} = $row->{taskid} + 0;
         

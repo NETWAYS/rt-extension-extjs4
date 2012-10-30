@@ -162,7 +162,8 @@ sub generateTaskRecord {
         },
         'tasks'         => [],
         'sum'           => 0,
-        'budget'        => 0
+        'budget'        => 0,
+        'variance'      => 0
     }
 }
 
@@ -220,13 +221,15 @@ sub buildData {
         
         if ($config) {
             $taskid = $config->{'taskid'};
-            $name = $config->{'taskname'};
+            $name = $data->{'project'};
         }
+        
+        $taskid = $taskid. "_". $data->{'projectid'}; 
         
         my $record = {};
         
-        if (grep($_->{'taskid_str'} eq $taskid, @{ $tasks->{'tasks'} })) {
-            my @test = grep($_->{'taskid_str'} eq $taskid, @{ $tasks->{'tasks'} });
+        if (grep($_->{'taskid'} eq $taskid, @{ $tasks->{'tasks'} })) {
+            my @test = grep($_->{'taskid'} eq $taskid, @{ $tasks->{'tasks'} });
             $record = $test[0];
         } else {
             $record = $self->generateTaskRecord($taskid, $data);
@@ -246,7 +249,11 @@ sub buildData {
         
         $record->{'sum'} += $data->{'sum'};
         
-        $record->{'sum'} += $data->{'budget'};
+        $record->{'budget'} += $data->{'budget'};
+        
+        if ($record->{'budget'}) {
+            $record->{'variance'} += $record->{'budget'} - $record->{'sum'};
+        }
         
         $record->{'taskid_str'} = $taskid;
         

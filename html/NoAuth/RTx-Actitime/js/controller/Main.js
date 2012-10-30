@@ -9,6 +9,7 @@ Ext.define("Actitime.controller.Main", {
         ref: 'panel'
     }],
     
+    requires: ["Actitime.util.Format"],
     stores: ["Times"],
     models: ["Provider", "Task", "People"],
     controllers: ["Actitime.controller.Main"],
@@ -25,12 +26,16 @@ Ext.define("Actitime.controller.Main", {
                 afterrender: this.containerAfterRender
             },
             
-            'actitime-inline-app > toolbar > button[itemId=tb-reload]': {
+            'container > toolbar > button[itemId=tb-reload]': {
                 click: this.toolbarReload
             },
             
-            'actitime-inline-app > toolbar > button > menucheckitem[itemId=tb-customer]': {
+            'container > toolbar > button > menucheckitem[itemId=tb-customer]': {
                 checkchange: this.toolbarCustomerChange
+            },
+            
+            'container > toolbar > button[itemId=tb-units] > menucheckitem': {
+                checkchange: this.toolbarUnitChange
             }
         });
         
@@ -108,6 +113,8 @@ Ext.define("Actitime.controller.Main", {
         
         this.getPanel().removeAll(true);
         
+        this.getPanel().hide();
+        
         this.createMask();
 
         this.getPanel().on("update", function() {
@@ -117,6 +124,7 @@ Ext.define("Actitime.controller.Main", {
         var task = new Ext.util.DelayedTask(function() {
             this.getPanel().update(records);
             this.getPanel().doLayout();
+            this.getPanel().show();
         }, this);
         
         task.delay(200);
@@ -142,5 +150,12 @@ Ext.define("Actitime.controller.Main", {
         }
         
         this.reloadView();
+    },
+    
+    toolbarUnitChange: function(item, checked) {
+        if (checked) {
+            Actitime.util.Format.setUnit(item.itemId);
+            this.reloadView();
+        }
     }
 });

@@ -6,7 +6,9 @@ Ext.application({
     paths: { 'Actitime': '<% RT->Config->Get("WebBaseURL") %>/NoAuth/RTx-Actitime/js' },
     
     requires: [
-        "Actitime.view.Container"
+        "Actitime.view.Container",
+        "Actitime.util.Format",
+        "Actitime.util.Config"
     ],
     
     views: ["InlineApp"],
@@ -31,12 +33,17 @@ Ext.application({
             
             container.doLayout();
         }
+        
+        Ext.XTemplate.addMember("actuals", Actitime.util.Format.actuals);
+        
+        Ext.QuickTips.init();
     },
     
     initConfiguration: function(el) {
         var attributes = {
             "ticketid": null,
-            "customerid": null
+            "customerid": null,
+            "actitimeurl": null
         };
         
         var elements = el.select("div");
@@ -51,6 +58,11 @@ Ext.application({
             config.destroy();
         });
         
+        // For later use
+        var configuration = Actitime.util.Config;
+        configuration.addAll(attributes);
+        
+        // Make the controller ready
         var controller = this.getController("Main");
         controller.setTicketId(attributes.ticketid);
         controller.setCustomerId(attributes.customerid);

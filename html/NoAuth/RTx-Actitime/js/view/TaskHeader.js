@@ -4,44 +4,53 @@ Ext.define("Actitime.view.TaskHeader", {
     requires: ["Actitime.view.DetailButton"],
     
     layout: {
-        type: "hbox",
+        type: "vbox",
         pack: "stretch",
-        align: "left"
+        align: "left",
+        defaultMargins: {
+            top: 2
+        }
     },
     
     defaults: {
-        margin: '2px 5px 0px 5px'
+        border: false
     },
     
     initComponent: function() {
+        
+        this.items = [{
+            xtype: "panel",
+            itemId: "header-top",
+            tpl: new Ext.XTemplate([
+                '<div class="actitime-header">{taskname}</div>',
+                '<div class="actitime-header-sub">gone: ',
+                '{sum:this.actuals}, estimated: {budget:this.actuals}, ',
+                'variance: {variance:this.actuals}</div>'
+            ])
+        }, {
+            xtype: "panel",
+            itemId: "header-bottom",
+            layout: {
+                type: "hbox",
+                defaultMargins: {
+                    right: 3
+                }
+            }
+        }];
+        
         this.callParent();
     },
     
     update: function(record) {
+        this.getComponent("header-top").update(record.getData());
         
-        this.removeAll(true);
-        
-        this.add({
-            xtype: "component",
-            html: Ext.String.format(
-                "<h2 style=\"line-height: 22px;\">{0}:</h2>",
-                record.get("taskname")
-            )
-        });
-        
+        var bottom = this.getComponent("header-bottom");
+        bottom.removeAll(true);
         record.tasks().each(function(item) {
-            this.add({
+            bottom.add({
                 xtype: "task-detail",
                 task: item
             });
         }, this);
-        
-        this.add({
-            xtype: "component",
-            html: Ext.String.format(
-                "<h2 style=\"line-height: 22px;\">Estimation: {0}</h2>",
-                record.get("budget")
-            )
-        });
     }
 })

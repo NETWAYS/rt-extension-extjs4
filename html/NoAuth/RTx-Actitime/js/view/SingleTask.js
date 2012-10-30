@@ -3,9 +3,8 @@ Ext.define("Actitime.view.SingleTask", {
     alias: ["widget.actitime-singletask"],
     requires: [
         "Actitime.view.TaskHeader",
-        "Actitime.view.TaskProgrss",
+        "Actitime.view.TaskProgress",
     ],
-    border: false,
     
     layout: {
         type: "vbox",
@@ -16,16 +15,21 @@ Ext.define("Actitime.view.SingleTask", {
         border: false
     },
     
+    border: false,
+    
     initComponent: function() {
+        
+        this.taskProgress = Ext.create("Actitime.view.TaskProgress",{
+            itemId: "task-progress"
+        });
         
         this.items = [{
             xtype: "task-header",
-            itemId: "task-header",
-            flex: 1
+            itemId: "task-header"
         }, {
-            xtype: "task-progress",
-            itemId: "task-progress",
-            flex: 2,
+            layout: "fit",
+            bodyPadding: 5,
+            items: [this.taskProgress]
         }]
         
         this.callParent();
@@ -36,7 +40,7 @@ Ext.define("Actitime.view.SingleTask", {
     },
     
     update: function(record) {
-        var header = this.getComponent("task-header");
-        header.update(record);
+        this.getComponent("task-header").update(record);
+        this.taskProgress.update(record);
     }
 });

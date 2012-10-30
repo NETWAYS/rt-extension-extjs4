@@ -4,33 +4,14 @@ Ext.define("Actitime.view.InlineApp",{
     requires: ["Actitime.view.SingleTask"],
     
     autoScroll: true,
+    border: false,
     layout: {
         type: "anchor"
     },
     
-    dockedItems: [{
-        dock: "top",
-        xtype: "toolbar",
-        items: [{
-            text: "Reload",
-            itemId: "tb-reload"
-        }, {
-            text: "Context",
-            menu: [{
-                xtype: "menucheckitem",
-                text: "Use customer id for tasks",
-                itemId: "tb-customer",
-                checked: false
-            }]
-        }]
-    }],
-    
     bodyStyle: {
         padding: '5px'
     },
-    
-    minHeight: 100,
-    maxHeight: 400,
     
     initComponent: function() {
         
@@ -48,14 +29,27 @@ Ext.define("Actitime.view.InlineApp",{
         
             this.removeAll(true);
             
-            Ext.iterate(records, function(record) {
-                this.add({
-                    xtype: 'actitime-singletask',
-                    task: record
-                });
+            if (records.length <= 0) {
                 
-            }, this);
+                var content = "<div class=\"actitime-spacer\"></div>"
+                    + "<div class=\"actitime-h1\">"
+                    + "No time information for this ticket</div>";
+                
+                this.callParent([content]);
+                
+            } else {
+                
+                this.callParent([""]);
+                
+                Ext.iterate(records, function(record) {
+                    this.add({
+                        xtype: 'actitime-singletask',
+                        task: record
+                    });
+                    
+                }, this);
             
+            }
             this.doLayout();
             
             this.fireEvent("update", this);

@@ -1,1 +1,2 @@
+<link rel="stylesheet" type="text/css" href="<% RT->Config->Get('WebPath') %>/NoAuth/RTx-Actitime/style/default.css" />
 <script type="text/javascript" src="<% RT->Config->Get('WebPath') %>/NoAuth/RTx-Actitime/js/app.js"></script>
