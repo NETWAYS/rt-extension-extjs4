@@ -1,16 +1,34 @@
 <link rel="stylesheet" type="text/css" href="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/resources/css/ext-all-scoped.css">
-<script type="text/javascript" src="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/ext-all.js"></script>
+<script type="text/javascript" src="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/<% $map->{$type} %>"></script>
 <script type="text/javascript">
 Ext.scopeResetCSS = true;
 </script>
 
 <style type="text/css">
-	.extjs-frame * {		
-		/* Fix for custom clearing */
-		/* overflow: hidden; */
-	}
-	
-	.metadata {
-		min-height: 20px;
-	}
+    .extjs-frame * {		
+        /* Fix for custom clearing */
+        /* overflow: hidden; */
+        /* Deactivated for 4.1 */
+    }
+    
+    .metadata {
+        min-height: 20px;
+    }
 </style>
+<%once>
+my $type = 'default';
+
+my $map = {
+    'default'   => 'ext-all.js',
+    'debug'     => 'ext-debug.js'
+};
+
+my $config = RT->Config->Get('RTx_ExtJS4_TYPE');
+
+if ($config && $config =~ m/^default|debug$/) {
+    $type = $config;
+}
+
+RT->Logger->debug('ExtJS include style: '. $type);
+
+</%once>

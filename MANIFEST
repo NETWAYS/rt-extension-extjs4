@@ -1,3 +1,5 @@
+.project
+doc/CONFIG
 html/Callbacks/RTx-ExtJS4/Elements/Header/Head
 html/NoAuth/ext-4-gpl/autohandler
 html/NoAuth/ext-4-gpl/bootstrap.js
