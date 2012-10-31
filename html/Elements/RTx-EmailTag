@@ -1,27 +1,30 @@
 <%once>
-	my @cparts = split('\@', RT->Config->Get('CommentAddress'));
-	my @rparts = split('\@', RT->Config->Get('CorrespondAddress'));
-	
-	my $cformat = $cparts[0]. '+%d@'. $cparts[1];
-	my $rformat = $rparts[0]. '+%d@'. $rparts[1];
-	
-	use Data::Dumper;
+    my @cparts = split('\@', RT->Config->Get('CommentAddress'));
+    my @rparts = split('\@', RT->Config->Get('CorrespondAddress'));
+    
+    my $cformat = "";
+    my $rformat = "";
+    
+    if (scalar(@cparts) && scalar(@rparts)) {
+        $cformat = $cparts[0]. '+%d@'. $cparts[1];
+        $rformat = $rparts[0]. '+%d@'. $rparts[1];
+    }
 </%once>
 
 <%method replyFromTicket>
-	<%init>
-		return sprintf($rformat, $Ticket->Id);
-	</%init>
-	<%args>
-		$Ticket
-	</%args>
+    <%init>
+        return sprintf($rformat, $Ticket->Id);
+    </%init>
+    <%args>
+        $Ticket
+    </%args>
 </%method>
 
 <%method commentFromTicket>
-	<%init>
-		return sprintf($cformat, $Ticket->Id);
-	</%init>
-	<%args>
-		$Ticket
-	</%args>
+    <%init>
+        return sprintf($cformat, $Ticket->Id);
+    </%init>
+    <%args>
+        $Ticket
+    </%args>
 </%method>
