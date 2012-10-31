@@ -1,3 +1,4 @@
+.project
 doc/FEATURES
 doc/README
 html/Callbacks/RTx-NETWAYS/Elements/Header/Head
@@ -7,6 +8,12 @@ html/Callbacks/RTx-NETWAYS/Ticket/ModifyLinks.html/FormStart
 html/Elements/Header
 html/Elements/RTx-EmailTag
 html/Elements/RTx-TitleTag
+html/Elements/ShowSearch
+html/Helpers/RTx-TicketProvider
+html/Ticket/Elements/RTx-QuickAddPrincipal
+html/Ticket/Elements/ShowGroupMembers
+html/Ticket/Elements/ShowPeople
+html/Ticket/Elements/ShowSummary
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
