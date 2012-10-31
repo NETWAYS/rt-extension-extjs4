@@ -1,0 +1,25 @@
+<%init>
+
+	# https://devops.netways.de/issues/515
+	if ((my $AdminCcGroup = RT->Config->Get('RTx_NETWAYS_UserRequestorGroup'))) {
+		my $Groups = $session{'CurrentUser'}->UserObj->OwnGroups;
+		
+		$Groups->Limit(
+			FIELD => 'Name',
+			VALUE => $AdminCcGroup
+		);
+		
+		if ($Groups->Count() == 1) {
+			$ARGSRef->{'Requestors'} = " ";
+			$ARGSRef->{'AdminCc'} = $session{'CurrentUser'}->EmailAddress;
+		}
+	}
+	
+</%init>
+<%once>
+	use Data::Dumper;
+</%once>
+<%args>
+	$QueueObj => undef
+	$ARGSRef => {}
+</%args>

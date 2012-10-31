@@ -1,0 +1,35 @@
+
+* Web create use AdminCc instead of Requestor
+
+https://devops.netways.de/issues/515
+
+Config option:
+
+Set($RTx_NETWAYS_UserRequestorGroup, 'NETWAYS');
+
+This changes the create process
+
+
+* NETWAYS specific tag title
+
+Set($RTx_NETWAYS_EnableTagFormat, 1);
+
+
+* Confirmation query upon merge
+
+https://devops.netways.de/issues/517
+
+* Show box only if count tickets
+
+* Added classes to boxes:
+
+- netways-tickets-due
+- netways-tickets-nobody
+- netways-tickets-default
+
+* Changed positions of ShowSummary
+
+* Quick assign of ticket principals
+
+Set($RTx_NETWAYS_EnableQuickAssign, 1);
+Set($RTx_NETWAYS_QuickAssignGroup, 'NETWAYS');

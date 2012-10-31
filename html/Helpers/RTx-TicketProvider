@@ -1,0 +1,54 @@
+<%init>
+	my $out = {
+		success => JSON::XS::false,
+		errors => [],
+		resultCount => 0,
+		result => []
+	};
+	
+	if (scalar(@tickets) == 1) {
+		@tickets = split(',\s*', shift(@tickets));
+	} 
+	
+	if (scalar(@tickets) <= 0) {
+		push(@{ $out->{errors} }, 'No tickets given!');
+	} else {
+		my $Collection = RT::Tickets->new($session{'CurrentUser'});
+		
+		my $tickets_alias = $Collection->Join(
+			TYPE   => 'LEFT',
+			ALIAS1 => 'main',
+			FIELD1 => 'id',
+			TABLE2 => 'Tickets',
+			FIELD2 => 'EffectiveId',
+		);
+		
+		$Collection->_OpenParen;
+		foreach my $ticket_id(@tickets) {
+			$Collection->_SQLLimit(
+				ALIAS => $tickets_alias,
+				FIELD => 'id',
+				VALUE => $ticket_id,
+				OPERATOR => '=',
+				ENTRYAGGREGATOR => 'OR'
+			);
+		}
+		$Collection->_CloseParen;
+		
+		if ($Collection->Count()) {
+			map { push @{ $out->{result} }, $_->{values} } @{$Collection->ItemsArrayRef()};
+			$out->{resultCount} = $Collection->Count();
+			$out->{success} = JSON::XS::true;
+		}
+	}
+	
+	$m->out(encode_json($out));
+	$m->abort();
+</%init>
+<%once>
+	use JSON::XS;
+	use Data::Dumper;
+</%once>
+<%args>
+	@tickets => ()
+</%args>
