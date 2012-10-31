@@ -222,6 +222,8 @@ sub buildData {
         if ($config) {
             $taskid = $config->{'taskid'};
             $name = $data->{'project'};
+        } else {
+            $name = $data->{'project'}. ' / '. $data->{'task'};
         }
         
         $taskid = $taskid. "_". $data->{'projectid'}; 
