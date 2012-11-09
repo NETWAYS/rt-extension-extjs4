@@ -254,7 +254,7 @@ sub buildData {
         $record->{'budget'} += $data->{'budget'};
         
         if ($record->{'budget'}) {
-            $record->{'variance'} += $record->{'budget'} - $record->{'sum'};
+            $record->{'variance'} = $record->{'budget'} - $record->{'sum'};
         }
         
         $record->{'taskid_str'} = $taskid;
