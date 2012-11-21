@@ -3,7 +3,7 @@ Ext.application({
     name: 'Actitime',
     autoCreateViewport: false,
     
-    paths: { 'Actitime': '<% RT->Config->Get("WebBaseURL") %>/NoAuth/RTx-Actitime/js' },
+    paths: { 'Actitime': '<% RT->Config->Get("WebURL") %>NoAuth/RTx-Actitime/js' },
     
     requires: [
         "Actitime.view.Container",

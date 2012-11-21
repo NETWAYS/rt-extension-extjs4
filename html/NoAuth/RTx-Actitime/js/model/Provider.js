@@ -60,7 +60,7 @@ Ext.define("Actitime.model.Provider", {
     
     proxy: {
         type: "ajax",
-        url: "<% RT->Config->Get("WebBaseURL") %>/RTx/Actitime/Provider.html",
+        url: "<% RT->Config->Get("WebURL") %>RTx/Actitime/Provider.html",
         reader: {
             type: "json",
             root: "tasks"
