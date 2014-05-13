@@ -3,8 +3,7 @@ use inc::Module::Install;
 
 RTx('RTx-Actitime');
 author('Marius Hein <marius.hein@netways.de>');
-version('0.1');
+version('0.2');
 license('gpl');
 
 &WriteAll;
-

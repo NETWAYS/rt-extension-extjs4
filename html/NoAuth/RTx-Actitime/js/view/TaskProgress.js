@@ -166,8 +166,18 @@ Ext.define("Actitime.view.TaskProgress", {
     },
     
     update: function(record) {
-        this.setSum(record.get("sum"));
-        this.setBudget(record.get("budget"));
+        if (record.get("active_sum")) {
+            this.setSum(record.get("active_sum"));
+        } else {
+            this.setSum(record.get("sum"));
+        }
+
+        if (record.get("active_budget")) {
+            this.setBudget(record.get("active_budget"));
+        } else {
+            this.setBudget(record.get("budget"));
+        }
+
         this.updateProgressbar();
         this.updateIcon();
         this.updateQuickTip();

@@ -21,11 +21,14 @@ Ext.define("Actitime.view.TaskHeader", {
         this.items = [{
             xtype: "panel",
             itemId: "header-top",
+            style: {
+                margin: '0 0 5px 0'
+            },
             tpl: new Ext.XTemplate([
                 '<div class="actitime-header">{taskname}</div>',
                 '<div class="actitime-header-sub">gone: ',
-                '{sum:this.actuals}, estimated: {budget:this.actuals}, ',
-                'variance: {variance:this.actuals}</div>'
+                '{active_sum:this.actuals}, estimated: {active_budget:this.actuals}, ',
+                'variance: {active_variance:this.actuals}</div>',
             ])
         }, {
             xtype: "panel",

@@ -35,6 +35,10 @@ Ext.define("Actitime.model.Provider", {
         type: "int",
         mapping: "active.sum"
     }, {
+        name: "active_variance",
+        type: "int",
+        mapping: "active.variance"
+    }, {
         name: "active_labels",
         type: "string",
         mapping: "active.labels"
@@ -46,6 +50,10 @@ Ext.define("Actitime.model.Provider", {
         name: "inactive_sum",
         type: "int",
         mapping: "inactive.sum"
+    }, {
+        name: "inactive_variance",
+        type: "int",
+        mapping: "inactive.variance"
     }, {
         name: "inactive_labels",
         type: "string",

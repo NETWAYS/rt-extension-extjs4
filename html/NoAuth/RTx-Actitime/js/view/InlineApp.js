@@ -29,14 +29,18 @@ Ext.define("Actitime.view.InlineApp",{
         
             this.removeAll(true);
             
-            if (records.length <= 0) {
+            if (records === null) {
+                var content = "<div class=\"actitime-spacer\"></div>"
+                    + "<div class=\"actitime-h1\">"
+                    + "Error. Could not load data!</div>";
                 
+                this.callParent([content]);
+            } else if (records.length <= 0) {
                 var content = "<div class=\"actitime-spacer\"></div>"
                     + "<div class=\"actitime-h1\">"
                     + "No time information for this ticket</div>";
                 
                 this.callParent([content]);
-                
             } else {
                 
                 this.callParent([""]);
