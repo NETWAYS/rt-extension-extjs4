@@ -1,8 +1,24 @@
-<div>
-(<strong><% loc($Title) %></strong>: <% join(', ', @links) | n %>)
+<div style="margin-top: 0.5em;">
+    <form name="<% $formName %>">
+        <select name="<% $selectName %>" onChange="location=document.<% $formName %>.<% $selectName %>.options[document.<% $formName %>.<% $selectName %>.selectedIndex].value;" value="GO">
+            <option selected><% loc($Title) %></option>
+            <% join('', @links) | n %>
+        </select>
+    </form>
 </div>
 <%init>
 return unless(RT->Config->Get('RTx_NETWAYS_EnableQuickAssign') && RT->Config->Get('RTx_NETWAYS_QuickAssignGroup'));
+
+sub genHexUID64{
+    my $UID = '';
+    for (my $i = 0; $i < 4; $i++) {
+        $UID .= sprintf("%x", int(rand() * 65535 + 0.5));
+    }
+    return $UID;
+}
+
+my $formName = 'form_' . genHexUID64();
+my $selectName = 'select_' . genHexUID64();
 
 my $CustomGroup = RT::Group->new($session{'CurrentUser'});
 $CustomGroup->LoadUserDefinedGroup(RT->Config->Get('RTx_NETWAYS_QuickAssignGroup'));
@@ -10,9 +26,9 @@ $CustomGroup->LoadUserDefinedGroup(RT->Config->Get('RTx_NETWAYS_QuickAssignGroup
 my $Members = $CustomGroup->UserMembersObj();
 
 $Members->OrderBy(
-	ALIAS => 'main',
-	FIELD => 'NickName',
-	ORDER => 'ASC'
+    ALIAS => 'main',
+    FIELD => 'NickName',
+    ORDER => 'ASC'
 );
 
 my @links = ();
@@ -20,34 +36,39 @@ my $base = RT->Config->Get('WebURL'). 'Ticket/Display.html?id='. $Ticket->Id;
 
 while (my $User = $Members->Next()) {
 
-	if ($Group && ref($Group) eq 'RT::Group' && $Group->HasMember($User->PrincipalId)) {
-		next;
-	}
-	elsif ($Type eq 'Owner' && $Ticket->Owner == $User->PrincipalId) {
-		next;
-	}
+    if ($Group && ref($Group) eq 'RT::Group' && $Group->HasMember($User->PrincipalId)) {
+        next;
+    }
+    elsif ($Type eq 'Owner' && $Ticket->Owner == $User->PrincipalId) {
+        next;
+    }
 
-	my $href = '';
-	
-	if ($Type =~ /^Requestor.?|Cc|AdminCc/) {
-		$href = $base. '&Ticket-AddWatcher-Principal-'. $User->PrincipalId. '='. $Type;
-	}
-	elsif ($Type =~ /^Owner/) {
-		$href = $base. '&ForceOwnerChange=1&Owner='. $User->PrincipalId;
-	}
-	
-	push @links, '<a href="'. $href. '" title="'. $User->RealName. '">'. ($User->NickName || $User->RealName). '</a>';
+    my $href = '';
+
+    if ($Type =~ /^Requestor.?|Cc|AdminCc/) {
+        $href = $base. '&Ticket-AddWatcher-Principal-'. $User->PrincipalId. '='. $Type;
+    }
+    elsif ($Type =~ /^Owner/) {
+        $href = $base. '&ForceOwnerChange=1&Owner='. $User->PrincipalId;
+    }
+
+    push @links, sprintf(
+        '<option value="%s">%s%s</option>',
+        $href,
+        $User->RealName,
+        $User->NickName ? sprintf(' (%s)', $User->NickName) : ''
+    );
 }
 
 return unless(scalar(@links));
 
 </%init>
 <%once>
-	use Data::Dumper;
+    use Data::Dumper;
 </%once>
 <%args>
-	$Title => 'Add'
-	$Type
-	$Ticket
-	$Group => ()
+    $Title => 'Add'
+    $Type
+    $Ticket
+    $Group => ()
 </%args>
