@@ -5,15 +5,20 @@ https://devops.netways.de/issues/515
 
 Config option:
 
+# Add users to AdminCc instead of Requestor
 Set($RTx_NETWAYS_UserRequestorGroup, 'NETWAYS');
 
-This changes the create process
+# Preprocess searches to display only with results
+#
+# Keep in mind that this can cause performance impact on the
+# entry page
+Set($RTx_NETWAYS_ShowSearchOnlyWithResults, 1);
 
+This changes the create process
 
 * NETWAYS specific tag title
 
 Set($RTx_NETWAYS_EnableTagFormat, 1);
-
 
 * Confirmation query upon merge
 

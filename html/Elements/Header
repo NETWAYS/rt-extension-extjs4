@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2011 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -53,30 +53,27 @@
 <html lang="en">
   <head>
     <title><%$Title%></title>
-
-    <& /Elements/Framekiller &>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- The X-UA-Compatible <meta> tag above must be very early in <head> -->
 
 % if ($Refresh && $Refresh =~ /^(\d+)/ && $1 > 0) {
-%   my $URL = $m->notes->{LogoutURL}; $URL = $URL ? ";URL=$URL" : "";
+%   my $URL = $m->notes->{RefreshURL}; $URL = $URL ? ";URL=$URL" : "";
     <meta http-equiv="refresh" content="<% "$1$URL" %>" />
 % }
 
-<link rel="shortcut icon" href="<%RT->Config->Get('WebImagesURL')%>favicon.png" type="image/png" />
+<& JavascriptConfig &>
+
 % for my $cssfile ( @css_files ) {
-<link rel="stylesheet" href="<%RT->Config->Get('WebPath')%>/NoAuth/css/<% $cssfile %>" type="text/css" media="all" />
+<link rel="stylesheet" href="<%RT->Config->Get('WebPath')%><% $cssfile %>" type="text/css" media="all" />
 % }
-<link rel="stylesheet" href="<%RT->Config->Get('WebPath')%>/NoAuth/css/print.css" type="text/css" media="print" />
 
 % for (keys %{$LinkRel || {}}) {
     <link rel="<% $_ %>" href="<% RT->Config->Get('WebPath') . $LinkRel->{$_} %>" />
 % }
+<link rel="shortcut icon" href="<%RT->Config->Get('WebImagesURL')%>favicon.png" type="image/png" />
 
 % if ( $RSSAutoDiscovery ) {
     <link rel="alternate" href="<%$RSSAutoDiscovery%>" type="application/rss+xml" title="RSS RT Search" />
-% }
-
-% if ($JavaScript) {
-<& HeaderJavascript, focus => $Focus, onload => $onload, RichText => $RichText &>
 % }
 
 % my $stylesheet_plugin = "/NoAuth/css/".$style."/InHeader";
@@ -92,11 +89,15 @@
 <% $attr->Content |n %>
 % }
 </style>
+% # Leave %ARGS for backward compatibility
+% $m->callback( %ARGS, CallbackName => 'Head', ARGSRef => \%ARGS, Title => \$Title);
 
-% $m->callback( %ARGS, Title => \$Title, CallbackName => 'Head' );
+<& HeaderJavascript, focus => $Focus, onload => $onload, RichText => $RichText &>
+
+<& /Elements/Framekiller &>
 
 </head>
-  <body class="<% lc $style %>" <% $id && qq[id="comp-$id"] |n %>>
+  <body class="<% join( ' ',@{$ARGS{'BodyClass'}}) %>" <% $id && qq[id="comp-$id"] |n %>>
 
 % if ($ShowBar) {
 <& /Elements/Logo, %ARGS &>
@@ -107,8 +108,6 @@
 % }
 <div id="header"><h1><% $Title %></h1></div>
 <%INIT>
-use Scalar::Util qw(blessed);
-
 $r->headers_out->{'Pragma'} = 'no-cache';
 $r->headers_out->{'Cache-control'} = 'no-cache';
 
@@ -126,12 +125,20 @@ my $style = $session{'CurrentUser'}
 
 my @css_files;
 if ( RT->Config->Get('DevelMode') ) {
-    @css_files = ( "$style/main.css", RT->Config->Get('CSSFiles' ) );
+    @css_files = map { "/static/css/$_" } "$style/main.css", RT->Config->Get('CSSFiles');
 }
 else {
     my $key =
       RT::Interface::Web::SquishedCSS( $style )->Key;
-    @css_files = "$style-squished-$key.css";
+    @css_files = "/NoAuth/css/$style/squished-$key.css";
+}
+
+# We use BodyClass in its $ARGS form so that callbacks have a chance to
+# massage it
+push @{$ARGS{'BodyClass'}}, lc $style;
+
+if (RT->Config->Get("UseSideBySideLayout", $session{'CurrentUser'})) {
+    push @{$ARGS{'BodyClass'}}, 'sidebyside';
 }
 
 </%INIT>
@@ -140,15 +147,13 @@ else {
 #$Focus => 'focus'
 $Focus => ''
 $Title =>  'RT'
-$Code => undef
 $Refresh => 0
-$Why => undef
 $ShowBar => 1
 $URL => undef
 $RSSAutoDiscovery => undef
 $onload => undef
 $LinkRel => undef
-$JavaScript => 1
 $SkipDoctype => 0
 $RichText => 1
+$BodyClass => undef
 </%ARGS>

@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2011 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -47,33 +47,30 @@
 %# END BPS TAGGED BLOCK }}}
 <table>
   <tr>
-    <td class="label" valign="top"><&|/l&>Owner</&>:</td>
+    <td class="label" style="vertical-align: top;"><&|/l&>Owner</&>:</td>
 % my $owner = $Ticket->OwnerObj;
     <td class="value"><& /Elements/ShowUser, User => $owner, Ticket => $Ticket &>
     <& /Elements/ShowUserEmailFrequency, User => $owner, Ticket => $Ticket &>
 % $m->callback( User => $owner, Ticket => $Ticket, %ARGS, CallbackName => 'AboutThisUser' );
-	<& RTx-QuickAddPrincipal, Type=>'Owner', Ticket=>$Ticket, Title => 'Give to' &>
+    <& RTx-QuickAddPrincipal, Type=>'Owner', Ticket=>$Ticket, Title => 'Give to' &>
     </td>
   </tr>
   <tr>
-    <td class="labeltop" valign="top"><&|/l&>Requestors</&>:</td>
-    <td class="value">
-    	<& ShowGroupMembers, Group => $Ticket->Requestors, Ticket => $Ticket &>
-    </td>
+    <td class="labeltop"><&|/l&>Requestors</&>:</td>
+    <td class="value"><& ShowGroupMembers, Group => $Ticket->Requestors, Ticket => $Ticket &></td>
   </tr>
   <tr>
-    <td class="labeltop" valign="top"><&|/l&>Cc</&>:</td>
-    <td class="value">
-    	<& ShowGroupMembers, Group => $Ticket->Cc, Ticket => $Ticket &>
-    </td>
+    <td class="labeltop"><&|/l&>Cc</&>:</td>
+    <td class="value"><& ShowGroupMembers, Group => $Ticket->Cc, Ticket => $Ticket &></td>
   </tr>
   <tr>
-    <td class="labeltop" valign="top"><&|/l&>AdminCc</&>:</td>
+    <td class="labeltop" style="vertical-align: top;"><&|/l&>AdminCc</&>:</td>
     <td class="value">
-    	<& ShowGroupMembers, Group => $Ticket->AdminCc, Ticket => $Ticket &>
-    	<& RTx-QuickAddPrincipal, Type=>'AdminCc', Group=>$Ticket->AdminCc, Ticket=>$Ticket &>
+    <& ShowGroupMembers, Group => $Ticket->AdminCc, Ticket => $Ticket &>
+    <& RTx-QuickAddPrincipal, Type=>'AdminCc', Group=>$Ticket->AdminCc, Ticket=>$Ticket &>
     </td>
   </tr>
+  <& /Ticket/Elements/ShowCustomFields, Ticket => $Ticket, Grouping => 'People', Table => 0 &>
 </table>
 <%INIT>
 </%INIT>
