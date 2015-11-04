@@ -23,17 +23,8 @@
 			FIELD2 => 'EffectiveId',
 		);
 		
-		$Collection->_OpenParen;
-		foreach my $ticket_id(@tickets) {
-			$Collection->_SQLLimit(
-				ALIAS => $tickets_alias,
-				FIELD => 'id',
-				VALUE => $ticket_id,
-				OPERATOR => '=',
-				ENTRYAGGREGATOR => 'OR'
-			);
-		}
-		$Collection->_CloseParen;
+		my $clause = 'id=' . join(' OR id=', @tickets);
+		$Collection->FromSQL("($clause)");
 		
 		if ($Collection->Count()) {
 			map { push @{ $out->{result} }, $_->{values} } @{$Collection->ItemsArrayRef()};
