@@ -8,16 +8,7 @@ use RTx::Actitime::Database;
 
 our $VERSION = "0.1.0";
 
-our $RIGHTS = {
-    ShowActitimeIntegration => "Show the actitime box in Ticket Summary"
-};
-
-our $RIGHTS_CATEGORIES = {
-    ShowActitimeIntegration => "Staff"
-};
-
-RT::System->AddRights(%{ $RIGHTS });
-RT::System->AddRightCategories(%{ $RIGHTS_CATEGORIES });
+RT::System->AddRight('Staff' => 'ShowActitimeIntegration' => 'Show the actitime box in Ticket Summary');
 
 RTx::Actitime::Database->new()->doConnect();
 
