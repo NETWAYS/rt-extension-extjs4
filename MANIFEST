@@ -5,6 +5,7 @@ doc/INDEX
 doc/QUERIES
 html/Callbacks/RTx-Actitime/Elements/Header/Head
 html/Callbacks/RTx-Actitime/Ticket/Elements/ShowSummary/LeftColumn
+html/Callbacks/RTx-Actitime/Ticket/Elements/ShowSummary/RightColumn
 html/NoAuth/RTx-Actitime/autohandler
 html/NoAuth/RTx-Actitime/icons/action-bookmark.png
 html/NoAuth/RTx-Actitime/icons/action-budget-critical.png
@@ -38,11 +39,16 @@ inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
+inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/ReadmeFromPod.pm
 inc/Module/Install/RTx.pm
+inc/Module/Install/RTx/Runtime.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
+inc/unicore/Name.pm
+inc/YAML/Tiny.pm
 lib/RTx/Actitime.pm
 lib/RTx/Actitime/Builder.pm
 lib/RTx/Actitime/Database.pm
