@@ -1670,8 +1670,8 @@ html/NoAuth/ext-4-gpl/docs/source/ItemSelector.html
 html/NoAuth/ext-4-gpl/docs/source/Json.html
 html/NoAuth/ext-4-gpl/docs/source/JSON.html
 html/NoAuth/ext-4-gpl/docs/source/Json2.html
-html/NoAuth/ext-4-gpl/docs/source/JSON3.html
 html/NoAuth/ext-4-gpl/docs/source/Json3.html
+html/NoAuth/ext-4-gpl/docs/source/JSON3.html
 html/NoAuth/ext-4-gpl/docs/source/JsonP.html
 html/NoAuth/ext-4-gpl/docs/source/JsonP2.html
 html/NoAuth/ext-4-gpl/docs/source/JsonProvider.html
@@ -5448,11 +5448,16 @@ inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
+inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/ReadmeFromPod.pm
 inc/Module/Install/RTx.pm
+inc/Module/Install/RTx/Runtime.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
+inc/unicore/Name.pm
+inc/YAML/Tiny.pm
 lib/RTx/ExtJS4.pm
 Makefile.PL
 MANIFEST			This list of files
