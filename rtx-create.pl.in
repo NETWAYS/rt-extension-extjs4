@@ -27,7 +27,7 @@ BEGIN {
 }
 
 use Getopt::Long;
-use RT::Interface::CLI qw(CleanEnv GetCurrentUser GetMessageContent loc);
+use RT::Interface::CLI qw(CleanEnv GetCurrentUser loc);
 use File::Basename;
 use RT;
 
