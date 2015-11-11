@@ -1,4 +1,8 @@
-Makefile
-MYMETA.yml
 MYMETA.json
+MYMETA.yml
+Makefile
 MANIFEST.bak
+blib/
+.DS_Store
+pm_to_blib
+lib/perllocal.pod
