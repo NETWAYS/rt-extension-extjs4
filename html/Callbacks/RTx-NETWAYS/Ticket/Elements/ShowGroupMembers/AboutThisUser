@@ -1,5 +1,5 @@
-&nbsp;[<a title="Remove <% $User->Name %> from group <% $Group->Type %>"
-	href="<% $BaseUrl %>/Ticket/Display.html?id=<% $Ticket->Id %>&Ticket-DeleteWatcher-Type-<% $Group->Type %>-Principal-<% $User->PrincipalId %>=1"
+&nbsp;[<a title="Remove <% $User->Name %> from group <% $Group->Name %>"
+	href="<% $BaseUrl %>/Ticket/Display.html?id=<% $Ticket->Id %>&Ticket-DeleteWatcher-Type-<% $Group->Name %>-Principal-<% $User->PrincipalId %>=1"
 ><strong><&|/l&>X</&></strong></a>]
 <%INIT>
 
