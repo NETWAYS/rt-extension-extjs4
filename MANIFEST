@@ -1,4 +1,3 @@
-.project
 doc/FEATURES
 doc/README
 html/Callbacks/RTx-NETWAYS/Elements/Header/Head
@@ -12,7 +11,6 @@ html/Elements/RTx-TitleTag
 html/Elements/ShowSearch
 html/Helpers/RTx-TicketProvider
 html/Ticket/Elements/RTx-QuickAddPrincipal
-html/Ticket/Elements/ShowGroupMembers
 html/Ticket/Elements/ShowPeople
 html/Ticket/Elements/ShowSummary
 inc/Module/Install.pm
