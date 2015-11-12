@@ -210,6 +210,11 @@ sub buildData {
         $self->getCustomerId()
     );
 
+    if (! $self->{'connection'}->usePool()) {
+        RT->Logger->info('Actitime: Close database handle');
+        $self->{'connection'}->getConnection()->disconnect();
+    }
+
     my $tasks = {
         'success'   => scalar(@{ $ref }) ? 1 : 0,
         'ticket'    => $self->getTicketId(),

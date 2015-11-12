@@ -22,13 +22,30 @@ sub new {
     
     unless (ref $INSTANCE eq 'RTx::Actitime::Database') {
         $INSTANCE = bless {
-            'connection' => undef
+            'connection'    => undef,
+            'use_pool'      => 1 
         }, $type;
         
         RT->Logger->debug('Creating new instance of '. ref($INSTANCE));
     }
+
+    my $disable_pool = RT->Config->Get('RTx_Actitime_DisablePool');
+    if (defined $disable_pool && $disable_pool eq '1') {
+        $INSTANCE->{'use_pool'} = '0';
+    }
     
     return $INSTANCE;
+}
+
+=item usePool()
+
+Return if db object use persistence
+
+=cut
+
+sub usePool {
+    my $self = shift;
+    return $self->{'use_pool'};
 }
 
 =item isApplicable()
