@@ -1,13 +1,48 @@
+<script>
+  jQuery(document).ready(function () {
+    jQuery('#<% $selectName %>').change(function () {
+      var uri = jQuery(this).val();
+      if (uri !== '<% loc($Title) %>') {
+        window.location.href = uri;
+      } else {
+        console.log('RTx-QuickAddPrincipal: No principal selected');
+      }
+    });
+
+    jQuery('#<% $buttonName %>').click(function (e) {
+        e.preventDefault();
+        var uri = jQuery(this).data('uri');
+        if (uri) {
+            window.location.href = uri;
+        } else {
+            alert('RTx-QuickAddPrincipal: Could not alter "<% $Type %>"');
+        }
+    });
+  });
+</script>
 <div style="margin-top: 0.5em;">
     <form name="<% $formName %>">
-        <select name="<% $selectName %>" onChange="location=document.<% $formName %>.<% $selectName %>.options[document.<% $formName %>.<% $selectName %>.selectedIndex].value;" value="GO">
+        <select id="<% $selectName %>" name="<% $selectName %>" value="GO">
             <option selected><% loc($Title) %></option>
             <% join('', @links) | n %>
         </select>
+%       if ($displayButton eq 1) {
+            <button style="text-align: center; width: 80px;" id="<% $buttonName %>" data-uri="<% $buttonUri %>"><% loc($titleButton) %></button>
+%       }
     </form>
 </div>
 <%init>
 return unless(RT->Config->Get('RTx_NETWAYS_EnableQuickAssign') && RT->Config->Get('RTx_NETWAYS_QuickAssignGroup'));
+
+my $hexUid          = genHexUID64();
+my $formName        = 'form_' . $hexUid;
+my $selectName      = 'select_' . $hexUid;
+my $buttonName      = 'button_' . $hexUid;
+my $displayButton   = 0;
+my $titleButton     = 'Me';
+my $buttonUri       = '';
+my $CustomGroup     = RT::Group->new($session{'CurrentUser'});
+my $me              = $session{'CurrentUser'};
 
 sub genHexUID64{
     my $UID = '';
@@ -17,10 +52,6 @@ sub genHexUID64{
     return $UID;
 }
 
-my $formName = 'form_' . genHexUID64();
-my $selectName = 'select_' . genHexUID64();
-
-my $CustomGroup = RT::Group->new($session{'CurrentUser'});
 $CustomGroup->LoadUserDefinedGroup(RT->Config->Get('RTx_NETWAYS_QuickAssignGroup'));
 
 my $Members = $CustomGroup->UserMembersObj();
@@ -58,6 +89,16 @@ while (my $User = $Members->Next()) {
         $User->RealName,
         $User->NickName ? sprintf(' (%s)', $User->NickName) : ''
     );
+}
+
+if ($Type eq 'Owner' && $Ticket->Owner != $me->PrincipalId) {
+    $displayButton = 1;
+    $buttonUri = $base . '&ForceOwnerChange=1&Owner='. $me->PrincipalId;
+    $titleButton = 'Take';
+} elsif ($Group && ref($Group) eq 'RT::Group' && ! $Group->HasMember($me->PrincipalId)) {
+    $displayButton = 1;
+    $buttonUri = $base. '&Ticket-AddWatcher-Principal-'. $me->PrincipalId. '='. $Type;
+    $titleButton = 'Add self';
 }
 
 return unless(scalar(@links));
