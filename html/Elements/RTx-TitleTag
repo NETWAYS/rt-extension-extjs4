@@ -1,0 +1,23 @@
+<%once>
+	my $rtname = RT->Config->Get('rtname');
+	my $format = '['. $rtname. ' #%d]';
+</%once>
+
+<%method createFromTicket>
+	<%init>
+		return sprintf($format, $Ticket->Id). ': '. $Ticket->Subject;
+	</%init>
+	<%args>
+		$Ticket
+	</%args>
+</%method>
+
+<%method rewriteExisting>
+	<%init>
+		$Title =~ s/#\s*(\d+)/sprintf($format, $1)/ge;
+		return $Title;
+	</%init>
+	<%args>
+		$Title
+	</%args>
+</%method>
