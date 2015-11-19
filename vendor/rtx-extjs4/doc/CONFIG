@@ -1,0 +1,5 @@
+Decide which file you want to include
+
+Types: default or debug
+
+SET($RTx_ExtJS4_TYPE, 'default');
