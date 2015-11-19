@@ -1,0 +1,10 @@
+<%init>
+	$Search->{'Query'} = $m->comp('/Elements/RTx-RewriteSearchMarker', Query => $Search->{'Query'});
+</%init>
+<%once>
+	use Data::Dumper;
+</%once>
+<%args>
+	$OriginalSearch => {}
+	$Search => {}
+</%args>
