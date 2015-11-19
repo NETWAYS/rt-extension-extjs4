@@ -1,0 +1,8 @@
+base:
+  build: .
+  dockerfile: docker/base/Dockerfile
+library:
+  build: .
+  dockerfile: docker/library/Dockerfile
+  extends:
+    service: base
