@@ -1,0 +1,29 @@
+Script action to control the owner of a ticket in to ways:
+
+Owner configured by template:
+
+    1) Create new template with name or id of the user.
+    
+    2) Create a new script use this action and select your new created
+       template as template argument
+    
+    3) Test and have fun!
+
+Owner by scrip argument
+
+    1) Be a DB admin and connect to your RT database
+    
+    2) Copy the row from Scrip table with the 'ExecModule' 'SetOwner' and add
+       new 'Argument' value representing your user and place a new 
+       description
+    
+    3) Creae a new Scrip with your new ScriptAction created above
+    
+    4) Test and have fun!
+
+
+Nobody user
+
+    1) Create a new Scrip action with 'Set to nobody' action
+    
+    2) Test and have fun!
