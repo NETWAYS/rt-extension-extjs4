@@ -1,0 +1,19 @@
+<%init>
+	foreach my $cf(@{ $Conditions }) {
+		if (exists($cf->{'Value'}->{'Arguments'}->{'CustomField'})) {
+			my $CustomField = $cf->{'Value'}->{'Arguments'}->{'CustomField'};
+			if ($CustomField->Type eq 'DBCustomField') {
+				$cf->{'Value'}->{'Path'} = '/Elements/EditCustomFieldDBCustomField';
+				$cf->{'Value'}->{'Arguments'}->{'Rows'} = 0;
+				$cf->{'Value'}->{'Arguments'}->{'Cols'} = 0;
+			}  
+		}
+	}
+</%init>
+<%once>
+	use Data::Dumper;
+</%once>
+<%args>
+	$Conditions => ()
+	$Queues => {}
+</%args>
