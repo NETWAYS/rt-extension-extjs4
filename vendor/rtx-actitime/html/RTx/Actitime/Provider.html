@@ -1,0 +1,34 @@
+<%init>
+    if (!$filter) {
+        die("No filter given");
+    }
+    
+    my $connection = RTx::Actitime::Database->new();
+    my $builder = RTx::Actitime::Builder->new($connection);
+    my $coder = JSON::XS->new->ascii->pretty->allow_nonref->allow_blessed;
+    
+    $filter = $coder->decode($filter);
+    
+    if ($filter->[0]->{'property'} eq 'ticketid') {
+        $builder->setTicketId($filter->[0]->{'value'});
+    }
+    
+    if ($filter->[0]->{'property'} eq 'customerid') {
+        $builder->setCustomerId($filter->[0]->{'value'});
+    }
+    
+    $builder->buildData();
+    
+    $r->content_type('application/json; charset=utf-8');
+    $m->out($coder->encode($builder->getStruct())); 
+    $m->abort();
+</%init>
+<%once>
+    use Data::Dumper;
+    use JSON::XS;
+    use RTx::Actitime::Database;
+    use RTx::Actitime::Builder;
+</%once>
+<%args>
+    $filter => undef
+</%args>
