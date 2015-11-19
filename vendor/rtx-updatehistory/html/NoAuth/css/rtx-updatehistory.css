@@ -1,0 +1,17 @@
+.rtx-update-history-box {
+    height: 600px;
+    overflow: scroll;
+    
+}
+
+.update-table-struct {
+    width: 100%;
+}
+
+.update-table-struct tr td {
+    vertical-align: top;
+}
+
+#ticket-update-message {
+    min-width: 600px;
+}
