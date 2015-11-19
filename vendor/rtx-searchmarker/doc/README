@@ -1,0 +1,41 @@
+After common installing you can use following markers within your saved searches:
+
+	__CurrentUser(<ATTRIBUTE>)__
+	
+	To retrieve user attributes from current user e.g.
+	
+	__CurrentUser(EmailAddress)__
+	
+	Which results into
+		$session{'CurrentUser'}->UserObj->EmailAddress
+	
+	__First__
+	
+	Beginning of the Unix Epoch:
+	
+	1970-01-01 00:00:00
+	
+	__Now__
+	
+	Unix actual local timestamp (based upon user timezone)
+	
+	__Midnight__
+	
+	Midnight of the actual timestamp:
+	
+	2012-01-03 17:35:22 -> 2012-01-03 00:00:00
+
+Some query examples:
+
+* Getting tickets due:
+
+id > 0 AND (  Due < '__Midnight__' and Due > '__First__' )
+
+
+* Getting all watched tickets:
+
+id > 0 and (  
+	Cc.EmailAddress = '__CurrentUser(EmailAddress)__' 
+	OR AdminCc.EmailAddress = '__CurrentUser(EmailAddress)__' 
+	OR Requestor.EmailAddress = '__CurrentUser(EmailAddress)__'
+)

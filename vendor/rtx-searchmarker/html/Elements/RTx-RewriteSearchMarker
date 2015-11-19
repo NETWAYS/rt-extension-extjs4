@@ -1,0 +1,21 @@
+<%init>
+	my $u = $session{'CurrentUser'};
+	
+	$Query =~ s/__CurrentUser\(([^\)]+)\)__/$u->UserObj->EmailAddress/ge;
+	
+	my $date = RT::Date->new($u);
+	
+	$date->Unix(0);
+	$Query =~ s/__First__/$date->ISO()/ge;
+	
+	$date->SetToNow();
+	$Query =~ s/__Now__/$date->ISO()/ge;
+	
+	$date->SetToMidnight();
+	$Query =~ s/__Midnight__/$date->ISO()/ge;
+	
+	return $Query;
+</%init>
+<%args>
+	$Query
+</%args>
