@@ -1,0 +1,12 @@
+SELECT
+
+    c.name as `cname`,
+    p.name as `pname`,
+    t.name as `tname`,
+    t.budget as `budget`
+
+FROM task t
+INNER JOIN project p on p.id = t.project_id
+INNER JOIN customer c on c.id = t.customer_id
+WHERE BUDGET > 0
+ORDER BY t.id DESC

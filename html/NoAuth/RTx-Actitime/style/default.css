@@ -1,0 +1,75 @@
+
+.actitime-header {
+    line-height: 22px;
+    font-weight: bolder;
+}
+
+.actitime-h1 {
+    display: block;
+    font-size: 14px;
+    font-weight: bolder;
+    text-align: center;
+    margin: 15px 0 0 0;
+}
+
+.actitime-h2 {
+    display: block;
+    font-size: 14px;
+    font-weight: bolder;
+    margin: 15px 0 15px 0;
+}
+
+.actitime-spacer {
+    height: 20px;
+}
+
+.actitime-icon-refresh {
+    background: transparent url("../icons/action-refresh.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-bookmark {
+    background: transparent url("../icons/action-bookmark.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-customers {
+    background: transparent url("../icons/action-customers.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-settings {
+    background: transparent url("../icons/action-settings.png") 0px 0px no-repeat !important;
+}
+.actitime-icon-user {
+    background: transparent url("../icons/action-user.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-close {
+    background: transparent url("../icons/action-close.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-budget-ok {
+    background: transparent url("../icons/action-budget-ok.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-budget-warning {
+    background: transparent url("../icons/action-budget-warning.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-budget-critical {
+    background: transparent url("../icons/action-budget-critical.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-budget-unconfigured {
+    background: transparent url("../icons/action-budget-unconfigured.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon-budget-failed {
+    background: transparent url("../icons/action-budget-failed.png") 0px 0px no-repeat !important;
+}
+
+.actitime-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+
