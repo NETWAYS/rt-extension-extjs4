@@ -1,0 +1,37 @@
+<%init>
+	my $search = RTx::DBCustomField->new();
+	
+	my $ticket = undef;
+	
+	if ($objectType eq 'RT::Ticket' && $objectId) {
+		$ticket = RT::Ticket->new($session{'CurrentUser'});
+		$ticket->Load($objectId);
+	}
+	
+	my $data = $search->callQuery(
+		name => $source,
+		query => $query || "",
+		ticket => $ticket
+	);
+	
+	my $json = {
+		success => 1,
+		total => scalar(@{ $data }),
+		result => $data
+	};
+	
+	my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
+	$r->content_type('application/json; charset=utf-8'); 
+	$m->out( $coder->encode($json) );
+	$m->abort();
+</%init>
+<%once>
+	use JSON::XS;
+	use Data::Dumper;
+</%once>
+<%args>
+	$query
+	$source
+	$objectId => undef
+	$objectType => undef
+</%args>
