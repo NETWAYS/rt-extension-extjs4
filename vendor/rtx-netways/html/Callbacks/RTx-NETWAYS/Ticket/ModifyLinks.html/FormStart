@@ -1,0 +1,113 @@
+<script type="text/javascript">
+	
+	Ext.onReady(function() {
+		var elements = Ext.select("input");
+		var form, mergeElement;
+		var doSubmit = false;
+		
+		
+		elements.each(function(el, composite, idx) {
+			if (el.dom.name.match(/MergeInto/)) {
+				form = el.parent('form');
+				mergeElement = el;
+				return false;
+			}
+		});
+		
+		
+		if (form && mergeElement) {
+			form.on('submit', function(e, el, eOpt) {
+				if (mergeElement.dom.value && doSubmit === false) {
+					e.preventDefault();
+					
+					var url = "<% RT->Config->Get('WebURL') %>/Helpers/RTx-TicketProvider";
+					var target = parseInt(mergeElement.dom.value);
+					var source = parseInt('<% $id %>');
+					
+					if (target === source) {
+						Ext.MessageBox.show({
+							icon: Ext.Msg.ERROR,
+							title: 'Doh!',
+							msg: Ext.String.format('Source and target ticket are the same!'),
+							buttons: Ext.MessageBox.OK,
+						});
+						return;
+					}
+					
+					Ext.Ajax.request({
+						url: url,
+						params: {
+							tickets: source + ',' + target
+						},
+						success: function(response) {
+							try {
+								data = Ext.decode(response.responseText, true);
+								if (Ext.isObject(data) && data.success) {									
+									if (data.resultCount !== 2) {
+										Ext.MessageBox.show({
+											icon: Ext.Msg.ERROR,
+											title: 'Doh!',
+											msg: Ext.String.format('Target ticket #{0} is not mergable!', target),
+											buttons: Ext.MessageBox.OK,
+										});
+										return;
+									}
+									
+									var result = data.result;
+									
+									var template = new Ext.XTemplate('#{id} - {subject} ({status})');
+									
+									var oSource = {};
+									var oTarget = {};
+									
+									try {
+										oSource = Ext.Array.filter(result, function(v) { return parseInt(v.id)==source && true; })[0];
+									} catch(e) {
+										console.log(e);
+									}
+									
+									try {
+										oTarget = Ext.Array.filter(result, function(v) { return parseInt(v.id)==target && true; })[0];
+									} catch(e) {
+										console.log(e);
+									}
+									
+									var strSource = template.apply(oSource);
+									var strTarget = template.apply(oTarget);
+									
+									Ext.MessageBox.show({
+										msg: Ext.String.format(
+												"You're about to merge ticket"
+												+ "<br /><br /><span style=\"font-weight: bolder;\">{0}</span>"
+												+ "<br /><br >into"
+												+ "<br /><br /><span style=\"font-weight: bolder;\">{1}</span>"
+												+ "<br /><br />Are you sure to proceed?", strSource, strTarget),
+										buttons: Ext.MessageBox.YESNO,
+										icon: Ext.Msg.WARNING,
+										title: 'Think for one minute...',
+										fn: function(buttonId) {
+											if (buttonId === 'yes') {
+												doSubmit = true;
+												form.dom.submit();
+											}
+										}
+									});
+								}
+							} catch(e) {
+								console.log(e);
+							}
+						}
+					});
+				}
+				
+			});
+		}
+	});
+	
+</script>
+<%init>
+	my $id = $ARGSRef->{'id'};	
+</%init>
+<%args>
+	$ARGSRef
+</%args>

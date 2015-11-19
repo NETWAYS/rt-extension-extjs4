@@ -1,0 +1,49 @@
+<tr>
+	<td class="label"><&|/l&>Reply Address</&>:</td>
+	<td class="value">
+		<input readonly="readonly" class="xrt-netways-titletag" type="text" value="<% $replyAddress %>" style="width: 350px;" />
+	</td>
+</tr>
+
+<tr>
+	<td class="label"><&|/l&>Comment Address</&>:</td>
+	<td class="value">
+		<input readonly="readonly" class="xrt-netways-titletag" type="text" value="<% $commentAddress %>" style="width: 350px;" />
+	</td>
+</tr>
+
+<tr>
+	<td class="label"><&|/l&>Time Tag</&>:</td>
+	<td class="value">
+		<input readonly="readonly" class="xrt-netways-titletag" type="text" value="<% $timeTag %>" style="width: 350px;" />
+	</td>
+</tr>
+
+<script type="text/javascript">
+	(function() {
+		var els = Ext.select("table input.xrt-netways-titletag", true);
+		
+		var myFunc = 
+		
+		els.each(function(el, c, idx) {
+			el.on('focus', function(e, element, eOpts) {
+				var f = function() {
+					element.select();
+				}
+				
+				e.preventDefault();
+				
+				Ext.Function.defer(f, 100);
+			});
+		});
+	})();
+	
+</script>
+<%init>
+	my $commentAddress = $m->comp('/Elements/RTx-EmailTag:commentFromTicket', Ticket => $TicketObj);
+	my $replyAddress =  $m->comp('/Elements/RTx-EmailTag:replyFromTicket', Ticket => $TicketObj);
+	my $timeTag = $m->comp('/Elements/RTx-TitleTag:createFromTicket', Ticket => $TicketObj);
+</%init>
+<%args>
+	$TicketObj
+</%args>
