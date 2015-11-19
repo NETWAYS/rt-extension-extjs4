@@ -1,0 +1,10 @@
+@ScripActions = ({
+    Name        => 'Set Owner to Nobody',
+    Description => 'Sets the ticket Owner to nobody',
+    ExecModule  => 'SetOwner',
+    Argument    => 'RT::Nobody'
+}, {
+    Name        => 'Set Owner to somebody',
+    Description => 'Sets the Owner to template argument',
+    ExecModule  => 'SetOwner'
+});
