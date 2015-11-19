@@ -6,3 +6,8 @@ library:
   dockerfile: docker/library/Dockerfile
   extends:
     service: base
+source:
+  build: .
+  dockerfile: docker/source/Dockerfile
+  extends:
+    service: library
