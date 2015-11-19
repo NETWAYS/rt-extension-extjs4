@@ -1,0 +1,35 @@
+<%init>
+
+	my @arry = ();
+
+	if (!exists($session{'RTx-HistoryComponent'}) || !$session{'RTx-HistoryComponent'}) {
+		$session{'RTx-HistoryComponent'} = ();
+	} else {
+		@arry = @{ $session{'RTx-HistoryComponent'} };
+	}
+	
+	my $date = RT::Date->new($session{'CurrentUser'});
+	$date->SetToNow();
+	
+	my $newEntry = {
+		'Ticket'	=> $Ticket,
+		'Time'		=> $date
+	};
+	
+	for (my $i=0; $i<scalar(@arry); $i++) {
+		if ($arry[$i]->{'Ticket'}->Id == $Ticket->Id) {
+			splice(@arry, $i, 1);
+		}
+	}
+	
+	push @arry, $newEntry;
+	
+	while (scalar(@arry) > $RTx::HistoryComponent::MAX_HISTORY) {
+		shift @arry;
+	}
+	
+	$session{'RTx-HistoryComponent'} = \@arry;
+</%init>
+<%args>
+	$Ticket => undef
+</%args>

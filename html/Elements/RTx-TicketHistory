@@ -1,0 +1,50 @@
+<&|/Widgets/TitleBox, title => loc('My last [_1] tickets', $RTx::HistoryComponent::MAX_HISTORY)&>
+
+<table cellspacing="0" cellpadding="2" width="100%" class="queue-summary">
+
+	<tr>
+		<th class="collection-as-table"><&|/l&>Id</&></th>
+		<th class="collection-as-table"><&|/l&>Subject</&></th>
+		<th class="collection-as-table"><&|/l&>Status</&></th>
+		<th class="collection-as-table"><&|/l&>Queue</&></th>
+		<th class="collection-as-table"><&|/l&>Last seen</&></th>
+	</tr>
+
+% for my $entry(reverse(@{ $session{'RTx-HistoryComponent'} })) {
+% my $link = RT->Config->Get('WebURL'). 'Ticket/Display.html?id='. $entry->{'Ticket'}->Id;
+	<tr class="<% (++$i % 2) ? 'oddline' : 'evenline' %>">
+		<td align="right"><a href="<%$link%>"><% $entry->{'Ticket'}->Id %></a></td>
+		<td align="left"><& .createSubject, Subject => $entry->{'Ticket'}->Subject, href => $link &></td>
+		<td align="right"><a href="<%$link%>"><% $entry->{'Ticket'}->Status %></a></td>
+		<td align="right"><a href="<%$link%>"><% $entry->{'Ticket'}->QueueObj->Name %></a></td>
+		<td align="right"><a href="<%$link%>"><% $entry->{'Time'}->DiffAsString($now) %></a></td>
+	</tr>
+% }
+
+</table>
+
+</&>
+<%def .createSubject>
+	<a href="<% $href %>" title="<% $Subject %>"><% $sub %></a>
+	<%init>
+		my $sub = $Subject;
+		if (length($sub) > $length) {
+			$sub = substr($sub, 0, $length). '...';
+		}
+	</%init>
+	<%args>
+		$Subject
+		$href
+		$length => 30
+	</%args>
+</%def>
+<%init>
+
+if (!$session{'RTx-HistoryComponent'} || !ref($session{'RTx-HistoryComponent'}) eq 'ARRAY') {
+	return
+}
+
+my $i=0;
+my $now = time;
+
+</%init>
