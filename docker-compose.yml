@@ -11,3 +11,8 @@ source:
   dockerfile: docker/source/Dockerfile
   extends:
     service: library
+runtime:
+  build: .
+  dockerfile: docker/runtime/Dockerfile
+  extends:
+    service: source
