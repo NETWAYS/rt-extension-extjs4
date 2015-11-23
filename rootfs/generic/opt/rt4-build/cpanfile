@@ -163,6 +163,6 @@ requires 'HTML::Entities';
 requires 'Pod::Simple', '3.24';
 
 # NETWAYS 
-requires 'Hook/LexWrap.pm';
+requires 'Hook::LexWrap';
 requires 'JSON::XS';
 
