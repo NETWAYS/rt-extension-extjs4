@@ -4,15 +4,21 @@ base:
 library:
   build: .
   dockerfile: docker/library/Dockerfile
-  extends:
-    service: base
 source:
   build: .
   dockerfile: docker/source/Dockerfile
-  extends:
-    service: library
 runtime:
   build: .
   dockerfile: docker/runtime/Dockerfile
+netways:
+  build: .
+  dockerfile: docker/netways/Dockerfile
+  container_name: rt4netways
+  ports:
+    - 80
+    - 443
+    - 25
+  priviledged: true
+  restart: always
   extends:
-    service: source
+    service: runtime

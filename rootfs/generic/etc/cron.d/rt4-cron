@@ -1,0 +1,6 @@
+RT_PATH=/opt/rt4
+PATH=$RT_PATH/bin:$RT_PATH/sbin:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+
+0 0 * * * root /storage/www/rt42.netways.de/sbin/rt-email-digest -m daily > /dev/null 2>&1
+0 0 * * 0 root /storage/www/rt42.netways.de/sbin/rt-email-digest -m weekly > /dev/null 2>&1
+0 * * * * root /storage/www/rt42.netways.de/sbin/rt-email-dashboards > /dev/null 2>&1

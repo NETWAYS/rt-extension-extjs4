@@ -1,0 +1,153 @@
+This file contains message digests of all files listed in MANIFEST,
+signed via the Module::Signature module, version 0.73.
+
+To verify the content in this distribution, first make sure you have
+Module::Signature installed, then type:
+
+    % cpansign -v
+
+It will check each file's integrity, as well as the signature's
+validity.  If "==> Signature verified OK! <==" is not displayed,
+the distribution may already have been compromised, and you should
+not run its Makefile.PL or Build.PL.
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+SHA1 ea2e696f6119ed9cafe7facf461c23aa95f6489f Changes
+SHA1 3d262860dd333f02bc6b130d37db143910e92fcb MANIFEST
+SHA1 bc4a2b1f9279b5433c84207555e63fb07ef5dfc8 MANIFEST.SKIP
+SHA1 4d406371f12ce6be9ad716a1d848982d8874d1a5 META.yml
+SHA1 506a9451d2cb3293d5de03c5ecbccda056536a8c Makefile.PL
+SHA1 357a83a76dc7cac7b849ceb9d5617cbf4adb4f40 README
+SHA1 4a72196627333064b33896d99b9e1d9edb5c9010 doc/images/asset-cfs.png
+SHA1 f124100e75d5ec44b3963e14255c1ee7f732d2d7 doc/images/asset-date-details.png
+SHA1 cf19032f1560f93bdae4448611d1a14d3b0c43de doc/images/asset-search.png
+SHA1 dfd7bba70478bbed2ecc68d6a84e25dd204c8bfa doc/images/asset-ticket-create-selfservice.png
+SHA1 44a893c66682e3bdd8ff3aef9a9ae4b51d59d52c doc/images/asset-ticket-create.png
+SHA1 ea34ddf2f033296908372eb0a3020fcbd0778127 doc/images/catalog-rights.png
+SHA1 1a017edb1a72e4bfb8e62451771f5c3ea3dd996b doc/images/edit-catalog.png
+SHA1 464dc62b48361444ed68f8a19ac7f2a7d2db8fe7 doc/images/self-service-display.png
+SHA1 d8e00ce5dbeb766c538a8c674fba7cb97136c4af etc/Assets_Config.pm
+SHA1 8544d7311139187b721bade87d5ff0fd569e023c etc/Tutorial_Configuration.txt
+SHA1 afbb49baa347f0096713e842cfa4d10c9e79d9df etc/acl.Oracle
+SHA1 2c09717684b0049d5dadc6fe0fa05b660f40c385 etc/acl.Pg
+SHA1 afbb49baa347f0096713e842cfa4d10c9e79d9df etc/acl.mysql
+SHA1 7ee85c8202d174641d1d8fc398a7c7b0e1ad4ac3 etc/initialdata
+SHA1 79341274e874a716e85e7df662945f3431cd97f2 etc/schema.Oracle
+SHA1 fb896d8b3260c958ca3410b15decfda5fd1690ae etc/schema.Pg
+SHA1 ba2da98dce8b7c01cc38c0abbd2abbf9292eb15a etc/schema.SQLite
+SHA1 3c73cf8bd6c851101538a80c65340719e729d77e etc/schema.mysql
+SHA1 2649b370923402c09971000774a70386b7383e73 etc/tutorialdata
+SHA1 e7b0fd86be47aa48179633a8f31bcc2bc1638b1f html/Admin/Assets/Catalogs/Create.html
+SHA1 8a257c6881d05a2aa90d29772b5345ea4be7b40d html/Admin/Assets/Catalogs/CustomFields.html
+SHA1 d6fa443f749ec475b61032d5e7614f365c7e72e2 html/Admin/Assets/Catalogs/Elements/EditBasics
+SHA1 2ce323bd43bf1baa04673ba0406b77dbd5e4b889 html/Admin/Assets/Catalogs/GroupRights.html
+SHA1 775f69ba9c2ae3a19774883f38fce3b29362b7fa html/Admin/Assets/Catalogs/Modify.html
+SHA1 5e3170e08fa26e754f46881f124232d0f5bf9829 html/Admin/Assets/Catalogs/Roles.html
+SHA1 5961b0754390b2dc2bb390671f0f0f7af2d9718d html/Admin/Assets/Catalogs/UserRights.html
+SHA1 e521fe88e8afff0ba95c54be2b522c0824d518fa html/Admin/Assets/Catalogs/index.html
+SHA1 5f1c3ee01b8e8d980c33576e04966893119e1af3 html/Admin/Assets/index.html
+SHA1 5b3a7b45e4d2e3402ebaa250815704f3db971dbe html/Admin/Global/CustomFields/Catalog-Assets.html
+SHA1 2e74d2c53bba5621ec0b499ff52d9f9c9dbf85e0 html/Asset/Create.html
+SHA1 52569042d9e473ec83b11bbc07fb46c051de53f2 html/Asset/CreateInCatalog.html
+SHA1 7334edb41c599b92700165e4e6a1ea490b9d8150 html/Asset/CreateLinkedTicket.html
+SHA1 8940f0c6c0e3f8b586dcfc8b30174c9a52a9d7c5 html/Asset/Display.html
+SHA1 3ccc989f274fd92ffae3f6aa56744cb8826b5515 html/Asset/Elements/AssetSearchBasics
+SHA1 6f26753191bf7b3096b4d8c7a41cb76832cd672e html/Asset/Elements/AssetSearchCFs
+SHA1 0b791384e252ad1e1e4cbd3f04890d0392b95358 html/Asset/Elements/AssetSearchPeople
+SHA1 3d14ddf9adf6c5a20cd46d480a53e70251135214 html/Asset/Elements/CreateInCatalog
+SHA1 07aa9c7a8034450b84c3472b005f9b4909455bf5 html/Asset/Elements/CreateLinkedTicket
+SHA1 ea376795b233491060c34538abe604563949a375 html/Asset/Elements/EditBasics
+SHA1 49d91a7cdfdc34aa4787970718506ae74101c057 html/Asset/Elements/EditDates
+SHA1 7ddd67b0a061cf7608919e7ac513f38547bf97e8 html/Asset/Elements/EditPeople
+SHA1 e99443e49df907ea076b30248959fd2d5416d6b3 html/Asset/Elements/SelectCatalog
+SHA1 98c01d72da40181015dafadf670da48e34e113f1 html/Asset/Elements/SelectStatus
+SHA1 3aff6f25c900c90cf4d0a4023483916755bd7443 html/Asset/Elements/ShowBasics
+SHA1 8d1f1ee1a66d016673c2565783befdf79179feb7 html/Asset/Elements/ShowCatalog
+SHA1 cab7388894c90d0eab1be5bcda7c6754881aa5a1 html/Asset/Elements/ShowDates
+SHA1 a06a8c4546b292d919952bc02aaea50b3a09f537 html/Asset/Elements/ShowLinks
+SHA1 3d997528704b4c913385a3f229eb2d08b9465c32 html/Asset/Elements/ShowPeople
+SHA1 edbc447fbc3e9ae64b65e7660c374388b8458b2e html/Asset/Elements/ShowRoleMembers
+SHA1 a446f72206c22fe04f3be1d51b3ef820ab7bbab6 html/Asset/Elements/ShowSummary
+SHA1 9c8b4d370b8ccc7b6a5dcf8efd197a48bda9d137 html/Asset/Elements/TSVExport
+SHA1 eaa7b1db6ecf91461288954e7cd16792b4062059 html/Asset/Helpers/CreateInCatalog
+SHA1 cce14c697a725ee7a60bfd1afaa2dbec94cda113 html/Asset/Helpers/CreateLinkedTicket
+SHA1 b52a70cabbdcd446e505836519cffa8cb6fe0ff7 html/Asset/History.html
+SHA1 be2dabd181a5c4f375e0b38d8bb0046728f9b532 html/Asset/Modify.html
+SHA1 1556eb35dd3cafaccb7c44929d658b3490db0afc html/Asset/ModifyCFs.html
+SHA1 bafd068ffb1ad0660d8429bc550798d3c57055d1 html/Asset/ModifyDates.html
+SHA1 cffbac0a9bfefa6948d9c3ebbd75b00d25bf33f5 html/Asset/ModifyLinks.html
+SHA1 c2490a6641c2812da7c9519ef81b543e66bde693 html/Asset/ModifyPeople.html
+SHA1 9cabcfe1e2d9cf8df26b0f6bf8d9432f3fc634c2 html/Asset/Search/Bulk.html
+SHA1 da7a9963c4d5f8a35507797e224ca257e72f4d97 html/Asset/Search/Results.tsv
+SHA1 5d5472db6cf0194cbbdb11eebf2721332d88edda html/Asset/Search/index.html
+SHA1 64ad6b98e0051473ea34fc3f553350912a42e959 html/Asset/index.html
+SHA1 6a0170b1173b2730c0acd7465c348f5a83cb2b4b html/Callbacks/RT-Extension-Assets/Elements/AddLinks/ExtraLinkInstructions
+SHA1 0e4ff42f8596caa7da8afc3de148ae726a59f35c html/Callbacks/RT-Extension-Assets/Elements/Tabs/Privileged
+SHA1 d7eb6776c34f45094b2e49bcc6dc7f3d7693f944 html/Callbacks/RT-Extension-Assets/Elements/Tabs/SelfService
+SHA1 64f4daacad9bee3b7b3e6146324228ca4a798953 html/Callbacks/RT-Extension-Assets/SelfService/Display.html/BeforeShowHistory
+SHA1 fc512fa83bb399b1de56c2320356ef8089e2b38f html/Callbacks/RT-Extension-Assets/Ticket/Create.html/AfterBasics
+SHA1 0ef35ce3f53b8e2befc24ee56280a81219167d69 html/Callbacks/RT-Extension-Assets/Ticket/Elements/ShowSummary/LinksExtra
+SHA1 a2c4b3cddddcda99900f6349c854bc8c845d8e1b html/Elements/Assets/AddPeople
+SHA1 20072684761e8bb4d00fe43d227ed34a201fe2fc html/Elements/Assets/EditPeople
+SHA1 3046a760b770ddd5b8891ff2e466439afd363f11 html/Elements/Assets/EditRoleMembers
+SHA1 6b4e0ed84029918e53cd4f32ce868fe266740caa html/Elements/Assets/Search
+SHA1 e108cc2f48b01ce921faa2747b9cd5df973df8f5 html/Elements/Assets/SelectRoleType
+SHA1 25df4bc534b014bc802de8ef84dff37b6a7cbb30 html/Elements/FindAsset
+SHA1 496e77d5afcfa1c17106cbd49d06c107b34db9e5 html/Elements/MyAssets
+SHA1 1f47618bbd8882da790a9d65acf855532fbf8efc html/Elements/RT__Asset/ColumnMap
+SHA1 dc02c9dc46902192111f9977ddce58439cee76bd html/Elements/RT__Catalog/ColumnMap
+SHA1 b4f2cdfde417d7b6dd9c51cfdc0afd27aa3829ff html/SelfService/Asset/CreateLinkedTicket.html
+SHA1 34cb3801d38fdb9ab54ed72d20221fb5b29d9c22 html/SelfService/Asset/Display.html
+SHA1 7062de85785901db487695c0de8f0b6e723f65fe html/SelfService/Asset/Helpers/CreateLinkedTicket
+SHA1 df7bd279a65057e617a5100a943a98d91689d2f9 html/SelfService/Asset/History.html
+SHA1 977ceace68f87f0a6f6b89e3cb31ed723b035cd4 html/SelfService/Asset/index.html
+SHA1 023036a3b0e8b70fd7700b91ef6b9df4d71fa0c8 html/Ticket/Elements/ShowAssets
+SHA1 460224f7f4e723fd1b6f9d9f107942a552b1efcf html/Ticket/Elements/ShowAssetsOnCreate
+SHA1 45b5b53fad516b626f6a2f50cee14f28063715dc html/User/Elements/AssetList
+SHA1 1ca764b84c4b3802d72438bc7ee73a30e8799b7b html/User/Elements/Portlets/UserAssets
+SHA1 d2664c57b65686abbfbbe1e71229761625be4922 inc/Module/Install.pm
+SHA1 da41a8d9904f7b409b49a5f6c338d3eb305a2b4b inc/Module/Install/Base.pm
+SHA1 0db0afe19cd298abba248fa089e5525bd5ab3ab6 inc/Module/Install/Can.pm
+SHA1 e7152bfd5ca67d0e33f96d09c59d600bca5c1f15 inc/Module/Install/Fetch.pm
+SHA1 bd2183c72617105d0b65f3ef81d013bf4af337d6 inc/Module/Install/Include.pm
+SHA1 29ee1cb0dc262b00983e3a2f5cf00b538dff5069 inc/Module/Install/Makefile.pm
+SHA1 e963f80cfe255f16e55067d1feb6841cff3ed2fe inc/Module/Install/Metadata.pm
+SHA1 2e6d9ed3ead010223a770841a5944e7ae5d1dc7a inc/Module/Install/RTx.pm
+SHA1 3fdf4c0cffdb1a2e23e5cd26bf95be553f1f9590 inc/Module/Install/RTx/Runtime.pm
+SHA1 79f5b4199f622e8b05aac266b0c39f6a85bb303f inc/Module/Install/ReadmeFromPod.pm
+SHA1 13c903897bad7f0fdd7871a4a0182ff62dfbefd5 inc/Module/Install/Substitute.pm
+SHA1 65a1f09af1f4f9e47a98b6b45667c328b1b2f9c0 inc/Module/Install/Win32.pm
+SHA1 f191c49475b3f51775180cd4f7e41e3bdab7f85a inc/Module/Install/WriteAll.pm
+SHA1 7173d20065379a781d0218b7e747ca7a9b11f7a0 inc/YAML/Tiny.pm
+SHA1 388cb0aee2cc9cc591d131e00d7ace9f411f953c lib/RT/Asset.pm
+SHA1 027b2bf793e878a5d6dacbb1fa04d25603695bbd lib/RT/Assets.pm
+SHA1 074f430ff85996c2fcc1feeda32fd7b7f50a08a8 lib/RT/Catalog.pm
+SHA1 4f04d9df39ec0bfe96289e90b5df77138272768c lib/RT/Catalogs.pm
+SHA1 8fbca8d1a9bd46dd3abcd5323a8e3f62d510d68c lib/RT/Extension/Assets.pm
+SHA1 b76e44d3728790a46a0d712b3f23f36028d1ad25 lib/RT/Extension/Assets/Tutorial.pm
+SHA1 d495ec341c534ea6e73cafed7ca88142daf36d81 lib/RT/Lifecycle/Asset.pm
+SHA1 a67c947884493e6e1e57991344c1d08959eef046 lib/RT/URI/asset.pm
+SHA1 57a1c421ee2541ec5e60944bd55b630c6793bd35 patches/rt-4.2.1-4.2.2.patch
+SHA1 91ffefed09a00d17f205671deffc53db1758f115 po/assets.pot
+SHA1 d752195c579d6d9868e780a012cbe4d6c88309b8 po/en.po
+SHA1 83b6aa4d8c49619ffdcfabc4e8249aa1aa2f0469 po/fr.po
+SHA1 389ede045cf5540265b93b9743582ad56770bb24 static/css/RTx-Assets.css
+SHA1 b3319ca275df87e72b903f5834c1b7fd239f8243 static/js/RTx-Assets.js
+SHA1 e6a65c2b96009d13dfb387d547ad9f5db601dcb4 xt/api.t
+SHA1 52b75d8ebc3c9eee4454c598393e24b90eb98a87 xt/collection.t
+SHA1 90a04b548a664feae08304a8d67038b3a80aea21 xt/compile.t
+SHA1 d43419e011ede8b933b4adc88393bbe5dda795b5 xt/lib/RT/Extension/Assets/Test.pm.in
+SHA1 0e8a565696f97e149ef6a789431dd0492d9b1652 xt/links.t
+SHA1 0170a2767b20f9aa04c58dd819c847228b7db73d xt/pod.t
+SHA1 9632b98da24e68cbc9413d7496aabcc1bff114a8 xt/rights.t
+SHA1 17e3da35497a009ce5b6ee61145c2331630cf110 xt/roles.t
+SHA1 da949da903c74857f3202d852b6cdd8c383bb2c6 xt/web.t
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlVKSu8ACgkQMflWJZZAbqBfqACfVJ49EWKgYqMMZza2dhR+kdbl
+BRYAoMELBTKaMFOrYIbD50ZHAVQp5OgR
+=T6fH
+-----END PGP SIGNATURE-----

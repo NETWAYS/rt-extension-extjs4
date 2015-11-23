@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND   noninteractive
 ENV TZ                Europe/Berlin
 ENV LANG              C.UTF-8
 
-COPY ["./rootfs/etc/apt/sources.list", "/etc/apt/sources.list"]
+COPY ["./rootfs/generic/etc/apt/sources.list", "/etc/apt/sources.list"]
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
         apt-utils \

@@ -92,6 +92,6 @@ RUN apt-get clean && apt-get update \
                 libdatetime-perl \
         && rm -rf lib/apt/lists/*
 
-COPY ["rootfs/opt/rt4-build/cpanfile", "/opt/rt4-build/cpanfile"]
+COPY ["rootfs/generic/opt/rt4-build/cpanfile", "/opt/rt4-build/cpanfile"]
 
 RUN ["cpanm", "--notest", "--installdeps", "/opt/rt4-build"]

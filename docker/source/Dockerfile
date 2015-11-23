@@ -9,12 +9,12 @@ ENV RT_VERSION    rt-4.2.12
 
 COPY ./vendor ${RT_SOURCE}
 
-COPY ./rootfs/opt/rt4-build/bin/* $RT_BUILD_DIR/bin/
+COPY ./rootfs/generic/opt/rt4-build/bin/* $RT_BUILD_DIR/bin/
 
 RUN addgroup --system rt && adduser root rt
 
 RUN echo $RT_VERSION > /opt/rt4-build/VERSION \
-  && cp -f /opt/rt4-build/VERSION $RT_SOURCE/rt \
+  && cp -f /opt/rt4-build/VERSION $RT_SOURCE/rt/.tag \
   && ln -sF /bin/false /usr/local/bin/git
 
 RUN cd $RT_SOURCE/rt \
