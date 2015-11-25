@@ -1,0 +1,3 @@
+/^Subject: \*\*\*SPAM\*\*\*/ DISCARD
+/^Subject: VIRUS \([^)]*\) IN MAIL TO YOU \(from/ DISCARD
+/^Subject: smsgate$/ DISCARD

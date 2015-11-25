@@ -211,7 +211,7 @@ Set($RTx_DBCustomField_Connections, {
 	},
 
 	'rt4' => {
-       	'dsn' => 'DBI:mysql:database=rt4_net_support;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
+       	'dsn' => 'DBI:mysql:database=rt4_net_support;host=mysql1.adm.netways.de;port=3306;mysql_enable_utf8=1',
 	        'username' => 'reporting',
 	        'password' => 'Yee3IeSh',
 	        'autoconnect' => 1

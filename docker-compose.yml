@@ -22,3 +22,15 @@ netways:
   restart: always
   extends:
     service: runtime
+icinga:
+  build: .
+  dockerfile: docker/netways/Dockerfile
+  container_name: rt4netways
+  ports:
+    - 80
+    - 443
+    - 25
+  priviledged: true
+  restart: always
+  extends:
+    service: runtime
