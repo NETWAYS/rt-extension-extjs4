@@ -31,6 +31,9 @@ RUN /usr/bin/newaliases \
 	&& /usr/sbin/postmap /etc/postfix/virtual
 
 RUN /usr/sbin/adduser www-data rt
-RUN /usr/sbin/a2enmod ssl ldap authnz_ldap; /usr/sbin/a2ensite rt && /usr/sbin/a2enconf netways-ldap
+RUN /usr/sbin/a2enmod ssl ldap authnz_ldap \
+	&& /usr/sbin/a2ensite rt \
+	&& /usr/sbin/a2enconf netways-ldap \
+	&& /usr/sbin/a2dissite 000-default
 
 CMD ["/usr/bin/supervisord"]
