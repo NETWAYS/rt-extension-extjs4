@@ -24,8 +24,8 @@ netways:
     service: runtime
 icinga:
   build: .
-  dockerfile: docker/netways/Dockerfile
-  container_name: rt4netways
+  dockerfile: docker/icinga/Dockerfile
+  container_name: rt4icinga
   ports:
     - 80
     - 443
