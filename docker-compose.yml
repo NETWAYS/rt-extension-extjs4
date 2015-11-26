@@ -18,7 +18,7 @@ netways:
     - 80
     - 443
     - 25
-  priviledged: true
+  privileged: true
   restart: always
   extends:
     service: runtime
@@ -30,7 +30,7 @@ icinga:
     - 80
     - 443
     - 25
-  priviledged: true
+  privileged: true
   restart: always
   extends:
     service: runtime
