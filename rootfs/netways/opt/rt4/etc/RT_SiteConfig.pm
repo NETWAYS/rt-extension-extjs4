@@ -23,7 +23,7 @@ Set($WebDomain, 'rt.netways.de');
 Set($WebPath, "");
 Set($WebPort, 443);
 Set($WebRemoteUserAuth, 1);
-Set($WebFallbackToRTLogin, 1);
+Set($WebFallbackToRTLogin, 0);
 Set($Timezone, "Europe/Berlin");
 
 Set($DatabaseType, "mysql");
