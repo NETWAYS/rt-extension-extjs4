@@ -1,4 +1,7 @@
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
 myorigin = /etc/mailname
+
+myhostname = localhost.localdomain
 
 smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)
 biff = no
@@ -22,18 +25,18 @@ smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 # information on enabling SSL in the smtp client.
 
 smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-myhostname = 1a382cba094f
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
-mydestination = 1a382cba094f, localhost.localdomain, , localhost
 relayhost =
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
 recipient_delimiter = +
 inet_interfaces = all
 
+mynetworks = hash:/etc/postfix/mynetworks
+mydestination = hash:/etc/postfix/mydomains
 header_checks = regexp:/etc/postfix/header_checks
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 virtual_maps = hash:/etc/postfix/virtual
 canonical_maps = hash:/etc/postfix/canonical
+transport_maps = hash:/etc/postfix/transport

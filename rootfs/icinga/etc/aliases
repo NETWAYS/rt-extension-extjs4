@@ -1,0 +1,15 @@
+# See man 5 aliases for format
+postmaster:    root
+
+# TICKET ID
+icinga-rt:  |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'General'
+            --action correspond
+            --url http://localhost"
+
+icinga-xrt:	|"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'General'
+            --action comment
+            --url http://localhost"

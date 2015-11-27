@@ -1,0 +1,4 @@
+# domain.tld smtp:[relay.host]:port
+# .domain.tld smtp:[relay.host]:port
+# anotherdomain.tld smtp:[relay.host]:port
+# .anotherdomain.tld smtp:[relay.host]:port

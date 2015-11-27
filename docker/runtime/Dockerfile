@@ -1,5 +1,13 @@
 FROM rt4netways_source
 
+ENV POSTFIX_MAILNAME "rt.localhost"
+ENV POSTFIX_MAILER_TYPE "Internet Site"
+
+RUN touch /etc/mailname && echo "$POSTFIX_MAILNAME" > /etc/mailname
+
+RUN echo "postfix postfix/mailname                string  ${POSTFIX_MAILNAME}" | debconf-set-selections
+RUN echo "postfix postfix/main_mailer_type        select  ${POSTFIX_MAILER_TYPE}" | debconf-set-selections
+
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     supervisor \
     postfix \
@@ -18,17 +26,12 @@ COPY ./rootfs/generic/etc/apache2/ssl/ /etc/apache2/ssl/
 COPY ./rootfs/generic/etc/apache2/conf-available/netways-ldap.conf /etc/apache2/conf-available/netways-ldap.conf
 COPY ./rootfs/generic/etc/ldap/ldap.conf /etc/ldap/ldap.conf
 COPY ./rootfs/generic/etc/cron.d/rt4-cron /etc/cron.d/rt4-cron
+COPY ./rootfs/generic/usr/local/sbin/update-postfix-tables.sh /usr/local/sbin/update-postfix-tables.sh
 
-COPY ./rootfs/generic/etc/postfix/main.cf /etc/postfix/main.cf
-COPY ./rootfs/generic/etc/postfix/canonical /etc/postfix/canonical
-COPY ./rootfs/generic/etc/postfix/header_checks /etc/postfix/header_checks
-COPY ./rootfs/generic/etc/postfix/virtual /etc/postfix/virtual
-COPY ./rootfs/generic/etc/mailname /etc/mailname
+COPY ./rootfs/generic/etc/postfix/ /etc/postfix/
 COPY ./rootfs/generic/etc/aliases /etc/aliases
 
-RUN /usr/bin/newaliases \
-	&& /usr/sbin/postmap /etc/postfix/canonical \
-	&& /usr/sbin/postmap /etc/postfix/virtual
+RUN chmod +x /usr/local/sbin/update-postfix-tables.sh && /usr/local/sbin/update-postfix-tables.sh
 
 RUN /usr/sbin/adduser www-data rt
 RUN /usr/sbin/a2enmod ssl ldap authnz_ldap \
@@ -36,4 +39,5 @@ RUN /usr/sbin/a2enmod ssl ldap authnz_ldap \
 	&& /usr/sbin/a2enconf netways-ldap \
 	&& /usr/sbin/a2dissite 000-default
 
-CMD ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/bin/supervisord"]
+CMD ["-c", "/etc/supervisor/conf.d/supervisor.conf"]
