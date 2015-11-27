@@ -31,7 +31,8 @@ COPY ./rootfs/generic/usr/local/sbin/update-postfix-tables.sh /usr/local/sbin/up
 COPY ./rootfs/generic/etc/postfix/ /etc/postfix/
 COPY ./rootfs/generic/etc/aliases /etc/aliases
 
-RUN chmod +x /usr/local/sbin/update-postfix-tables.sh && /usr/local/sbin/update-postfix-tables.sh
+RUN chmod +x /usr/local/sbin/update-postfix-tables.sh
+RUN /usr/local/sbin/update-postfix-tables.sh
 
 RUN /usr/sbin/adduser www-data rt
 RUN /usr/sbin/a2enmod ssl ldap authnz_ldap \
