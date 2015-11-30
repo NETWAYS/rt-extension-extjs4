@@ -23,7 +23,8 @@ REMOTE=(
 "git://git.netways.org/rt4/rtx-addservicedata.git"
 "git://git.netways.org/rt4/rtx-createlinkedtickets.git"
 "git://git.netways.org/rt4/rtx-actitime.git"
-"git://git.netways.org/rt4/rtx-action-subjectandevent.git")
+"git://git.netways.org/rt4/rtx-action-subjectandevent.git"
+"git://git.netways.org/rt4/rtx-action-changeowner.git")
 
 if [ ! -x $GIT ]; then
     echo "GIT not found"
