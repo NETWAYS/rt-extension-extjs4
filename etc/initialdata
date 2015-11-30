@@ -1,0 +1,6 @@
+@ScripActions = ({
+    Name        => 'Add owner to admincc',
+    Description => 'Sets the owner to nobody and add previous owner to admincc',
+    ExecModule  => 'ChangeOwner',
+    Argument    => 'changeowner,nobody'
+});
