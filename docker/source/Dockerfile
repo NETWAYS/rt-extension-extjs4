@@ -39,4 +39,6 @@ RUN cd $RT_SOURCE/rt \
 RUN mkdir -p /opt/rt4/var/data/gpg \
   && chown 33.33 /opt/rt4/var/data/gpg \
   && mkdir -p /opt/rt4/var/data/smime \
-  && chown 33.33 /opt/rt4/var/data/smime
+  && chown 33.33 /opt/rt4/var/data/smime \
+  && mkdir -p /opt/rt4/var/data/RT-Shredder \
+  && chown 33.33 /opt/rt4/var/data/RT-Shredder
