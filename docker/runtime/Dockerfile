@@ -16,6 +16,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     apache2 \
     apache2-mpm-event \
     libapache2-mod-perl2 \
+    logrotate \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 25 80 443
