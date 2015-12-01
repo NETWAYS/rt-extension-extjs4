@@ -93,6 +93,7 @@ Plugin('RTx::SearchMarker');
 Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
+Plugin('RTx::Action::ChangeOwner');
 
 # Full text search
 Set(%FullTextSearch,
@@ -176,7 +177,7 @@ Set($HomepageComponents, [qw(
        Dashboards
        SavedSearches
        RTx-UserSearch
-	RTx-TicketHistory
+       RTx-TicketHistory
 )]);
 
 Set($RTx_CreateLinkedTickets_Config, [
