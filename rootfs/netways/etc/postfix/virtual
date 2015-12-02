@@ -131,29 +131,4 @@ xrt@rt.netways.de                       net-xrt
 # Blanco
 blanco@rt.netways.de        net-blanco
 
-# RT Demosystem
-###################################################################################
-rtdemo.netways.de                       anything
-
-sales@rtdemo.netways.de                 rtdemo-sales
-support@rtdemo.netways.de               rtdemo-support
-audi@rtdemo.netways.de                  rtdemo-audi
-bmw@rtdemo.netways.de                   rtdemo-bmw
-secondlevel@rtdemo.netways.de           rtdemo-2nd
-
-comment@rtdemo.netways.de               rtdemo-comment
-xr@rtdemo.netways.de                    rtdemo-comment
-rt@rtdemo.netways.de                    rtdemo-correspond
-# RT Present
-###################################################################################
-rtpresent.netways.de                    anything
-
-support1@rtpresent.netways.de           rtpresent-support1
-support2@rtpresent.netways.de           rtpresent-support2
-cc@rtpresent.netways.de                 rtpresent-cc
-
-rt-comment@rtpresent.netways.de         rtpresent-comment
-
-# [netways #45250]: eMail Adresse git@icinga.org einrichten
-###################################################################################
 git@icinga.org                          git@www.icinga.org

@@ -34,17 +34,11 @@ net-tickets:		|"/opt/rt4/bin/rt-mailgate
 			--queue 'Inbox Automails' 
 			--action correspond"
 
-#			--customfield Client:NET 
-#			--customfield Mailtype:Ticket"
-
 # root, rootmail @rt.netways.de
 net-root:		|"/opt/rt4/bin/rt-mailgate 
 			--url http://localhost/ 
 			--queue 'Inbox Automails' 
 			--action correspond"
-
-#			--customfield Client:NET 
-#			--customfield Mailtype:Rootmail"
 
 # hostmaster@rt.netways.de
 net-hostmaster:		|"/opt/rt4/bin/rt-mailgate 
@@ -52,17 +46,11 @@ net-hostmaster:		|"/opt/rt4/bin/rt-mailgate
 			--queue 'Inbox Automails' 
 			--action correspond"
 
-#			--customfield Client:NET 
-#			--customfield Mailtype:Hostmaster"
-
 # abuse@rt.netways.de
 net-abuse:		|"/opt/rt4/bin/rt-mailgate 
 			--url http://localhost/ 
 			--queue 'Inbox Allgemein' 
 			--action correspond"
-
-#			--customfield Client:NET 
-#			--customfield Mailtype:Abuse"
 
 # changes@rt.netways.de
 net-changes:		|"/opt/rt4/bin/rt-mailgate 
@@ -101,15 +89,11 @@ net-inbox-sun:		|"/opt/rt4/bin/rt-mailgate
 			--queue 'Inbox Allgemein' 
 			--action correspond"
 
-# 			--customfield Client:SUN"
-
 # rechnungseingang@rt.netways.de
 net-inbox-rechnung: 	|"/opt/rt4/bin/rt-mailgate 
 			--url http://localhost/
 			--queue 'Inbox Allgemein' 
 			--action correspond"
-
-#			--customfield Client:NET"
 
 # Inbox Einkauf -> Sales Aufgaben intern ######################################
 
@@ -225,8 +209,6 @@ net-hardware: 		|"/opt/rt4/bin/rt-mailgate
 			--action correspond 
 			--queue 'Shop Bestellungen'"
 
-# 			--customfield Client:DIV"
-
 # Events Services ##################################################
 
 net-event-allgemein:	|"/opt/rt4/bin/rt-mailgate  
@@ -238,15 +220,10 @@ net-nagkon-referent:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'VT OSMC'"
 
-#			--customfield 'Client:OSMC'
-#			--customfield 'Event-Status:Referent'"
-
 # presse@rt.netways.de
 net-nagkon-presse:	|"/opt/rt4/bin/rt-mailgate  
 			--url http://localhost/ --action correspond
 			--queue 'Event Aufgaben'"
-
-#			--customfield 'Client:NAGKON'"
 
 # sponsor@rt.netways.de
 net-nagkon-sponsor:	|"/opt/rt4/bin/rt-mailgate  
@@ -258,22 +235,15 @@ net-nagkon-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
                       	--url http://localhost/ --action correspond
                      	--queue 'TM OSMC'"
 
-#	               	--customfield 'Client:OSMC'
-#           	     	--customfield 'NT_Type:NagiosProfessional'"
-
 # training.allgemein@rt.netways.de
 net-nagtrain-allgemein:	|"/opt/rt4/bin/rt-mailgate  
                       	--url http://localhost/ --action correspond
                      	--queue 'Event Aufgaben'"
 
-# 	               	--customfield 'Client:NAGTRAIN'"
-
 # nagiostraining.teilnehmer@rt.netways.de
 net-nagtrain-teilnehmer:  |"/opt/rt4/bin/rt-mailgate  
                       	--url http://localhost/ --action correspond
                        --queue 'TM Training'"
-
-# 	               	--customfield 'Training:Nagios Availability'"
 
 # puppettraining.teilnehmer@rt.netways.de
 net-puptrain-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
