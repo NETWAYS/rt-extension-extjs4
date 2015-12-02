@@ -36,7 +36,7 @@ RUN chmod +x /usr/local/sbin/update-postfix-tables.sh
 RUN /usr/local/sbin/update-postfix-tables.sh
 
 RUN /usr/sbin/adduser www-data rt
-RUN /usr/sbin/a2enmod ssl ldap authnz_ldap \
+RUN /usr/sbin/a2enmod ssl ldap authnz_ldap rewrite \
 	&& /usr/sbin/a2ensite rt \
 	&& /usr/sbin/a2enconf netways-ldap \
 	&& /usr/sbin/a2dissite 000-default
