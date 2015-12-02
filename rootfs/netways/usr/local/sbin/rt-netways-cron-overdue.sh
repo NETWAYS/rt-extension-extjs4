@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CRON=/storage/www/rt42.netways.de/bin/rt-crontool
+CRON=/opt/rt4/bin/rt-crontool
 
 if [[ ! -x $CRON ]]; then
         echo "Crontool is not executable"
