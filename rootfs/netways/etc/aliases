@@ -314,6 +314,12 @@ net-blanco:		|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'Blanco'"
 
+# Buchhaltung
+
+net-buha-aufgaben: |"/opt/rt4/bin/rt-mailgate  
+			--url http://localhost/ --action correspond
+			--queue 'Buha Aufgaben'"
+
 # TICKET ID
 net-rt: 		|"/opt/rt4/bin/rt-mailgate 
 			--extension ticket 
@@ -326,3 +332,4 @@ net-xrt: 		|"/opt/rt4/bin/rt-mailgate
 			--queue 'Inbox Allgemein' 
 			--action comment 
 			--url http://localhost/"
+

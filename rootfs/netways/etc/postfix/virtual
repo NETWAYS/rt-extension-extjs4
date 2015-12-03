@@ -129,6 +129,9 @@ comment@rt.netways.de                   net-xrt
 xrt@rt.netways.de                       net-xrt
 
 # Blanco
-blanco@rt.netways.de        net-blanco
+blanco@rt.netways.de        			net-blanco
+
+# Buchhaltung
+nws-invoice@rt.netways.de               net-buha-aufgaben
 
 git@icinga.org                          git@www.icinga.org
