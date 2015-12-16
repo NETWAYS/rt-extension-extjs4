@@ -139,13 +139,13 @@ Set($RTx_QueueCategories_Map, [
 		items => ['Inbox Allgemein', 'Inbox Automails']
 	}, {
 		name => '02. Organisation',
-		items => ['Admin Aufgaben', 'Admin Beschaffung', 'Buha Aufgaben', 'NETWAYS Billing', 'NETWAYS Holiday', 'Buha Support Kontingent']
+		items => ['Admin Aufgaben', 'Admin Beschaffung', 'Buha Aufgaben', 'Buha Kontingente', 'NETWAYS Billing', 'NETWAYS Holiday']
 	}, {
 		name => '03. Management',
 		items => ['MA Aufgaben', 'MA Jobs']
 	}, {
 		name => '04. Managed Services',
-		items => ['MS Infrastruktur', 'MS Projekte', 'MS Support Hosting', 'MS Support Contracts']
+		items => ['MS Infrastruktur', 'MS Support Hosting', 'MS Support Contracts']
 	}, {
 		name => '05. Professional Services',
 		items => ['PS Aufgaben intern', 'PS Aufgaben extern', 'PS Aufgaben stalled']
@@ -154,16 +154,16 @@ Set($RTx_QueueCategories_Map, [
 		items => ['DEV Aufgaben intern', 'DEV Aufgaben extern']
 	}, {
 		name => '07. Sales & Shop',
-		items => ['Sales Aufgaben intern', 'Sales Aufgaben extern', 'Sales Aufgaben Demosysteme', 'Sales Beschaffung', 'Shop Bestellungen', 'Shop Aufgaben']
+		items => ['Sales Aufgaben intern', 'Sales Aufgaben extern', 'Sales Beschaffung', 'Shop Bestellungen', 'Shop Aufgaben']
 	}, {
 		name => '08. Events & Marketing',
 		items => ['Event Aufgaben', 'Training Aufgaben', 'Marketing Aufgaben', 'Marketing Grafik']
 	}, {
 		name => '09. Teilnehmerqueues',
-		items => ['TM Training', 'TM OSMC', 'TM OSDC', 'TM OSBC', 'TM Puppetcamp', 'TM OpenNebulaConf', 'TM DevOpsDays', 'VT OSMC', 'VT OSDC', 'VT OSBC', 'VT OpenNebulaConf', 'TM Events']
+		items => ['TM Training', 'TM OSMC', 'TM OSDC', 'TM OSBC', 'TM DOST', 'TM DevOpsDays', 'VT OSMC', 'VT OSDC', 'VT OSBC', 'VT DOST', 'TM Events']
 	}, {
 		name => '10. Kunden',
-		items => ['Icinga', 'Telekom', 'Blanco', 'DB Systel']
+		items => ['Blanco', 'DB Systel', 'Icinga', 'Telekom', 'Telekom T-Systems Leipzig']
 	}
 ]);
 
