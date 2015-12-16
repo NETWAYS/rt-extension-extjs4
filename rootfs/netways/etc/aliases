@@ -153,17 +153,6 @@ net-shop:  		|"/opt/rt4/bin/rt-mailgate
 			--action correspond 
 			--queue 'Shop Bestellungen'"
 
-# Sales -> Aufgaben Demosysteme ############################################################
-
-net-sales-demo-register:		|"/usr/local/sbin/mail_rewrite.py | /usr/sbin/sendmail net-sales-demo-output"
-
-net-sales-demo: net-sales-demo-output
-
-net-sales-demo-output:	|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--action correspond 
-			--queue 'Sales Aufgaben Demosysteme'", new-account@monitoring-demo.rz10.adm.netways.de 
-
 # Kundensupport Contracts ####################################################
 
 # service@rt.netways.de
@@ -250,11 +239,6 @@ net-puptrain-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
                        --url http://localhost/ --action correspond
                        --queue 'TM Training'"
 
-# puppetcamp.teilnehmer@rt.netways.de
-net-puppetcamp-teilnehmer: |"/opt/rt4/bin/rt-mailgate
-                       --url http://localhost/ --action correspond
-                       --queue 'TM Puppetcamp'"
-
 # osdc.teilnehmer@rt.netways.de
 net-osdc-teilnehmer:	|"/opt/rt4/bin/rt-mailgate 
 			--url http://localhost/ 
@@ -278,15 +262,19 @@ net-osbc-referent:	|"/opt/rt4/bin/rt-mailgate
 net-training:	|"/opt/rt4/bin/rt-mailgate 
 			--url http://localhost/ 
 			--action correspond
-           --queue 'TM Training'"
+		        --queue 'TM Training'"
 
-net-opennebulaconf-teilnehmer:	|"/opt/rt4/bin/rt-mailgate  
-			--url http://localhost/ --action correspond
-			--queue 'TM OpenNebulaConf'"
+# Deutsche OpenStack Tage
 
-net-opennebulaconf-referent:	|"/opt/rt4/bin/rt-mailgate  
+net-dost-teilnehmer:	|"/opt/rt4/bin/rt-mailgate  
 			--url http://localhost/ --action correspond
-			--queue 'VT OpenNebulaConf'"
+			--queue 'TM DOST'"
+
+net-dost-referent:	|"/opt/rt4/bin/rt-mailgate  
+			--url http://localhost/ --action correspond
+			--queue 'VT DOST'"
+
+# DevOpsDays Berlin
 
 net-devopsdays-teilnehmer:	|"/opt/rt4/bin/rt-mailgate  
 			--url http://localhost/ --action correspond
@@ -296,11 +284,6 @@ net-devopsdays-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
 net-event-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
            --url http://localhost/ --action correspond
            --queue 'TM Events'"
-
-net-osbf:		|"/opt/rt4/bin/rt-mailgate  
-			--url http://localhost/ --action correspond
-			--queue 'OSBF'"
-
 
 net-rakuten:		|"/opt/rt4/bin/rt-mailgate  
 			--url http://localhost/ --action correspond

@@ -102,20 +102,14 @@ osdc.referent@rt.netways.de             net-osdc-referent
 osbc.teilnehmer@rt.netways.de           net-osbc-teilnehmer
 osbc.referent@rt.netways.de             net-osbc-referent
 
-# Puppetcamp
-puppetcamp.teilnehmer@rt.netways.de     net-puppetcamp-teilnehmer
-
-# OpenNebulaConf
-opennebula.referent@rt.netways.de       net-opennebulaconf-referent
-opennebula.teilnehmer@rt.netways.de     net-opennebulaconf-teilnehmer
+# DOST
+dost.referent@rt.netways.de       	net-dost-referent
+dost.teilnehmer@rt.netways.de     	net-dost-teilnehmer
 
 # DevOpsDays
 devopsdays.attendee@rt.netways.de       net-devopsdays-teilnehmer
 
-# OSBF
-osbf@rt.netways.de                      net-osbf
-
-# Tradoria
+# Rakuten
 tradoria@rt.netways.de                  net-rakuten
 
 # Telekom
@@ -129,7 +123,7 @@ comment@rt.netways.de                   net-xrt
 xrt@rt.netways.de                       net-xrt
 
 # Blanco
-blanco@rt.netways.de        			net-blanco
+blanco@rt.netways.de      		net-blanco
 
 # Buchhaltung
 nws-invoice@rt.netways.de               net-buha-aufgaben
