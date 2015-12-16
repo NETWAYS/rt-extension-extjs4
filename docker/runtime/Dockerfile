@@ -14,7 +14,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     cron \
     rsyslog \
     apache2 \
-    apache2-mpm-event \
+    apache2-mpm-prefork \
     libapache2-mod-perl2 \
     logrotate \
     && rm -rf /var/lib/apt/lists/*
@@ -36,7 +36,8 @@ RUN chmod +x /usr/local/sbin/update-postfix-tables.sh
 RUN /usr/local/sbin/update-postfix-tables.sh
 
 RUN /usr/sbin/adduser www-data rt
-RUN /usr/sbin/a2enmod ssl ldap authnz_ldap rewrite expires headers \
+RUN /usr/sbin/a2dismod mpm_event
+RUN /usr/sbin/a2enmod mpm_prefork ssl ldap authnz_ldap rewrite expires headers \
 	&& /usr/sbin/a2ensite rt \
 	&& /usr/sbin/a2enconf netways-ldap \
 	&& /usr/sbin/a2dissite 000-default
