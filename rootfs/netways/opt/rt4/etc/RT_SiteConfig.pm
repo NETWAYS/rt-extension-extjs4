@@ -194,7 +194,7 @@ Set($RTx_CreateLinkedTickets_Config, [
 
 ]);
 
-Set($RTx_DBCustomField_DisablePool, 1);
+Set($RTx_DBCustomField_DisablePool, 0);
 
 Set($RTx_DBCustomField_Connections, {
 	'sugarcrm' => {
@@ -535,7 +535,7 @@ Set($RTx_DBCustomField_Fields, {
 
 # Set($RTx_ExtJS4_TYPE, 'debug');
 
-Set($RTx_Actitime_DisablePool, 1);
+Set($RTx_Actitime_DisablePool, 0);
 Set($RTx_Actitime_DB_DSN, 'DBI:mysql:database=actitime;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=0');
 Set($RTx_Actitime_DB_USER, 'reporting');
 Set($RTx_Actitime_DB_PASS, 'Yee3IeSh');
