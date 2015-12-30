@@ -17,6 +17,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     apache2-mpm-prefork \
     libapache2-mod-perl2 \
     logrotate \
+    nfs-common \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 25 80 443
