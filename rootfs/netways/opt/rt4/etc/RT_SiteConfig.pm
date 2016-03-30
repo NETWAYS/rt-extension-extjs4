@@ -1,4 +1,4 @@
-# Any configuration directives you include  here will override 
+# Any configuration directives you include  here will override
 # RT's default configuration file, RT_Config.pm
 #
 # To include a directive here, just copy the equivalent statement
@@ -22,8 +22,6 @@ Set($Organization, "netways.de");
 Set($WebDomain, 'rt.netways.de');
 Set($WebPath, "");
 Set($WebPort, 443);
-Set($WebRemoteUserAuth, 1);
-Set($WebFallbackToRTLogin, 0);
 Set($Timezone, "Europe/Berlin");
 
 Set($DatabaseType, "mysql");
@@ -94,6 +92,7 @@ Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
 Plugin('RTx::Action::ChangeOwner');
+Plugin('RT::Authen::ExternalAuth');
 
 # Full text search
 Set(%FullTextSearch,
@@ -101,20 +100,62 @@ Set(%FullTextSearch,
    Indexed => 0,
 );
 
-# Mason performance 
-Set(@MasonParameters, ( 
-       static_source => 1, 
-       buffer_preallocate_size => 16777216, # 16MB 
-       data_cache_defaults => { 
-           cache_class => "MemoryCache", 
-           cache_depth => 8 
-       }, 
-       # preloads => ['/Elements/*'] 
+# Mason performance
+Set(@MasonParameters, (
+       static_source => 1,
+       buffer_preallocate_size => 16777216, # 16MB
+       data_cache_defaults => {
+           cache_class => "MemoryCache",
+           cache_depth => 8
+       },
+       # preloads => ['/Elements/*']
 ));
 
 
 
-### Plugin Konfiguration ### 
+### Plugin Konfiguration ###
+
+# Authentication
+Set($WebRemoteUserAuth, 1);
+Set($WebFallbackToRTLogin, 1);
+Set($AutoCreateNonExternalUsers, 0);
+Set($ExternalAuthPriority, ['netways-ldap']);
+Set($ExternalInfoPriority, ['netways-ldap']);
+Set($UserAutocreateDefaultsOnLogin, {
+  Privileged => 1
+});
+Set($ExternalSettings, {
+  'netways-ldap' => {
+    'type' => 'ldap',
+    'server' => 'int.netways.de',
+    'user' => 'netways-http@INT.NETWAYS.DE',
+    'pass' => 'Zuriep2w',
+    'base' => 'DC=int,DC=netways,DC=de',
+    'filter' => '(&(objectClass=organizationalPerson)(userAccountControl:1.2.840.113556.1.4.803:=0)(memberOf=CN=net-rt-auth-HTTP,OU=AuthGroups,OU=NETWAYS,OU=NETRZ,OU=NETWAYS,DC=int,DC=netways,DC=de))',
+    'd_filter' => '(&(userAccountControl:1.2.840.113556.1.4.803:=2))',
+    'group' => 'CN=net-rt-auth-HTTP,OU=AuthGroups,OU=NETWAYS,OU=NETRZ,OU=NETWAYS,DC=int,DC=netways,DC=de',
+    'group_attr' => 'member',
+    'group_scope' => 'sub',
+    'attr_match_list' => [
+      'Name',
+      'EmailAddress',
+    ],
+    'attr_map' => {
+      'Name'         => 'sAMAccountName',
+      'EmailAddress' => 'mail',
+      'RealName'     => 'cn',
+      'WorkPhone'    => 'telephoneNumber',
+      'MobilePhone'  => 'mobile',
+      'Address1'     => 'streetAddress',
+      'City'         => 'l',
+      'State'        => 'st',
+      'Zip'          => 'postalCode',
+      'Country'      => 'co',
+      'NickName'     => 'initials',
+      'Organization' => 'department'
+    }
+  }
+});
 
 Set($RTx_EmailHeader_AdditionalHeaders, {
 	'Return-Path' => 'rt+__Ticket(id)__@rt.netways.de'
@@ -228,21 +269,21 @@ Set ($RTx_DBCustomField_Queries, {
 			from viewTimeSelect ts
 			order by mode
 		},
-				
+
 		'searchfields' => ['ts.mode', 'ts.divisor'],
 		'searchop' => 'OR',
-				
+
 		'fields' => {
 			'mode' => 'ts.mode',
 			'divisor' => 'ts.divisor'
 		},
-			
+
 		'field_tpl' => q{
 			{mode}({divisor})
 		},
-				
+
 		'field_id' => 'divisor',
-				
+
 		'returnquery' => q{
                        CALL sprTimeFromTicket(__TICKET(id)__, __VALUE__);
                },
@@ -269,7 +310,7 @@ Set ($RTx_DBCustomField_Queries, {
 
                'returnfield_tpl' => q{
                	Config type: {mode}({divisor})
-               	
+
                	<tpl if="c_billable">
                		<div>
                			<strong style="color: #009900;">Billable</strong>: {c_billable}
@@ -284,7 +325,7 @@ Set ($RTx_DBCustomField_Queries, {
                			<strong style="color: #cc0033;">Non-billable</strong>: {c_nonbillable} (<a href="{link}{nonbillable_taskid}" target="_blank">link</a>)
                		</div>
                	</tpl>
-               	
+
                },
 
                'returnfield_small_tpl' => q{
@@ -292,9 +333,9 @@ Set ($RTx_DBCustomField_Queries, {
 		},
 
        'companies' => {
-       		
+
        		'connection'    => 'sugarcrm',
-       		
+
                'query' => q{
                        SELECT
                        __DBCF_FIELDS__
@@ -324,7 +365,7 @@ Set ($RTx_DBCustomField_Queries, {
 	                	<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
                	</div>
               	},
-              	
+
               	'field_config' => {},
 
                'returnquery'   => q{
@@ -373,7 +414,7 @@ Set ($RTx_DBCustomField_Queries, {
 			inner join GroupMembers m on m.memberid = u.id
 			inner join Groups g on g.id = m.groupid
 			inner join Principals p on p.id = u.id
-			where g.name = 'NETWAYS' 
+			where g.name = 'NETWAYS'
 			and p.Disabled = 0
 			and u.Realname not like ''
 			and u.Realname != 'NETWAYS' and (__DBCF_WHERE__)
@@ -437,9 +478,9 @@ Set ($RTx_DBCustomField_Queries, {
 
 
 	'opportunities' => {
-       		
+
        	'connection'    => 'sugarcrm',
-       		
+
                'query' => q{
 					SELECT __DBCF_FIELDS__
 					FROM accounts_opportunities as ao
@@ -478,7 +519,7 @@ Set ($RTx_DBCustomField_Queries, {
 	                	<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
                	</div>
               	},
-              	
+
               	'field_config' => {},
 
                'returnquery'   => q{
