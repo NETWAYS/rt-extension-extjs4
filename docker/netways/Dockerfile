@@ -10,3 +10,5 @@ RUN rt4-install-extensions.sh rtx-action-setowner rtx-actitime rtx-addservicedat
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
 
 RUN /usr/local/sbin/update-postfix-tables.sh
+
+EXPOSE 25 80 443
