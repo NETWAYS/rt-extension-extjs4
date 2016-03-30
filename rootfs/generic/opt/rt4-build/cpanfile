@@ -162,7 +162,10 @@ requires 'Convert::Color';
 requires 'HTML::Entities';
 requires 'Pod::Simple', '3.24';
 
-# NETWAYS 
+# NETWAYS
 requires 'Hook::LexWrap';
 requires 'JSON::XS';
 
+# RT::Authen::ExternalAuth
+requires 'Net::SSLeay';
+requires 'Net::LDAP';

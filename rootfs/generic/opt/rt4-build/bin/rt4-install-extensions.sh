@@ -35,15 +35,19 @@ cd $RT_SOURCE
 for I in $RT_PLUGIN_LIST
 do
 	PLUGIN_PATH=$RT_SOURCE/$I
+	echo "* Install $I ($PLUGIN_PATH)"
 	if [[ ! -d $PLUGIN_PATH ]]
 	then
-		echo "Path not found for plugin '$I'"
+		echo "* Path not found for plugin '$I'"
 		continue
+	else
+		echo "* Creating Makefile ($PERL $INIT_MAKE_FILE)"
 	fi
 	cd $PLUGIN_PATH
 	$PERL $INIT_MAKE_FILE
 	$MAKE
 	$MAKE install
+	echo ""
 done
 
 cd $CDIR
