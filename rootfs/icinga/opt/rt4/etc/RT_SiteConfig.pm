@@ -7,7 +7,7 @@ Set($WebPort, 443);
 Set($Timezone, "Europe/Berlin");
 
 Set($DatabaseType, "mysql");
-Set($DatabaseHost,   "mysql1.adm.netways.de");
+Set($DatabaseHost,   "192.168.0.1");
 Set($DatabaseUser, "rt4_user");
 Set($DatabasePassword, q{R75qk8Pd6PNzgJX});
 Set($DatabaseName, "rt4_icinga_support");
