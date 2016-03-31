@@ -2,14 +2,38 @@
 postmaster:    root
 
 # TICKET ID
-icinga-rt:  |"/opt/rt4/bin/rt-mailgate
+icinga-rt:      |"/opt/rt4/bin/rt-mailgate
             --extension ticket
             --queue 'General'
             --action correspond
             --url http://localhost"
 
-icinga-xrt:	|"/opt/rt4/bin/rt-mailgate
+icinga-xrt:     |"/opt/rt4/bin/rt-mailgate
             --extension ticket
             --queue 'General'
             --action comment
+            --url http://localhost"
+
+icinga-events:  |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Events'
+            --action correspond
+            --url http://localhost"
+
+icinga-partner: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Partner'
+            --action correspond
+            --url http://localhost"
+
+icinga-shop:    |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Shop'
+            --action correspond
+            --url http://localhost"
+
+icinga-support: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Support'
+            --action correspond
             --url http://localhost"

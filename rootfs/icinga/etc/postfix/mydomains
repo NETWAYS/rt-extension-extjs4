@@ -1,3 +1,4 @@
-rt.icinga.org			OK
-localhost.localdomain	OK
-localhost				OK
+rt.icinga.org         OK
+icinga.org            OK
+localhost.localdomain OK
+localhost				      OK
