@@ -1,6 +1,8 @@
 SHELL								= /bin/bash
 DOCKER_COMPOSE			= $(shell command -v docker-compose)
 DOCKER							= $(shell command -v docker)
+GIT									= $(shell command -v git)
+GIT_EXPORT_FILE			= rt4netways.tgz
 DOCKER_COMPOSE_YML	= docker-compose.yml
 DOCKER_BASE_IMAGES	= base library source runtime
 DOCKER_PROD_IMAGES	= netways icinga
@@ -33,3 +35,12 @@ clean:
 
 distclean:
 	@${DOCKER_COMPOSE} down --rmi local
+
+export:
+	@if [[ -e "${GIT_EXPORT_FILE}" ]]; then \
+		echo "Target file exists (${GIT_EXPORT_FILE}), delete"; \
+		rm ${GIT_EXPORT_FILE}; \
+	fi
+	@echo -n "Export git HEAD to ${GIT_EXPORT_FILE} ... "
+	@${GIT} archive --format=tar --prefix=rt4netways/ HEAD | gzip -c > ${GIT_EXPORT_FILE}
+	@echo "ok"
