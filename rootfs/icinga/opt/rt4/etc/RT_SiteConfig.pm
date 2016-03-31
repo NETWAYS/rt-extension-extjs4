@@ -30,7 +30,6 @@ Set($MaxAttachmentSize, 25_000_000);
 Set($MaxInlineBody, 8000000);
 Set($ParseNewMessageForTicketCcs, 1);
 
-# Set($RTAddressRegexp, '^.+\@rt.netways.de$');
 Set($RTAddressRegexp, '^(info|xrt|rt|events|shop|partner|support|sales)\@(rt\.)?icinga\.org$');
 Set($CorrespondAddress , 'rt@icinga.org');
 Set($CommentAddress , 'xrt@icinga.org');
@@ -109,7 +108,7 @@ Set($ExternalSettings, {
 });
 
 Set($RTx_EmailHeader_AdditionalHeaders, {
-    'Return-Path' => 'rt+__Ticket(id)__@rt.netways.de'
+    'Return-Path' => 'rt+__Ticket(id)__@rt.icinga.org'
 });
 
 Set($RTx_EmailHeader_OverwriteSendmailArgs, '-f rt+__Ticket(id)__@rt.icinga.org');
