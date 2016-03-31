@@ -37,3 +37,9 @@ icinga-support: |"/opt/rt4/bin/rt-mailgate
             --queue 'Support'
             --action correspond
             --url http://localhost"
+
+icinga-sales: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Sales'
+            --action correspond
+            --url http://localhost"
