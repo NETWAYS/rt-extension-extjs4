@@ -78,7 +78,7 @@ Plugin('RT::Authen::ExternalAuth');
 # Authentication
 Set($WebRemoteUserAuth, 1);
 Set($WebFallbackToRTLogin, 1);
-Set($AutoCreateNonExternalUsers, 0);
+Set($AutoCreateNonExternalUsers, 1);
 Set($ExternalAuthPriority, ['icinga-ldap']);
 Set($ExternalInfoPriority, ['icinga-ldap']);
 Set($UserAutocreateDefaultsOnLogin, {

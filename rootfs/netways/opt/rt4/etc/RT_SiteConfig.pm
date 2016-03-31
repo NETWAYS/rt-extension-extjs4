@@ -118,7 +118,7 @@ Set(@MasonParameters, (
 # Authentication
 Set($WebRemoteUserAuth, 1);
 Set($WebFallbackToRTLogin, 1);
-Set($AutoCreateNonExternalUsers, 0);
+Set($AutoCreateNonExternalUsers, 1);
 Set($ExternalAuthPriority, ['netways-ldap']);
 Set($ExternalInfoPriority, ['netways-ldap']);
 Set($UserAutocreateDefaultsOnLogin, {
