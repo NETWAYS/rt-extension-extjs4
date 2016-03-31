@@ -1,7 +1,14 @@
-rt@rt.icinga.org		icinga-rt
-rtx@rt.icinga.org		icinga-rtx
-info@icinga.org     icinga-rt
-events@icinga.org   icinga-events
-shop@icinga.org     icinga-shop
-partner@icinga.org  icinga-partner
-support@icinga.org  icinga-support
+rt@rt.icinga.org        icinga-rt
+rtx@rt.icinga.org       icinga-rtx
+info@icinga.org         icinga-rt
+info@rt.icinga.org      icinga-rt
+
+events@icinga.org       icinga-events
+shop@icinga.org         icinga-shop
+partner@icinga.org      icinga-partner
+support@icinga.org      icinga-support
+
+events@rt.icinga.org    icinga-events
+shop@rt.icinga.org      icinga-shop
+partner@rt.icinga.org   icinga-partner
+support@rt.icinga.org   icinga-support
