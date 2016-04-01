@@ -18,6 +18,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libapache2-mod-perl2 \
     logrotate \
     nfs-common \
+    vim \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 25 80 443
