@@ -112,7 +112,7 @@ Set(@MasonParameters, (
        # preloads => ['/Elements/*']
 ));
 
-
+Set($WebSessionClass, "Apache::Session::File");
 
 ### Plugin Konfiguration ###
 

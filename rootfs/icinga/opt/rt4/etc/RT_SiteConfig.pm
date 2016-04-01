@@ -57,6 +57,8 @@ Set(@MasonParameters, (
        # preloads => ['/Elements/*']
 ));
 
+Set($WebSessionClass, "Apache::Session::File");
+
 Plugin('RT::Extension::ExtractCustomFieldValues');
 Plugin('RTx::CreateLinkedTickets');
 Plugin('RTx::ExtJS4');
