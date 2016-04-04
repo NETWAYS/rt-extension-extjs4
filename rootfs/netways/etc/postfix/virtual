@@ -31,8 +31,6 @@ nagiosgrapher@rt.netways.de             net-inbox
 nagiosgrapher@bugs.netways.de           net-inbox
 sun@rt.netways.de                       net-inbox-sun
 rechnungseingang@rt.netways.de          net-inbox-rechnung
-info@icinga.org                         net-inbox
-@icinga.org                             net-inbox
 info@netways.net                        net-inbox
 
 # Buha Aufgaben
@@ -127,5 +125,3 @@ blanco@rt.netways.de      		net-blanco
 
 # Buchhaltung
 nws-invoice@rt.netways.de               net-buha-aufgaben
-
-git@icinga.org                          git@www.icinga.org

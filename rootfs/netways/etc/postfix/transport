@@ -1,5 +1,5 @@
 # transport for rt.netways.de
 
-rt.netways.de	local
-.rt.netways.de	local
-*				smtp:10.10.0.49:25
+rt.netways.de   local
+.rt.netways.de  local
+*               smtp:10.10.0.49:25
