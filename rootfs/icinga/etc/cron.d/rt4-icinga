@@ -1,0 +1,4 @@
+RT_PATH=/opt/rt4
+PATH=$RT_PATH/bin:$RT_PATH/sbin:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+
+*/15 *  * * * root /usr/local/sbin/icinga-cron-resolve-automails.sh > /tmp/icinga-cron-resolve-automails.log 2>&1

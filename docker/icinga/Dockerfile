@@ -4,7 +4,10 @@ ENV RTHOME /opt/rt4
 
 COPY ./rootfs/icinga/ /
 
-RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm && chown root.rt /opt/rt4/etc/RT_SiteConfig.pm
+RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
+  && chown root.rt /opt/rt4/etc/RT_SiteConfig.pm \
+  && chmod 755 /usr/local/sbin/icinga-cron-resolve-automails.sh
+
 RUN rt4-install-extensions.sh \
   rtx-action-setowner \
   rtx-addservicedata \
