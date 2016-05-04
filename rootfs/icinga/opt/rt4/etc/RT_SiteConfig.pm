@@ -30,7 +30,7 @@ Set($MaxAttachmentSize, 25_000_000);
 Set($MaxInlineBody, 8000000);
 Set($ParseNewMessageForTicketCcs, 1);
 
-Set($RTAddressRegexp, '^(info|xrt|rt|events|shop|partner|support|sales)\@(rt\.)?icinga\.org$');
+Set($RTAddressRegexp, '^(info|xrt|rt|events|shop|partner|support|sales|automail)\@(rt\.)?icinga\.org$');
 Set($CorrespondAddress , 'rt@icinga.org');
 Set($CommentAddress , 'xrt@icinga.org');
 Set($SetOutgoingMailFrom, 1);

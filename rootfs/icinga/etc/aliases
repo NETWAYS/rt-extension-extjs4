@@ -43,3 +43,9 @@ icinga-sales: |"/opt/rt4/bin/rt-mailgate
             --queue 'Sales'
             --action correspond
             --url http://localhost"
+
+icinga-automail: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Automail'
+            --action correspond
+            --url http://localhost"
