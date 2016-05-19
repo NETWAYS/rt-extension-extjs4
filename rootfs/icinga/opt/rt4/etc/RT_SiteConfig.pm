@@ -124,7 +124,7 @@ Set($RTx_NETWAYS_EnableTagFormat, 1);
 Set($RTx_NETWAYS_ShowSearchOnlyWithResults, 0);
 
 Set($RTx_TicketActions_ShowQuickAccess, 1);
-Set($RTx_TicketActions_FontAwesome, 'https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css');
+Set($RTx_TicketActions_FontAwesome, 'https://cdn.netways.de/font-awesome/4.5.0/css/font-awesome.min.css');  
 
 Set($HomepageComponents, [qw(
     QuickCreate
