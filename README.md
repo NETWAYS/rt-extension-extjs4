@@ -64,6 +64,13 @@ startet. Dadurch lassen sich die Logausgaben auf einer Konsole mitverfolgen.
 Eine Ausnahme bildet hier Postfix, da dieser eine Reihe von Diensten
 (qmgr, pickup) selber startet.
 
+Der supervisor-Dienst ist so eingerichtet, dass man mittels `supervisorctl`
+den Unix-Socket ansprechen kann. So ist es innerhalb des Docker-Containers
+möglich, etwa `apache2` neuzustarten um RT-Perl-Module zu laden.
+
+    supervisorctl status apache2
+    supervisorctl restart apache2
+
 ## Docker Build Hinweis
 
 Das Docker Workdir ist auf `./` angelegt. Die einzelnen Images liegen
