@@ -23,6 +23,7 @@ RUN rt4-install-extensions.sh \
   rtx-ticketactions \
   rtx-updatehistory \
   rtx-usersearch \
+  rtx-action-changeowner \
   RT-Extension-ExtractCustomFieldValues \
   RT-Authen-ExternalAuth
 
