@@ -8,6 +8,13 @@ use subs qw(
     Commit
 );
 
+sub MyTrim {
+    my $str = shift;
+    chomp($str);
+    $str =~ s/^\s+|\s+$//g;
+    return $str;
+};
+
 sub Prepare {
     my $self = shift;
 
@@ -34,29 +41,23 @@ sub Prepare {
     }
 
     if ($c =~ m/firstname:\s*(.*?)$/m) {
-    $firstname = $1;
-    chomp($firstname);
+    $firstname = MyTrim($1);
     }
 
     if ($c =~ m/lastname:\s*(.*?)$/m) {
-    $surname = $1;
-    chomp($surname);
+    $surname = MyTrim($1);
     }
 
     if ($c =~ m/ticket(auswahl)?:\s*(Paket\s+)?([^\(\r\n]*)[^\r\n]*?$/m) {
-    $package = $3;
-    chomp($package);
-    $package =~ s/^\s+|\s+$//g;
+    $package = MyTrim($3);
     }
 
     if ($c =~ m/email:\s*(.*?)$/m) {
-    $email = $1;
-    chomp($email);
+    $email = MyTrim($1);
     }
 
-    if ($c =~ m/EVENT:\s*(.*?)$/m) {
-    $event = $1;
-    chomp($event);
+    if ($c =~ m/EVENT:\s*(.*?)$/mi || $c =~ m/training:\s*(.*?)$/mi) {
+    $event = MyTrim($1);
     }
 
     if ($firstname && $surname) {
