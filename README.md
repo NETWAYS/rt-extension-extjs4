@@ -136,10 +136,27 @@ Ebenfalls unter rt4-build kann mit diesem Script auf die RT Instanz
 Das Script unter `/usr/local/sbin` aktualisiert alle Postfix Hash Tables und
 führt einen `postfix reload` durch.
 
-## Start der Icinga Instanz
+## Start der Instanz
+
+### Start der NETWAYS Instanz
 
 Bezogen auf ein NETWAYS Single-Machine Docker Environment gestaltet sich der
 Start des RT folgendermaßen:
+
+    docker run \
+      --name=rt4netways \
+      --hostname=rt.netways.de \
+      --privileged=true \
+      -d \
+      -p 25:25 \
+      -p 80:80 \
+      -p 443:443 \
+      rt4netways_netways
+
+### Start der Icinga Instanz
+
+Bezogen auf ein NETWAYS Single-Machine Docker Environment gestaltet sich der
+Start des RT für Icinga folgendermaßen:
 
     docker run \
       --name=rt4icinga \
@@ -150,7 +167,49 @@ Start des RT folgendermaßen:
       -p 80:80 \
       -p 443:443 \
       rt4netways_icinga
-  
+
+## Updates
+
+### Plugins aktualisieren
+
+Die jeweiligen RT-Plugins sind als Git-Subtree in das Hauptrepository eingebunden.
+Um ein Update der Quellen in `vendor/` vorzunehmen, müssen die externen Repositories
+als zusätzliche Remotes eingetragen werden.
+
+    ./bin/setup-git.sh
+
+Um ein bestimmtes Plugin zu aktualisieren, muss man den Subtree pullen und squashen.
+
+    git subtree pull --prefix vendor/rtx-action-subjectandevent rtx-action-subjectandevent master --squash
+
+Git-Log kontrollieren und die Änderungen pushen.
+
+    git push
+
+### RT Container Upgrade
+
+Per SSH auf die Produktiv-Instanz connection (mit `-A`) und in nach `/home/rt/rt4netways`
+wechseln. Dort das Git-Repository pullen.
+
+    ssh -A mfriedrich@net-rt.adm.netways
+    cd /home/rt/rt4netways
+    sudo git pull
+
+Die Docker-Images neu bauen.
+
+    make base-images
+    make netways (oder icinga)
+
+Den laufenden Docker-Container stoppen und löschen.
+
+    docker stop rt4netways
+    docker rm rt4netways
+
+Den neuen Docker-Container mittels Start-Script in `/home/rt` starten.
+
+    /home/rt/start-rt4netways.sh
+
+
 ## Weiterführende Dokumentation
 
 Zum Beispiel zur Anbindung der Mailsysteme sind im Verzeichnis `./doc`
