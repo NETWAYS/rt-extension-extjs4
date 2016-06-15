@@ -186,6 +186,11 @@ Git-Log kontrollieren und die Änderungen pushen.
 
     git push
 
+Gitlab-Repository aktualisieren:
+
+    git remote add gitlab git@gitlab.netways.org:RequestTracker/rt4netways.git
+    git push gitlab master
+
 ### RT Container Upgrade
 
 Per SSH auf die Produktiv-Instanz connection (mit `-A`) und in nach `/home/rt/rt4netways`
