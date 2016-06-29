@@ -14,6 +14,9 @@ append_dot_mydomain = no
 
 readme_directory = no
 
+# Maildrop
+message_size_limit = 35000000
+
 # TLS parameters
 smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
 smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
