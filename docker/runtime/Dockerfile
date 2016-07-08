@@ -44,5 +44,4 @@ RUN /usr/sbin/a2enmod mpm_prefork ssl ldap authnz_ldap rewrite expires headers \
 	&& /usr/sbin/a2enconf netways-ldap \
 	&& /usr/sbin/a2dissite 000-default
 
-ENTRYPOINT ["/usr/bin/supervisord"]
-CMD ["-c", "/etc/supervisor/conf.d/supervisor.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
