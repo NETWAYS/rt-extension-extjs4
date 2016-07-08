@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -97,6 +97,16 @@ my $build_admin_menu = sub {
         $cfs->child( create => title => loc('Create'), path => "/Admin/CustomFields/Modify.html?Create=1" );
     }
 
+    if ( $session{'CurrentUser'}->HasRight( Object => RT->System, Right => 'AdminCustomRoles' ) ) {
+        my $roles = $admin->child( 'custom-roles' =>
+            title       => loc('Custom Roles'),
+            description => loc('Manage custom roles'),
+            path        => '/Admin/CustomRoles/',
+        );
+        $roles->child( select => title => loc('Select'), path => "/Admin/CustomRoles/" );
+        $roles->child( create => title => loc('Create'), path => "/Admin/CustomRoles/Modify.html?Create=1" );
+    }
+
     if ( $session{'CurrentUser'}->HasRight( Object => RT->System, Right => 'ModifyScrips' ) ) {
         my $scrips = $admin->child( 'scrips' =>
             title       => loc('Scrips'),
@@ -164,6 +174,11 @@ my $build_admin_menu = sub {
         description => loc('Select Custom Fields for Articles in all Classes'),
         path        => '/Admin/Global/CustomFields/Class-Article.html',
     );
+    $cfadmin->child( 'assets' =>
+        title       => loc('Assets'),
+        description => loc('Select Custom Fields for Assets in all Catalogs'),
+        path        => '/Admin/Global/CustomFields/Catalog-Assets.html',
+    );
 
     my $article_admin = $admin->child( articles => title => loc('Articles'), path => "/Admin/Articles/index.html" );
     my $class_admin = $article_admin->child(classes => title => loc('Classes'), path => '/Admin/Articles/Classes/' );
@@ -191,6 +206,24 @@ my $build_admin_menu = sub {
         title => loc('Create'),
         path => '/Admin/CustomFields/Modify.html?'.$m->comp("/Elements/QueryString", Create=>1, LookupType=> "RT::Class-RT::Article" ),
     );
+
+    my $assets_admin = $admin->child( assets => title => loc("Assets"), path => '/Admin/Assets/' );
+    my $catalog_admin = $assets_admin->child( catalogs =>
+        title       => loc("Catalogs"),
+        description => loc("Modify asset catalogs"),
+        path        => "/Admin/Assets/Catalogs/"
+    );
+    $catalog_admin->child( "select", title => loc("Select"), path => $catalog_admin->path );
+    $catalog_admin->child( "create", title => loc("Create"), path => "Create.html" );
+
+
+    my $assets_cfs = $assets_admin->child( "cfs",
+        title => loc("Custom Fields"),
+        description => loc("Modify asset custom fields"),
+        path => "/Admin/CustomFields/?Type=" . RT::Asset->CustomFieldLookupType
+    );
+    $assets_cfs->child( "select", title => loc("Select"), path => $assets_cfs->path );
+    $assets_cfs->child( "create", title => loc("Create"), path => "/Admin/CustomFields/Modify.html?Create=1&LookupType=" . RT::Asset->CustomFieldLookupType);
 
     $admin_global->child( 'group-rights' =>
         title       => loc('Group Rights'),
@@ -247,7 +280,7 @@ my $build_admin_menu = sub {
         path        => '/Admin/Tools/Shredder',
     );
 
-    if ( $request_path =~ m{^/Admin/(Queues|Users|Groups|CustomFields)} ) {
+    if ( $request_path =~ m{^/Admin/(Queues|Users|Groups|CustomFields|CustomRoles)} ) {
         my $type = $1;
         my $tabs = PageMenu();
 
@@ -256,6 +289,7 @@ my $build_admin_menu = sub {
             Users        => loc("Users"),
             Groups       => loc("Groups"),
             CustomFields => loc("Custom Fields"),
+            CustomRoles  => loc("Custom Roles"),
         );
 
         my $section;
@@ -307,6 +341,7 @@ my $build_admin_menu = sub {
                 $queue->child( 'group-rights' => title => loc('Group Rights'), path => "/Admin/Queues/GroupRights.html?id=".$id );
                 $queue->child( 'user-rights' => title => loc('User Rights'), path => "/Admin/Queues/UserRights.html?id=" . $id );
                 $queue->child( 'history' => title => loc('History'), path => "/Admin/Queues/History.html?id=" . $id );
+                $queue->child( 'default-values' => title => loc('Default Values'), path => "/Admin/Queues/DefaultValues.html?id=" . $id );
 
                 $m->callback( CallbackName => 'PrivilegedQueue', queue_id => $id, page_menu => $queue);
             }
@@ -369,6 +404,20 @@ my $build_admin_menu = sub {
                 unless ( $obj->IsOnlyGlobal ) {
                     $tabs->child( 'applies-to' => title => loc('Applies to'),   path => "/Admin/CustomFields/Objects.html?id=" . $id );
                 }
+            }
+        }
+    }
+
+    if ( $request_path =~ m{^/Admin/CustomRoles} ) {
+        if ( $DECODED_ARGS->{'id'} && $DECODED_ARGS->{'id'} =~ /^\d+$/ ) {
+            my $id = $DECODED_ARGS->{'id'};
+            my $obj = RT::CustomRole->new( $session{'CurrentUser'} );
+            $obj->Load($id);
+
+            if ( $obj and $obj->id ) {
+                my $tabs = PageMenu();
+                $tabs->child( basics       => title => loc('Basics'),       path => "/Admin/CustomRoles/Modify.html?id=".$id );
+                $tabs->child( 'applies-to' => title => loc('Applies to'),   path => "/Admin/CustomRoles/Objects.html?id=" . $id );
             }
         }
     }
@@ -464,8 +513,12 @@ my $build_admin_menu = sub {
 
 my $build_main_nav = sub {
 
-    PageWidgets()->child( simple_search => raw_html => $m->scomp('SimpleSearch') );
-    PageWidgets()->child( create_ticket => raw_html => $m->scomp('CreateTicket') );
+    if ($request_path =~ m{^/Asset/}) {
+        PageWidgets()->child( asset_search => raw_html => $m->scomp('/Asset/Elements/Search') );
+    } else {
+        PageWidgets()->child( simple_search => raw_html => $m->scomp('SimpleSearch') );
+        PageWidgets()->child( create_ticket => raw_html => $m->scomp('CreateTicket') );
+    }
 
     my $home = Menu->child( home => title => loc('Homepage'), path => '/' );
     unless ($session{'dashboards_in_menu'}) {
@@ -525,12 +578,21 @@ my $build_main_nav = sub {
 
     $search->child( users => title => loc('Users'),   path => "/User/Search.html" );
 
+    $search->child( assets => title => loc("Assets"), path => "/Asset/Search/" )
+        if $session{CurrentUser}->HasRight( Right => 'ShowAssetsMenu', Object => RT->System );
+
     if ($session{CurrentUser}->HasRight( Right => 'ShowArticlesMenu', Object => RT->System )) {
         my $articles = Menu->child( articles => title => loc('Articles'), path => "/Articles/index.html");
         $articles->child( articles => title => loc('Overview'), path => "/Articles/index.html" );
         $articles->child( topics   => title => loc('Topics'),   path => "/Articles/Topics.html" );
         $articles->child( create   => title => loc('Create'),   path => "/Articles/Article/PreCreate.html" );
         $articles->child( search   => title => loc('Search'),   path => "/Articles/Article/Search.html" );
+    }
+
+    if ($session{CurrentUser}->HasRight( Right => 'ShowAssetsMenu', Object => RT->System )) {
+        my $assets = Menu->child( "assets", title => loc("Assets"), path => "/Asset/Search/" );
+        $assets->child( "create", title => loc("Create"), path => "/Asset/CreateInCatalog.html" );
+        $assets->child( "search", title => loc("Search"), path => "/Asset/Search/" );
     }
 
     my $tools = Menu->child( tools => title => loc('Tools'), path => '/Tools/index.html' );
@@ -577,14 +639,14 @@ my $build_main_nav = sub {
          && $session{'CurrentUser'}->HasRight( Right => 'ModifySelf', Object => RT->System )) {
         my $settings = $about_me->child( settings => title => loc('Settings'), path => '/Prefs/Other.html' );
         $settings->child( options        => title => loc('Preferences'),        path => '/Prefs/Other.html' );
-        $settings->child( about_me       => title => loc('About me'),       path => '/User/Prefs.html' );
+        $settings->child( about_me       => title => loc('About me'),       path => '/Prefs/AboutMe.html' );
         $settings->child( search_options => title => loc('Search options'), path => '/Prefs/SearchOptions.html' );
         $settings->child( myrt           => title => loc('RT at a glance'), path => '/Prefs/MyRT.html' );
         $settings->child( dashboards_in_menu =>
             title => loc('Dashboards in menu'),
             path  => '/Prefs/DashboardsInMenu.html',
         );
-        $settings->child( quicksearch    => title => loc('Quick search'),   path => '/Prefs/Quicksearch.html' );
+        $settings->child( queue_list    => title => loc('Queue list'),   path => '/Prefs/QueueList.html' );
 
         my $search_menu = $settings->child( 'saved-searches' => title => loc('Saved Searches') );
         my $searches = [ $m->comp( "/Search/Elements/SearchesForObject",
@@ -629,10 +691,6 @@ my $build_main_nav = sub {
 
             if ( $obj and $obj->id ) {
                 my $actions = PageMenu()->child( actions => title => loc('Actions'), sort_order  => 95 );
-                my $tabs = PageMenu();
-                $tabs->child( bookmark => raw_html => $m->scomp( '/Ticket/Elements/Bookmark', id => $id ), sort_order => 99 );
-                $tabs->child( display => title => loc('Display'), path => "/Ticket/Display.html?id=" . $id );
-                $tabs->child( history => title => loc('History'), path => "/Ticket/History.html?id=" . $id );
 
                 my %can = %{ $obj->CurrentUser->PrincipalObj->HasRights( Object => $obj ) };
                 $can{'_ModifyOwner'} = $obj->CurrentUserCanSetOwner();
@@ -644,6 +702,16 @@ my $build_main_nav = sub {
                             && ( $can{'ExecuteCode'} || $can{'SuperUser'} );
                     }
                 };
+
+                my $tabs = PageMenu();
+                $tabs->child( bookmark => raw_html => $m->scomp( '/Ticket/Elements/Bookmark', id => $id ), sort_order => 98 );
+
+                if ($can->('ModifyTicket')) {
+                    $tabs->child( timer => raw_html => $m->scomp( '/Ticket/Elements/PopupTimerLink', id => $id ), sort_order => 99 );
+                }
+
+                $tabs->child( display => title => loc('Display'), path => "/Ticket/Display.html?id=" . $id );
+                $tabs->child( history => title => loc('History'), path => "/Ticket/History.html?id=" . $id );
 
                 # comment out until we can do it for an individual custom field
                 #if ( $can->('ModifyTicket') || $can->('ModifyCustomField') ) {
@@ -889,7 +957,6 @@ my $build_main_nav = sub {
             $tabs->child( display => title => loc('Display'), path => "/Articles/Article/Display.html?id=".$id );
             $tabs->child( history => title => loc('History'), path => "/Articles/Article/History.html?id=".$id );
             $tabs->child( modify  => title => loc('Modify'),  path => "/Articles/Article/Edit.html?id=".$id );
-            $tabs->child( delete  => title => loc('Delete'),  path => "/Articles/Article/Delete.html?id=".$id );
         }
     }
 
@@ -913,12 +980,114 @@ my $build_main_nav = sub {
                 if ( $obj->CurrentUserHasRight('ModifyArticle') ) {
                     $tabs->child(modify => title => loc('Modify'), path => '/Articles/Article/Edit.html?id=' . $id );
                 }
-                if ( $obj->CurrentUserHasRight('DeleteArticle') ) {
-                    $tabs->child(delete => title => loc('Delete'), path => '/Articles/Article/Delete.html?id=' . $id );
-                }
             }
         }
 
+    }
+
+    if ($request_path =~ m{^/Asset/} and $DECODED_ARGS->{id} and $DECODED_ARGS->{id} !~ /\D/) {
+        my $page  = PageMenu();
+        my $id    = $DECODED_ARGS->{id};
+        my $asset = RT::Asset->new( $session{CurrentUser} );
+        $asset->Load($id);
+
+        if ($asset->id) {
+            $page->child("display",     title => loc("Display"),        path => "/Asset/Display.html?id=$id");
+            $page->child("history",     title => loc("History"),        path => "/Asset/History.html?id=$id");
+            $page->child("basics",      title => loc("Basics"),         path => "/Asset/Modify.html?id=$id");
+            $page->child("links",       title => loc("Links"),          path => "/Asset/ModifyLinks.html?id=$id");
+            $page->child("people",      title => loc("People"),         path => "/Asset/ModifyPeople.html?id=$id");
+            $page->child("dates",       title => loc("Dates"),          path => "/Asset/ModifyDates.html?id=$id");
+
+            for my $grouping (RT::CustomField->CustomGroupings($asset)) {
+                my $cfs = $asset->CustomFields;
+                $cfs->LimitToGrouping( $asset => $grouping );
+                next unless $cfs->Count;
+                $page->child(
+                    "cf-grouping-$grouping",
+                    title   => loc($grouping),
+                    path    => "/Asset/ModifyCFs.html?id=$id;Grouping=" . $m->interp->apply_escapes($grouping, 'u'),
+                );
+            }
+
+            my $actions = $page->child("actions", title => loc("Actions"));
+            $actions->child("create-linked-ticket", title => loc("Create linked ticket"), path => "/Asset/CreateLinkedTicket.html?Asset=$id");
+
+            my $status    = $asset->Status;
+            my $lifecycle = $asset->LifecycleObj;
+            for my $action ( $lifecycle->Actions($status) ) {
+                my $next = $action->{'to'};
+                next unless $lifecycle->IsTransition( $status => $next );
+
+                my $check = $lifecycle->CheckRight( $status => $next );
+                next unless $asset->CurrentUserHasRight($check);
+
+                my $label = $action->{'label'} || ucfirst($next);
+                $actions->child(
+                    $label,
+                    title   => loc($label),
+                    path    => "/Asset/Modify.html?id=$id;Update=1;DisplayAfter=1;Status="
+                                . $m->interp->apply_escapes($next, 'u'),
+
+                    class       => "asset-lifecycle-action",
+                    attributes  => {
+                        'data-current-status'   => $status,
+                        'data-next-status'      => $next,
+                    },
+                );
+            }
+        }
+    } elsif ($request_path =~ m{^/Asset/Search/}) {
+        my $page  = PageMenu();
+        my %search = map @{$_},
+            grep defined $_->[1] && length $_->[1],
+            map {ref $DECODED_ARGS->{$_} ? [$_, $DECODED_ARGS->{$_}[0]] : [$_, $DECODED_ARGS->{$_}] }
+            grep /^(?:q|SearchAssets|!?(Name|Description|Catalog|Status|Role\..+|CF\..+)|Order(?:By)?|Page)$/,
+            keys %$DECODED_ARGS;
+        if ( $request_path =~ /Bulk/) {
+            $page->child('search',
+                title => loc('Show Results'),
+                path => '/Asset/Search/?' . (keys %search ? $query_string->(%search) : ''),
+            );
+        } else {
+            $page->child('bulk',
+                title => loc('Bulk Update'),
+                path => '/Asset/Search/Bulk.html?' . (keys %search ? $query_string->(%search) : ''),
+            );
+        }
+        $page->child('csv',
+            title => loc('Download Spreadsheet'),
+            path  => '/Asset/Search/Results.tsv?' . (keys %search ? $query_string->(%search) : ''),
+        );
+    } elsif ($request_path =~ m{^/Admin/Global/CustomFields/Catalog-Assets\.html$}) {
+        my $page  = PageMenu();
+        $page->child("create", title => loc("Create New"), path => "/Admin/CustomFields/Modify.html?Create=1;LookupType=" . RT::Asset->CustomFieldLookupType);
+    } elsif ($request_path =~ m{^/Admin/CustomFields(/|/index\.html)?$}
+            and $DECODED_ARGS->{'Type'} and $DECODED_ARGS->{'Type'} eq RT::Asset->CustomFieldLookupType) {
+        my $page  = PageMenu();
+        $page->child("create")->path( $page->child("create")->path . "&LookupType=" . RT::Asset->CustomFieldLookupType );
+    } elsif ($request_path =~ m{^/Admin/Assets/Catalogs/}) {
+        my $page  = PageMenu();
+        my $actions = $request_path =~ m{/((index|Create)\.html)?$}
+            ? $page
+            : $page->child("catalogs", title => loc("Catalogs"), path => "/Admin/Assets/Catalogs/");
+
+        $actions->child("select", title => loc("Select"), path => "/Admin/Assets/Catalogs/");
+        $actions->child("create", title => loc("Create"), path => "/Admin/Assets/Catalogs/Create.html");
+
+        my $catalog = RT::Catalog->new( $session{CurrentUser} );
+        $catalog->Load($DECODED_ARGS->{id}) if $DECODED_ARGS->{id};
+
+        if ($catalog->id and $catalog->CurrentUserCanSee) {
+            my $query = "id=" . $catalog->id;
+            $page->child("modify", title => loc("Basics"), path => "/Admin/Assets/Catalogs/Modify.html?$query");
+            $page->child("people", title => loc("Roles"),  path => "/Admin/Assets/Catalogs/Roles.html?$query");
+
+            $page->child("cfs", title => loc("Asset Custom Fields"), path => "/Admin/Assets/Catalogs/CustomFields.html?$query");
+
+            $page->child("group-rights", title => loc("Group Rights"), path => "/Admin/Assets/Catalogs/GroupRights.html?$query");
+            $page->child("user-rights",  title => loc("User Rights"),  path => "/Admin/Assets/Catalogs/UserRights.html?$query");
+        }
     }
 
     if ( $request_path =~ m{^/User/(Summary|History)\.html} ) {
@@ -963,6 +1132,8 @@ my $build_selfservice_nav = sub {
     $tickets->child( open   => title => loc('Open tickets'),   path => '/SelfService/' );
     $tickets->child( closed => title => loc('Closed tickets'), path => '/SelfService/Closed.html' );
 
+    Menu->child( "assets", title => loc("Assets"), path => "/SelfService/Asset/" )
+        if $session{CurrentUser}->HasRight( Right => 'ShowAssetsMenu', Object => RT->System );
 
     my $username = '<span class="current-user">'
                  . $m->interp->apply_escapes($session{'CurrentUser'}->Name, 'h')
@@ -988,6 +1159,18 @@ my $build_selfservice_nav = sub {
     }
 
     PageWidgets->child( goto => raw_html => $m->scomp('/SelfService/Elements/GotoTicket') );
+
+    if ($request_path =~ m{^/SelfService/Asset/} and $DECODED_ARGS->{id}) {
+        my $page = PageMenu();
+        my $id   = $DECODED_ARGS->{id};
+        $page->child("display",     title => loc("Display"),        path => "/SelfService/Asset/Display.html?id=$id");
+        $page->child("history",     title => loc("History"),        path => "/SelfService/Asset/History.html?id=$id");
+
+        if (Menu->child("new")) {
+            my $actions = $page->child("actions", title => loc("Actions"));
+            $actions->child("create-linked-ticket", title => loc("Create linked ticket"), path => "/SelfService/Asset/CreateLinkedTicket.html?Asset=$id");
+        }
+    }
 
     $m->callback( CallbackName => 'SelfService', Path => $request_path );
 };

@@ -63,7 +63,20 @@ for my $unset ("0", "-", " ") {
     $m->field('Due_Date' => $unset);
     $m->click('SubmitTicket');
     $m->text_contains("Due: (Not set)", "due date successfully cleared with '$unset'");
-    $m->warning_like(qr/Couldn't parse date '-'/) if $unset eq "-";
+
+    if ( $unset eq '-' ) {
+        my @warnings = $m->get_warnings;
+        chomp @warnings;
+        is_deeply(
+            [ @warnings ],
+            [
+                (
+                    q{Couldn't parse date '-' by Time::ParseDate},
+                    q{Couldn't parse date '-' by DateTime::Format::Natural}
+                )
+            ]
+        );
+    }
 }
 
 $m->get( $url . '/Ticket/ModifyAll.html?id=' . $ticket->id );
@@ -72,7 +85,7 @@ $m->field(WatcherTypeEmail => 'Requestor');
 $m->field(WatcherAddressEmail => 'root@localhost');
 $m->click('SubmitTicket');
 $m->text_contains(
-    "Added root as a Requestor for this ticket",
+    "Added root as Requestor for this ticket",
     'watcher is added',
 );
 $m->form_name('TicketModifyAll');
@@ -80,7 +93,7 @@ $m->field(WatcherTypeEmail => 'Requestor');
 $m->field(WatcherAddressEmail => 'root@localhost');
 $m->click('SubmitTicket');
 $m->text_contains(
-    "root is already a Requestor",
+    "root is already Requestor",
     'no duplicate watchers',
 );
 

@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -58,7 +58,7 @@
 <input type="hidden" class="hidden" name="Token" value="<% $ARGS{'Token'} %>" />
 
 <&| /Widgets/TitleBox, title => loc('Modify ticket # [_1]', $Ticket->Id), class=>'ticket-info-basics' &>
-<& Elements/EditBasics, TicketObj => $Ticket, defaults => \%ARGS &>
+<& Elements/EditBasics, TicketObj => $Ticket, defaults => \%ARGS, ExcludeCustomRoles => 1 &>
 <& /Elements/EditCustomFields, Object => $Ticket, Grouping => 'Basics' &>
 </&>
 
@@ -114,7 +114,7 @@
     </td>
   </tr>
 
-  <tr><td colspan="2"><& /Ticket/Elements/EditTransactionCustomFields, %ARGS, TicketObj => $Ticket, KeepValue => 1, &></td></tr>
+  <tr><td colspan="2"><& /Ticket/Elements/EditTransactionCustomFields, %ARGS, TicketObj => $Ticket &></td></tr>
 
 <& /Ticket/Elements/AddAttachments, %ARGS, TicketObj => $Ticket &>
 

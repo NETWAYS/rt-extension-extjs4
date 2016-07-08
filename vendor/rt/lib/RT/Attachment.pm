@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -642,8 +642,8 @@ sub EncodedHeaders {
 
 =head2 GetHeader $TAG
 
-Returns the value of the header Tag as a string. This bypasses the weeding out
-done in Headers() above.
+Returns the value of the B<first> header Tag as a string. This bypasses the
+weeding out done in Headers() above.
 
 =cut
 
@@ -659,6 +659,24 @@ sub GetHeader {
     
     # we found no header. return an empty string
     return undef;
+}
+
+=head2 GetAllHeaders $TAG
+
+Returns a list of all values for the the given header tag, in the order they
+appear.
+
+=cut
+
+sub GetAllHeaders {
+    my $self = shift;
+    my $tag = shift;
+    my @values = ();
+    foreach my $line ($self->_SplitHeaders) {
+        next unless $line =~ /^\Q$tag\E:\s+(.*)$/si;
+        push @values, $1;
+    }
+    return @values;
 }
 
 =head2 DelHeader $TAG
@@ -1176,6 +1194,39 @@ sub __DependsOn {
         Shredder => $args{'Shredder'}
     );
     return $self->SUPER::__DependsOn( %args );
+}
+
+sub ShouldStoreExternally {
+    my $self = shift;
+    my $type = $self->ContentType;
+    my $length = $self->ContentLength;
+
+    if ($type =~ m{^multipart/}) {
+        return (0, "attachment is multipart");
+    }
+    elsif ($length == 0) {
+        return (0, "zero length");
+    }
+    elsif ($type =~ m{^(text|message)/}) {
+        # If textual, we only store externally if it's _large_
+        return 1 if $length > RT->Config->Get('ExternalStorageCutoffSize');
+        return (0, "text length ($length) does not exceed ExternalStorageCutoffSize (" . RT->Config->Get('ExternalStorageCutoffSize') . ")");
+    }
+    elsif ($type =~ m{^image/}) {
+        # Ditto images, which may be displayed inline
+        return 1 if $length > RT->Config->Get('ExternalStorageCutoffSize');
+        return (0, "image size ($length) does not exceed ExternalStorageCutoffSize (" . RT->Config->Get('ExternalStorageCutoffSize') . ")");
+    }
+    else {
+        return 1;
+    }
+}
+
+sub ExternalStoreDigest {
+    my $self = shift;
+
+    return undef if $self->ContentEncoding ne 'external';
+    return $self->_Value('Content');
 }
 
 RT::Base->_ImportOverlays();

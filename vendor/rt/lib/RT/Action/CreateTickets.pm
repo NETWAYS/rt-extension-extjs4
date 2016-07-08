@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -1139,7 +1139,10 @@ sub UpdateCustomFields {
         }
 
         foreach my $value (@values) {
-            next unless length($value);
+            next if $ticket->CustomFieldValueIsEmpty(
+                Field => $CustomFieldObj,
+                Value => $value,
+            );
             my ( $val, $msg ) = $ticket->AddCustomFieldValue(
                 Field => $cf,
                 Value => $value

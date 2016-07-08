@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -61,6 +61,7 @@ use RT::Interface::Web;
 use File::Temp 'tempdir';
 use HTML::Scrubber;
 use URI::QueryParam;
+use List::MoreUtils 'uniq';
 
 sub MailDashboards {
     my $self = shift;
@@ -93,6 +94,8 @@ sub MailDashboards {
         my $currentuser = RT::CurrentUser->new;
         $currentuser->LoadByName($user->Name);
 
+        my $subscriber_lang = $user->Lang;
+
         # look through this user's subscriptions, are any supposed to be generated
         # right now?
         for my $subscription ($user->Attributes->Named('Subscription')) {
@@ -103,22 +106,95 @@ sub MailDashboards {
                 LocalTime    => [$hour, $dow, $dom],
             );
 
-            my $email = $subscription->SubValue('Recipient')
-                     || $user->EmailAddress;
+            my $recipients = $subscription->SubValue('Recipients');
+            my $recipients_users = $recipients->{Users};
+            my $recipients_groups = $recipients->{Groups};
 
-            eval {
-                $self->SendDashboard(
-                    %args,
-                    CurrentUser  => $currentuser,
-                    Email        => $email,
-                    Subscription => $subscription,
-                    From         => $from,
-                )
-            };
-            if ( $@ ) {
-                $RT::Logger->error("Caught exception: $@");
+            my @emails;
+            my %recipient_language;
+
+            # add users' emails to email list
+            for my $user_id (@{ $recipients_users || [] }) {
+                my $user = RT::User->new(RT->SystemUser);
+                $user->Load($user_id);
+                next unless $user->id;
+
+                push @emails, $user->EmailAddress;
+                $recipient_language{$user->EmailAddress} = $user->Lang;
             }
-            else {
+
+            # add emails for every group's members
+            for my $group_id (@{ $recipients_groups || [] }) {
+                my $group = RT::Group->new(RT->SystemUser);
+                $group->Load($group_id);
+                next unless $group->id;
+
+                my $users = $group->UserMembersObj;
+                while (my $user = $users->Next) {
+                    push @emails, $user->EmailAddress;
+                    $recipient_language{$user->EmailAddress} = $user->Lang;
+                }
+            }
+
+            my $email_success = 0;
+            for my $email (uniq @emails) {
+                eval {
+                    my $lang;
+                    for my $langkey (RT->Config->Get('EmailDashboardLanguageOrder')) {
+                        if ($langkey eq '_subscription') {
+                            if ($lang = $subscription->SubValue('Language')) {
+                                $RT::Logger->debug("Using subscription's specified language '$lang'");
+                                last;
+                            }
+                        }
+                        elsif ($langkey eq '_recipient') {
+                            if ($lang = $recipient_language{$email}) {
+                                $RT::Logger->debug("Using recipient's preferred language '$lang'");
+                                last;
+                            }
+                        }
+                        elsif ($langkey eq '_subscriber') {
+                            if ($lang = $subscriber_lang) {
+                                $RT::Logger->debug("Using subscriber's preferred language '$lang'");
+                                last;
+                            }
+                        }
+                        else { # specific language name
+                            $lang = $langkey;
+                            $RT::Logger->debug("Using EmailDashboardLanguageOrder fallback language '$lang'");
+                            last;
+                        }
+                    }
+
+                    # use English as the absolute fallback. Though the config
+                    # lets you specify a site-specific fallback, it also lets
+                    # you not specify a fallback, and we don't want to
+                    # accidentally reuse whatever language the previous
+                    # recipient happened to have
+                    if (!$lang) {
+                        $RT::Logger->debug("Using RT's fallback language 'en'. You may specify a different fallback language in your config with EmailDashboardLanguageOrder.");
+                        $lang = 'en';
+                    }
+
+                    $currentuser->{'LangHandle'} = RT::I18N->get_handle($lang);
+
+                    $self->SendDashboard(
+                        %args,
+                        CurrentUser  => $currentuser,
+                        Email        => $email,
+                        Subscription => $subscription,
+                        From         => $from,
+                    )
+                };
+                if ( $@ ) {
+                    $RT::Logger->error("Caught exception: $@");
+                }
+                else {
+                    $email_success = 1;
+                }
+            }
+
+            if ($email_success) {
                 my $counter = $subscription->SubValue('Counter') || 0;
                 $subscription->SetSubValues(Counter => $counter + 1)
                     unless $args{DryRun};
@@ -149,17 +225,27 @@ sub IsSubscriptionReady {
     my $sub_dom       = $subscription->SubValue('Dom');
     my $sub_fow       = $subscription->SubValue('Fow') || 1;
 
+    my $log_frequency = $sub_frequency;
+    if ($log_frequency eq 'daily') {
+        my $days = join ' ', grep { $subscription->SubValue($_) }
+                             qw/Monday Tuesday Wednesday Thursday Friday
+                                Saturday Sunday/;
+
+        $log_frequency = "$log_frequency ($days)";
+    }
+
     my ($hour, $dow, $dom) = @{ $args{LocalTime} };
 
-    $RT::Logger->debug("Checking against subscription " . $subscription->Id . " for " . $args{User}->Name . " with frequency $sub_frequency, hour $sub_hour, dow $sub_dow, dom $sub_dom, fow $sub_fow, counter $counter");
+    $RT::Logger->debug("Checking against subscription " . $subscription->Id . " for " . $args{User}->Name . " with frequency $log_frequency, hour $sub_hour, dow $sub_dow, dom $sub_dom, fow $sub_fow, counter $counter");
 
     return 0 if $sub_frequency eq 'never';
 
     # correct hour?
     return 0 if $sub_hour ne $hour;
 
-    # all we need is the correct hour for daily dashboards
-    return 1 if $sub_frequency eq 'daily';
+    if ($sub_frequency eq 'daily') {
+        return $subscription->SubValue($dow) ? 1 : 0;
+    }
 
     if ($sub_frequency eq 'weekly') {
         # correct day of week?
@@ -176,12 +262,6 @@ sub IsSubscriptionReady {
     # if monthly, correct day of month?
     if ($sub_frequency eq 'monthly') {
         return $sub_dom == $dom;
-    }
-
-    # monday through friday
-    if ($sub_frequency eq 'm-f') {
-        return 0 if $dow eq 'Sunday' || $dow eq 'Saturday';
-        return 1;
     }
 
     $RT::Logger->debug("Invalid subscription frequency $sub_frequency for " . $args{User}->Name);
@@ -236,11 +316,23 @@ SUMMARY
     local $HTML::Mason::Commands::session{CurrentUser} = $currentuser;
     local $HTML::Mason::Commands::r = RT::Dashboard::FakeRequest->new;
 
+    my $HasResults = undef;
+
     my $content = RunComponent(
         '/Dashboards/Render.html',
-        id      => $dashboard->Id,
-        Preview => 0,
+        id         => $dashboard->Id,
+        Preview    => 0,
+        HasResults => \$HasResults,
     );
+
+    if ($subscription->SubValue('SuppressIfEmpty')) {
+        # undef means there were no searches, so we should still send it (it's just portlets)
+        # 0 means there was at least one search and none had any result, so we should suppress it
+        if (defined($HasResults) && !$HasResults) {
+            $RT::Logger->debug("Not sending because there are no results and the subscription has SuppressIfEmpty");
+            return;
+        }
+    }
 
     if ( RT->Config->Get('EmailDashboardRemove') ) {
         for ( RT->Config->Get('EmailDashboardRemove') ) {
@@ -323,7 +415,6 @@ sub EmailDashboard {
     my $frequency    = $subscription->SubValue('Frequency');
 
     my %frequency_lookup = (
-        'm-f'     => 'Weekday', # loc
         'daily'   => 'Daily',   # loc
         'weekly'  => 'Weekly',  # loc
         'monthly' => 'Monthly', # loc

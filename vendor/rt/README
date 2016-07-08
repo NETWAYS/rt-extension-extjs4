@@ -27,8 +27,8 @@ o   A supported SQL database
                                            upgrade path guaranteed
 
 o   Apache version 1.3.x or 2.x (http://httpd.apache.org)
-        with mod_perl -- (http://perl.apache.org)
-        or with FastCGI -- (http://www.fastcgi.com)
+        with FastCGI -- (http://www.fastcgi.com)
+        or mod_perl -- (http://perl.apache.org)
         or another webserver with FastCGI support
 
         RT's FastCGI handler needs to access RT's configuration file.
@@ -66,10 +66,10 @@ GENERAL INSTALLATION
 
     If you are upgrading from a previous version of RT, please review
     the upgrade notes for the appropriate versions, which can be found
-    in docs/UPGRADING-* If you are coming from 4.0.x to 4.2.x you should
-    review both the UPGRADING-4.0 and UPGRADING-4.2 files.  Similarly, if
-    you were coming from 3.8.x, you would want to review the UPGRADING-3.8,
-    UPGRADING-4.0 and UPGRADING-4.2 documents.
+    in docs/UPGRADING-* If you are coming from 4.2.x to 4.4.x you should
+    review both the UPGRADING-4.2 and UPGRADING-4.4 files.  Similarly, if
+    you were coming from 4.0.x, you would want to review the UPGRADING-4.0,
+    UPGRADING-4.2 and UPGRADING-4.4 documents.
 
     Any upgrade steps given in version-specific UPGRADING files should
     be run after the rest of the steps below; however, please read the
@@ -159,7 +159,7 @@ GENERAL INSTALLATION
 
       You should back up your database before running this command.
       When you run it, you will be prompted for your previous version of
-      RT (such as 4.0.23) so that the appropriate set of database
+      RT (such as 4.2.12) so that the appropriate set of database
       upgrades can be applied.
 
       If 'make upgrade-database' completes without error, your upgrade
@@ -190,14 +190,18 @@ GENERAL INSTALLATION
  9) Set up automated recurring tasks (cronjobs):
 
     To generate email digest messages, you must arrange for the provided
-    utility to be run once daily, and once weekly. You may also want to
-    arrange for the rt-email-dashboards utility to be run hourly.  For
-    example, if your task scheduler is cron, you can configure it by
+    utility to be run once daily, and once weekly. You may also want
+    to arrange for the rt-email-dashboards utility to be run hourly. If
+    you choose to use the external storage feature, that must process
+    new attachments on a regular basis.
+
+    If your task scheduler is cron, you can configure it by
     adding the following lines as /etc/cron.d/rt:
 
         0 0 * * * root /opt/rt4/sbin/rt-email-digest -m daily
         0 0 * * 0 root /opt/rt4/sbin/rt-email-digest -m weekly
         0 * * * * root /opt/rt4/sbin/rt-email-dashboards
+        0 0 * * * root /opt/rt4/sbin/rt-externalize-attachments
 
 10) Configure the RT email gateway.  To let email flow to your RT
     server, you need to add a few lines of configuration to your mail
@@ -216,9 +220,14 @@ GENERAL INSTALLATION
 
            perldoc /opt/rt4/bin/rt-mailgate
 
-11) Set up automatic backups for RT and its data as described in
-    the docs/backups.pod document.
+11) Set up full text search
 
+    Full text search (FTS) without database indexing is a very slow operation,
+    and is thus disabled by default. You'll need to follow the instructions in
+    docs/full_text_indexing.pod to enable FTS.
+
+12) Set up automatic backups for RT and its data as described in
+    the docs/backups.pod document.
 
 GETTING HELP
 ------------
@@ -251,7 +260,7 @@ similar to those above.  Address questions about the stable release to
 the rt-users list, and questions about the development version to the
 rt-devel list.
 
-The RT wiki, at http://requesttracker.wikia.com/ , is also a potential
+The RT wiki, at https://rt-wiki.bestpractical.com, is also a potential
 resource.
 
 
@@ -262,7 +271,7 @@ If you believe you've discovered a security issue in RT, please send an
 email to <security@bestpractical.com> with a detailed description of the
 issue, and a secure means to respond to you (such as your PGP public
 key).  You can find our PGP key and fingerprint at
-http://bestpractical.com/security/
+https://bestpractical.com/security/
 
 
 BUGS
@@ -281,7 +290,7 @@ fix them.  To report a bug, send email to <rt-bugs@bestpractical.com>.
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)

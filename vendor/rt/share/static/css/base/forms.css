@@ -24,6 +24,11 @@ form {
 
 }
 
+.value.no-value {
+    color: #666;
+    font-style: italic;
+}
+
 
 
 div.button-row {
@@ -236,6 +241,31 @@ form div.submit div.buttons div.next {
 .invalid {
     font-style: italic;
     color: red;
+}
+
+.messagebox-attachment-warning {
+    display: none;
+}
+
+.messagebox-attachment-warning .ignore {
+    display: none;
+}
+
+ul.selectable {
+    list-style-type: none;
+}
+
+ul.selectable input[type=checkbox],
+ul.selectable a {
+    vertical-align: bottom;
+}
+
+#reuse-attachments {
+    padding-top: 0.25em;
+}
+
+.ticket-info-attachments ul li {
+    font-size: .8em;
 }
 
 /* query builder */

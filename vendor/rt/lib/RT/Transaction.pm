@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -118,7 +118,7 @@ sub Create {
         NewValue       => undef,
         MIMEObj        => undef,
         ActivateScrips => 1,
-        CommitScrips   => 1,
+        DryRun         => undef,
         ObjectType     => 'RT::Ticket',
         ObjectId       => 0,
         ReferenceType  => undef,
@@ -182,6 +182,8 @@ sub Create {
         return @return;
     }
 
+    push @{$args{DryRun}}, $self if $args{DryRun};
+
     $self->{'scrips'} = RT::Scrips->new(RT->SystemUser);
 
     $RT::Logger->debug('About to prepare scrips for transaction #' .$self->Id); 
@@ -206,7 +208,7 @@ sub Create {
         TransactionObj => $txn,
    );
 
-    if ($args{'CommitScrips'} ) {
+    unless ($args{DryRun} ) {
         $RT::Logger->debug('About to commit scrips for transaction #' .$self->Id);
         $self->{'scrips'}->Commit();
         RT::Ruleset->CommitRules($rules);
@@ -398,12 +400,12 @@ sub Content {
                 . $self->QuoteHeader
                 . '<br /><blockquote class="gmail_quote" type="cite">'
                 . $content
-                . '</blockquote></div><br /><br />';
+                . '</blockquote></div>';
         } else {
             $content = $self->ApplyQuoteWrap(content => $content,
                                              cols    => $args{'Wrap'} );
 
-            $content = $self->QuoteHeader . "\n$content\n\n";
+            $content = $self->QuoteHeader . "\n$content";
         }
     }
 
@@ -865,6 +867,20 @@ sub _FormatUser {
     ];
 }
 
+sub _CanonicalizeRoleName {
+    my $self = shift;
+    my $role_name = shift;
+
+    if ($role_name =~ /^RT::CustomRole-(\d+)$/) {
+        my $role = RT::CustomRole->new($self->CurrentUser);
+        $role->Load($1);
+        return $role->Name;
+    }
+
+    return $self->loc($role_name);
+}
+
+
 %_BriefDescriptions = (
     Create => sub {
         my $self = shift;
@@ -1072,19 +1088,19 @@ sub _FormatUser {
         my $self = shift;
         my $principal = RT::Principal->new($self->CurrentUser);
         $principal->Load($self->NewValue);
-        return ( "[_1] [_2] added", $self->loc($self->Field), $self->_FormatPrincipal($principal));    #loc()
+        return ( "[_1] [_2] added", $self->_CanonicalizeRoleName($self->Field), $self->_FormatPrincipal($principal));    #loc()
     },
     DelWatcher => sub {
         my $self = shift;
         my $principal = RT::Principal->new($self->CurrentUser);
         $principal->Load($self->OldValue);
-        return ( "[_1] [_2] deleted", $self->loc($self->Field), $self->_FormatPrincipal($principal));  #loc()
+        return ( "[_1] [_2] deleted", $self->_CanonicalizeRoleName($self->Field), $self->_FormatPrincipal($principal));  #loc()
     },
     SetWatcher => sub {
         my $self = shift;
         my $principal = RT::Principal->new($self->CurrentUser);
         $principal->Load($self->NewValue);
-        return ( "[_1] set to [_2]", $self->loc($self->Field), $self->_FormatPrincipal($principal));  #loc()
+        return ( "[_1] set to [_2]", $self->_CanonicalizeRoleName($self->Field), $self->_FormatPrincipal($principal));  #loc()
     },
     Subject => sub {
         my $self = shift;
@@ -1260,7 +1276,7 @@ sub _FormatUser {
         elsif ($duration < 60) {
             return ("Worked [quant,_1,minute,minutes]", $duration); # loc()
         } else {
-            return ("Worked [quant,_1,hour,hours] ([quant,_2,minute,minutes])", sprintf("%.1f", $duration / 60), $duration); # loc()
+            return ("Worked [quant,_1,hour,hours] ([quant,_2,minute,minutes])", sprintf("%.2f", $duration / 60), $duration); # loc()
         }
     },
     PurgeTransaction => sub {
@@ -1311,7 +1327,16 @@ sub _FormatUser {
         } else {
             return ("Reminder completed"); #loc()
         }
-    }
+    },
+    'RT::Asset-Set-Catalog' => sub {
+        my $self = shift;
+        return ("[_1] changed from [_2] to [_3]",   #loc
+                $self->loc($self->Field), map {
+                    my $c = RT::Catalog->new($self->CurrentUser);
+                    $c->Load($_);
+                    $c->Name || $self->loc("~[a hidden catalog~]")
+                } $self->OldValue, $self->NewValue);
+    },
 );
 
 
@@ -1398,7 +1423,7 @@ sub CurrentUserCanSee {
         my $cf = RT::CustomField->new( $self->CurrentUser );
         $cf->SetContextObject( $self->Object );
         $cf->Load( $cf_id );
-        return 0 unless $cf->CurrentUserHasRight('SeeCustomField');
+        return 0 unless $cf->CurrentUserCanSee;
     }
 
     # Transactions that might have changed the ->Object's visibility to
@@ -1499,33 +1524,24 @@ parameters to update this transaction's custom fields.
 
 sub UpdateCustomFields {
     my $self = shift;
-    my %args = (@_);
+    my %args = @_;
 
-    # This method used to have an API that took a hash of a single
-    # value "ARGSRef", which was a reference to a hash of arguments.
-    # This was insane. The next few lines of code preserve that API
-    # while giving us something saner.
-    my $args;
-    if ($args{'ARGSRef'}) {
-        RT->Deprecated( Arguments => "ARGSRef", Remove => "4.4" );
-        $args = $args{ARGSRef};
-    } else {
-        $args = \%args;
-    }
-
-    foreach my $arg ( keys %$args ) {
+    foreach my $arg ( keys %args ) {
         next
           unless ( $arg =~
             /^(?:Object-RT::Transaction--)?CustomField-(\d+)/ );
         next if $arg =~ /-Magic$/;
         my $cfid   = $1;
-        my $values = $args->{$arg};
+        my $values = $args{$arg};
         my $cf = $self->LoadCustomFieldByIdentifier($cfid);
         next unless $cf->ObjectTypeFromLookupType($cf->__Value('LookupType'))->isa(ref $self);
         foreach
           my $value ( UNIVERSAL::isa( $values, 'ARRAY' ) ? @$values : $values )
         {
-            next unless (defined($value) && length($value));
+            next if $self->CustomFieldValueIsEmpty(
+                Field => $cf,
+                Value => $value,
+            );
             $self->_AddCustomFieldValue(
                 Field             => $cfid,
                 Value             => $value,
@@ -1533,6 +1549,8 @@ sub UpdateCustomFields {
             );
         }
     }
+
+    $self->AddCustomFieldDefaultValues;
 }
 
 =head2 LoadCustomFieldByIdentifier

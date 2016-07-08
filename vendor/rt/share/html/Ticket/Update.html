@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -81,14 +81,6 @@
 % }
 </select> 
 
-<script type="text/javascript">
-    jQuery(function() {
-        jQuery("input[name=TxnSendMailTo]").change(function(ev) {
-            jQuery("input[name=TxnSendMailTo]").filter( function() { return this.value == ev.target.value; } ).prop("checked",jQuery(ev.target).prop('checked'));
-        });
-    });
-</script>
-
 % $m->callback( %ARGS, CallbackName => 'AfterUpdateType' );
 </td></tr>
 
@@ -114,6 +106,7 @@
                 Default      => $ARGS{'Owner'}
             }
         },
+        { special => 'roles' },
         {   name => 'Worked',
             comp => '/Elements/EditTimeValue',
             args => {
@@ -126,17 +119,25 @@
 
 % $m->callback( %ARGS, CallbackName => 'AfterWorked', Ticket => $TicketObj );
 
-<& /Ticket/Elements/EditTransactionCustomFields, %ARGS, TicketObj => $TicketObj, InTable => 1, KeepValue => 1, &>
+<& /Ticket/Elements/EditTransactionCustomFields, %ARGS, TicketObj => $TicketObj, AsTable => 1 &>
 
   </table>
   </&>
 
 % $m->callback( %ARGS, CallbackName => 'RightColumnBottom', Ticket => $TicketObj );
-
 </div>
 
 <div id="ticket-update-message">
-  <& /Ticket/Elements/ShowSimplifiedRecipients, TicketObj => $TicketObj, %ARGS &>
+% if ( RT->Config->Get('SimplifiedRecipients', $session{'CurrentUser'}) ) {
+    <&|/Widgets/TitleBox, title => loc('Recipients'), id => 'recipients' &>
+%   unless ($TicketObj->CurrentUserHasRight('ShowOutgoingEmail')) {
+%     for my $address (grep {defined} ref $ARGS{TxnSendMailTo} ? @{$ARGS{TxnSendMailTo}} : $ARGS{TxnSendMailTo}) {
+        <input type="hidden" name="TxnSendMailTo" value="<% $address %>" />
+%     }
+      <input type="hidden" name="TxnRecipients" value="<% $ARGS{TxnRecipients} || '' %>" />
+%   }
+    </&>
+%}
 
   <&|/Widgets/TitleBox, title => loc('Message'), class => 'messagedetails' &>
   <table width="100%" border="0">
@@ -186,22 +187,70 @@
 
 % if ($TicketObj->CurrentUserHasRight('ShowOutgoingEmail')) {
   <&|/Widgets/TitleBox, title => loc('Scrips and Recipients'), id => 'previewscrips', rolledup => RT->Config->Get('SimplifiedRecipients', $session{'CurrentUser'}) &>
-    <& /Ticket/Elements/PreviewScrips, TicketObj => $TicketObj, %ARGS &>
+%   for my $address (grep {defined} ref $ARGS{TxnSendMailTo} ? @{$ARGS{TxnSendMailTo}} : $ARGS{TxnSendMailTo}) {
+      <input type="hidden" name="TxnSendMailTo" value="<% $address %>" />
+%   }
+    <input type="hidden" name="TxnRecipients" value="<% $ARGS{TxnRecipients} || '' %>" />
   </&>
 % }
 </div>
 
 % $m->callback( %ARGS, CallbackName => 'AfterScrips', Ticket => $TicketObj );
 
-% if (my $recips = $m->notes("DryRun-Recipients-".$TicketObj->Id)) {
-<input type="hidden" name="TxnRecipients" value="<% join ",",sort keys %{$recips} %>" />
-% }
-
 </form>
 <hr class="clear" />
 
 % $m->callback( %ARGS, CallbackName => 'AfterForm', Ticket => $TicketObj );
 
+% if ($TicketObj->CurrentUserHasRight('ShowOutgoingEmail') or RT->Config->Get('SimplifiedRecipients', $session{'CurrentUser'})) {
+<script type="text/javascript">
+jQuery( function() {
+   var updateScrips = function() {
+       if (CKEDITOR.instances && CKEDITOR.instances['UpdateContent']) {
+           CKEDITOR.instances['UpdateContent'].updateElement();
+       }
+       var syncCheckboxes = function(ev) {
+           var target = ev.target;
+           jQuery("input[name=TxnSendMailTo]").filter( function() { return this.value == target.value; } ).prop("checked",jQuery(target).prop('checked'));
+       };
+       jQuery('#recipients div.titlebox-content').load( '<% RT->Config->Get('WebPath')%>/Helpers/ShowSimplifiedRecipients',
+           jQuery('form[name=TicketUpdate]').serializeArray(),
+           function() {
+               var txn_send_field = jQuery("#recipients input[name=TxnSendMailTo]");
+               txn_send_field.change( syncCheckboxes );
+               txn_send_field.click( function () { setCheckbox(this) } );
+               jQuery("#recipients input[name=TxnSendMailToAll]").click( function() { setCheckbox(this, 'TxnSendMailTo'); } );
+               if (txn_send_field.length > 0) {
+                   setCheckbox(txn_send_field[0]);
+               }
+           }
+       );
+       jQuery('#previewscrips div.titlebox-content').load( '<% RT->Config->Get('WebPath')%>/Helpers/PreviewScrips',
+           jQuery('form[name=TicketUpdate]').serializeArray(),
+           function() {
+               var txn_send_field = jQuery("#previewscrips input[name=TxnSendMailTo]");
+               txn_send_field.change( syncCheckboxes );
+               txn_send_field.click( function () { setCheckbox(this) } );
+               jQuery("#previewscrips input[name=TxnSendMailToAll]").click( function() { setCheckbox(this, 'TxnSendMailTo'); } );
+               if (txn_send_field.length > 0) {
+                   setCheckbox(txn_send_field[0]);
+               }
+           }
+       );
+   };
+   updateScrips();
+
+   if (CKEDITOR.instances && CKEDITOR.instances['UpdateContent']) {
+       CKEDITOR.instances['UpdateContent'].on('blur', updateScrips );
+   }
+   else {
+       jQuery('#UpdateContent').on('blur', updateScrips );
+   }
+
+   jQuery("#ticket-update-metadata :input, #UpdateCc, #UpdateBcc").change( updateScrips );
+});
+</script>
+% }
 <%INIT>
 my $CanRespond = 0;
 my $CanComment = 0;

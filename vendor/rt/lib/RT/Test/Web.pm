@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -54,6 +54,7 @@ use warnings;
 use base qw(Test::WWW::Mechanize);
 use Scalar::Util qw(weaken);
 use MIME::Base64 qw//;
+use Encode 'encode_utf8';
 
 BEGIN { require RT::Test; }
 require Test::More;
@@ -67,6 +68,12 @@ sub new {
     my $self = $instance = $class->SUPER::new(@args);
     weaken $instance;
     $self->cookie_jar(HTTP::Cookies->new);
+    # Clear our caches of anything that the server process may have done
+    $self->add_handler(
+        response_done => sub {
+            RT::Record->FlushCache;
+        },
+    ) if RT::Record->can( "FlushCache" );
 
     return $self;
 }
@@ -153,13 +160,14 @@ sub logout {
 sub goto_ticket {
     my $self = shift;
     my $id   = shift;
+    my $view = shift || 'Display';
     unless ( $id && int $id ) {
         Test::More::diag( "error: wrong id ". defined $id? $id : '(undef)' );
         return 0;
     }
 
     my $url = $self->rt_base_url;
-    $url .= "Ticket/Display.html?id=$id";
+    $url .= "Ticket/${ view }.html?id=$id";
     $self->get($url);
     unless ( $self->status == 200 ) {
         Test::More::diag( "error: status is ". $self->status );
@@ -425,8 +433,45 @@ sub dom {
     return Mojo::DOM->new( $self->content );
 }
 
+# override content_* and text_* methods in Test::Mech to dump the content
+# on failure, to speed investigation
+for my $method_name (qw/
+    content_is content_contains content_lacks content_like content_unlike
+    text_contains text_lacks text_like text_unlike
+/) {
+    my $super_method = __PACKAGE__->SUPER::can($method_name);
+    my $implementation = sub {
+        local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+        my $self = shift;
+        my $ok = $self->$super_method(@_);
+        if (!$ok) {
+            my $dir = RT::Test->temp_directory;
+            my ($name) = $self->uri->path =~ m{/([^/]+)$};
+            $name ||= 'index.html';
+
+            my $file = $dir . '/' . RT::Test->builder->current_test . '-' . $name;
+
+            open my $handle, '>', $file or die $!;
+            print $handle encode_utf8($self->content) or die $!;
+            close $handle or die $!;
+
+            Test::More::diag("Dumped failing test page content to $file");
+        }
+        return $ok;
+    };
+
+    no strict 'refs';
+    *{$method_name} = $implementation;
+}
+
 sub DESTROY {
     my $self = shift;
+
+    if ( RT::Test->builder->{Done_Testing} ) {
+        die "RT::Test::Web object needs to be destroyed before done_testing is called";
+    }
+
     if ( !$RT::Test::Web::DESTROY++ ) {
         $self->no_warnings_ok;
     }

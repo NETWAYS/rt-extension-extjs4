@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -48,7 +48,7 @@
 <%init>
 my $Config = {};
 $Config->{$_} = RT->Config->Get( $_, $session{CurrentUser} )
-  for qw(rtname WebPath MessageBoxRichTextHeight);
+  for qw(rtname WebPath MessageBoxRichText MessageBoxRichTextHeight);
 
 my $CurrentUser = {};
 if ($session{CurrentUser} and $session{CurrentUser}->id) {
@@ -64,6 +64,14 @@ if ($session{CurrentUser} and $session{CurrentUser}->id) {
 
 my $Catalog = {
     quote_in_filename => "Filenames with double quotes can not be uploaded.", #loc
+    attachment_warning_regex => "\\battach", #loc
+    shortcut_help_error => "Unable to open shortcut help. Reason:", #loc
+    error => "Error", #loc
+    check => "Check", #loc
+    remove => "Remove", #loc
+    loading => "Loading...", #loc
+    try_again => "Try again", #loc
+    history_scroll_error => "Could not load ticket history. Reason:", #loc
 };
 $_ = loc($_) for values %$Catalog;
 

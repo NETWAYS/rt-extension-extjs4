@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -51,7 +51,7 @@
     titleright => $customize ? loc('Edit') : '',
     titleright_href => $customize,
     hideable => $hideable &>
-<& $query_display_component, hideable => $hideable, %$ProcessedSearchArg, ShowNavigation => 0, Class => 'RT::Tickets' &>
+<& $query_display_component, hideable => $hideable, %$ProcessedSearchArg, ShowNavigation => 0, Class => 'RT::Tickets', HasResults => $HasResults &>
 </&>
 <%init>
 my $search;
@@ -125,21 +125,6 @@ foreach ( $SearchArg, $ProcessedSearchArg ) {
 
     # extract-message-catalog would "$1", so we avoid quotes for loc calls
     $_->{'Format'} =~ s/__loc\(["']?(\w+)["']?\)__/my $f = "$1"; loc($f)/ge;
-    if ( $_->{'Query'} =~ /__Bookmarks__/ ) {
-        $_->{'Rows'} = 999;
-
-        # DEPRECATED: will be here for a while up to 4.4
-        RT->Deprecated(
-            Remove  => "4.4",
-            Instead => "id = '__Bookmarked__'",
-            Message => "The __Bookmarks__ query syntax is deprecated",
-            Object  => $search,
-        );
-
-        my @bookmarks = $session{'CurrentUser'}->UserObj->Bookmarks;
-        my $query = join(" OR ", map " id = '$_' ", @bookmarks ) || 'id=0';
-        $_->{'Query'} =~ s/__Bookmarks__/( $query )/g;
-    }
 }
 
 my $QueryString = '?' . $m->comp( '/Elements/QueryString', %$SearchArg );
@@ -150,5 +135,6 @@ $SavedSearch    => undef
 %Override       => ()
 $IgnoreMissing  => undef
 $hideable       => 1
-$ShowCustomize => 1
+$ShowCustomize  => 1
+$HasResults     => undef
 </%ARGS>

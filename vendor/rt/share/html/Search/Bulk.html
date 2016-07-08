@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -94,6 +94,31 @@
 <td class="value"> <& /Elements/EmailInput, Name => "AddAdminCc", Size=> 20, Default => $ARGS{AddAdminCc} &> </td></tr>
 <tr><td class="label"> <&|/l&>Remove AdminCc</&>: </td>
 <td class="value"> <& /Elements/EmailInput, Name => "DeleteAdminCc", Size=> 20, Default => $ARGS{DeleteAdminCc} &> </td></tr>
+
+% my $single_roles = RT::CustomRoles->new($session{CurrentUser});
+% $single_roles->LimitToSingleValue;
+% $single_roles->LimitToObjectId($_) for keys %$seen_queues;
+% while (my $role = $single_roles->Next) {
+<tr>
+<td class="label"> <&|/l, $role->Name &>Make [_1]</&>: </td>
+<td class="value"><& /Elements/SingleUserRoleInput, role => $role, ShowPlaceholder => 0, ShowEntryHint => 0, Size => 20, Default => $ARGS{"RT::CustomRole-" . $role->Id} &></td>
+</tr>
+% }
+
+% my $multi_roles = RT::CustomRoles->new($session{CurrentUser});
+% $multi_roles->LimitToMultipleValue;
+% $multi_roles->LimitToObjectId($_) for keys %$seen_queues;
+% while (my $role = $multi_roles->Next) {
+<tr>
+<td class="label"> <&|/l, $role->Name &>Add [_1]</&>: </td>
+<td class="value"> <& /Elements/EmailInput, Name => "AddRT::CustomRole-" . $role->Id, Size=> 20, Default => $ARGS{"AddRT::CustomRole-" . $role->Id} &> </td>
+</tr>
+<tr>
+<td class="label"> <&|/l, $role->Name &>Remove [_1]</&>: </td>
+<td class="value"> <& /Elements/EmailInput, Name => "DeleteRT::CustomRole-" . $role->Id, Size=> 20, Default => $ARGS{"DeleteRT::CustomRole-" . $role->Id} &> </td>
+</tr>
+% }
+
 </table>
 </td>
 <td valign="top">
@@ -142,11 +167,9 @@
 <td><& /Elements/EditCustomField,
     CustomField => $CF,
     Object => RT::Transaction->new( $session{'CurrentUser'} ),
-    &><em><% $CF->FriendlyType %></em></td>
+    &><em><% $CF->EntryHint // '' %></em></td>
 </td></tr>
 % } # end if while
-
-<& /Ticket/Elements/AddAttachments, %ARGS &>
 
  <tr><td class="labeltop"><&|/l&>Message</&>:</td>
  <td class="messagebox-container action-<% $ARGS{UpdateType} || 'private' %>">
@@ -158,6 +181,9 @@
                         ( IncludeSignature => $IncludeSignature ),
         &>
  </td></tr>
+
+<& /Ticket/Elements/AddAttachments, %ARGS &>
+
  </table>
 
 </&>
@@ -189,6 +215,11 @@ $cfs->SetContextObject( values %$seen_queues ) if keys %$seen_queues == 1;
 
 </form>
 
+%# Keyboard shortcuts info
+<div class="clear"></div>
+<div class="keyboard-shortcuts footer">
+    <p><&|/l_unsafe, '<span class="keyboard-shortcuts-key">?</span>' &>Press [_1] to view keyboard shortcuts.</&></p>
+</div>
 
 <%INIT>
 unless ( defined $Rows ) {
@@ -283,6 +314,7 @@ unless ( $ARGS{'AddMoreAttach'} ) {
         my @cfresults = ProcessRecordBulkCustomFields( RecordObj => $Ticket, ARGSRef => \%ARGS );
 
         my @tempresults = (
+            grep { defined }
             @watchresults,  @basicresults, @dateresults,
             @updateresults, @linkresults,  @cfresults
         );

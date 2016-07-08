@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -96,19 +96,21 @@ RT::ACE->RegisterCacheHandler(sub {
 });
 
 use RT::Groups;
+use RT::CustomRoles;
 use RT::ACL;
 use RT::Interface::Email;
 
-__PACKAGE__->AddRight( General => SeeQueue            => 'View queue' ); # loc
-__PACKAGE__->AddRight( Admin   => AdminQueue          => 'Create, modify and delete queue' ); # loc
-__PACKAGE__->AddRight( Admin   => ShowACL             => 'Display Access Control List' ); # loc
-__PACKAGE__->AddRight( Admin   => ModifyACL           => 'Create, modify and delete Access Control List entries' ); # loc
-__PACKAGE__->AddRight( Admin   => ModifyQueueWatchers => 'Modify queue watchers' ); # loc
-__PACKAGE__->AddRight( General => SeeCustomField      => 'View custom field values' ); # loc
-__PACKAGE__->AddRight( Staff   => ModifyCustomField   => 'Modify custom field values' ); # loc
-__PACKAGE__->AddRight( Admin   => AssignCustomFields  => 'Assign and remove queue custom fields' ); # loc
-__PACKAGE__->AddRight( Admin   => ModifyTemplate      => 'Modify Scrip templates' ); # loc
-__PACKAGE__->AddRight( Admin   => ShowTemplate        => 'View Scrip templates' ); # loc
+__PACKAGE__->AddRight( General => SeeQueue              => 'View queue' ); # loc
+__PACKAGE__->AddRight( Admin   => AdminQueue            => 'Create, modify and delete queue' ); # loc
+__PACKAGE__->AddRight( Admin   => ShowACL               => 'Display Access Control List' ); # loc
+__PACKAGE__->AddRight( Admin   => ModifyACL             => 'Create, modify and delete Access Control List entries' ); # loc
+__PACKAGE__->AddRight( Admin   => ModifyQueueWatchers   => 'Modify queue watchers' ); # loc
+__PACKAGE__->AddRight( General => SeeCustomField        => 'View custom field values' ); # loc
+__PACKAGE__->AddRight( Staff   => ModifyCustomField     => 'Modify custom field values' ); # loc
+__PACKAGE__->AddRight( Staff   => SetInitialCustomField => 'Add custom field values only at object creation time'); # loc
+__PACKAGE__->AddRight( Admin   => AssignCustomFields    => 'Assign and remove queue custom fields' ); # loc
+__PACKAGE__->AddRight( Admin   => ModifyTemplate        => 'Modify Scrip templates' ); # loc
+__PACKAGE__->AddRight( Admin   => ShowTemplate          => 'View Scrip templates' ); # loc
 
 __PACKAGE__->AddRight( Admin   => ModifyScrips        => 'Modify Scrips' ); # loc
 __PACKAGE__->AddRight( Admin   => ShowScrips          => 'View Scrips' ); # loc
@@ -139,9 +141,6 @@ Arguments: ARGS is a hash of named parameters.  Valid parameters are:
   Description
   CorrespondAddress
   CommentAddress
-  InitialPriority
-  FinalPriority
-  DefaultDueIn
  
 If you pass the ACL check, it creates the queue and returns its queue id.
 
@@ -157,12 +156,10 @@ sub Create {
         CommentAddress    => '',
         Lifecycle         => 'default',
         SubjectTag        => undef,
-        InitialPriority   => 0,
-        FinalPriority     => 0,
-        DefaultDueIn      => 0,
         Sign              => undef,
         SignAuto          => undef,
         Encrypt           => undef,
+        SLA               => undef,
         _RecordTransaction => 1,
         @_
     );
@@ -202,7 +199,7 @@ sub Create {
     }
     $RT::Handle->Commit;
 
-    for my $attr (qw/Sign SignAuto Encrypt/) {
+    for my $attr (qw/Sign SignAuto Encrypt SLA/) {
         next unless defined $args{$attr};
         my $set = "Set" . $attr;
         my ($status, $msg) = $self->$set( $args{$attr} );
@@ -472,43 +469,21 @@ sub TicketTransactionCustomFields {
     return ($cfs);
 }
 
+=head2 CustomRoles
 
-
-
-
-=head2 AllRoleGroupTypes
-
-B<DEPRECATED> and will be removed in a future release. Use L</Roles>
-instead.
-
-Returns a list of the names of the various role group types for Queues,
-including roles used only for ACLs like Requestor and Owner. If you don't want
-them, see L</ManageableRoleGroupTypes>.
+Returns an L<RT::CustomRoles> object containing all queue-specific roles.
 
 =cut
 
-sub AllRoleGroupTypes {
-    RT->Deprecated(
-        Remove => "4.4",
-        Instead => "RT::Queue->Roles",
-    );
-    shift->Roles;
-}
+sub CustomRoles {
+    my $self = shift;
 
-=head2 IsRoleGroupType
-
-B<DEPRECATED> and will be removed in a future release. Use L</HasRole> instead.
-
-Returns whether the passed-in type is a role group type.
-
-=cut
-
-sub IsRoleGroupType {
-    RT->Deprecated(
-        Remove => "4.4",
-        Instead => "RT::Queue->HasRole",
-    );
-    shift->HasRole(@_);
+    my $roles = RT::CustomRoles->new( $self->CurrentUser );
+    if ( $self->CurrentUserHasRight('SeeQueue') ) {
+        $roles->LimitToObjectId( $self->Id );
+        $roles->ApplySortOrder;
+    }
+    return ($roles);
 }
 
 =head2 ManageableRoleGroupTypes
@@ -532,7 +507,7 @@ Returns whether the passed-in type is a manageable role group type.
 sub IsManageableRoleGroupType {
     my $self = shift;
     my $type = shift;
-    return( $self->HasRole($type) and not $self->Role($type)->{ACLOnly} );
+    return grep { $type eq $_ } $self->ManageableRoleGroupTypes;
 }
 
 
@@ -577,8 +552,9 @@ sub AddWatcher {
     my ($principal, $msg) = $self->AddRoleMember( %args );
     return ( 0, $msg) unless $principal;
 
-    return ( 1, $self->loc("Added [_1] to members of [_2] for this queue.",
-                           $principal->Object->Name, $self->loc($args{'Type'}) ));
+    my $group = $self->RoleGroup( $args{Type} );
+    return ( 1, $self->loc("Added [_1] as [_2] for this queue",
+                           $principal->Object->Name, $group->Label ));
 }
 
 
@@ -607,8 +583,9 @@ sub DeleteWatcher {
     my ($principal, $msg) = $self->DeleteRoleMember( %args );
     return ( 0, $msg) unless $principal;
 
-    return ( 1, $self->loc("Removed [_1] from members of [_2] for this queue.",
-                           $principal->Object->Name, $self->loc($args{'Type'}) ));
+    my $group = $self->RoleGroup( $args{Type} );
+    return ( 1, $self->loc("[_1] is no longer [_2] for this queue",
+                           $principal->Object->Name, $group->Label ));
 }
 
 
@@ -662,9 +639,7 @@ If the user doesn't have "ShowQueue" permission, returns an empty group
 sub Cc {
     my $self = shift;
 
-    return RT::Group->new($self->CurrentUser)
-        unless $self->CurrentUserHasRight('SeeQueue');
-    return $self->RoleGroup( 'Cc' );
+    return $self->RoleGroup( 'Cc', CheckRight => 'SeeQueue' );
 }
 
 
@@ -680,9 +655,7 @@ If the user doesn't have "ShowQueue" permission, returns an empty group
 sub AdminCc {
     my $self = shift;
 
-    return RT::Group->new($self->CurrentUser)
-        unless $self->CurrentUserHasRight('SeeQueue');
-    return $self->RoleGroup( 'AdminCc' );
+    return $self->RoleGroup( 'AdminCc', CheckRight => 'SeeQueue' );
 }
 
 
@@ -950,56 +923,10 @@ Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 
 =cut
 
+=head2 SortOrder
 
-=head2 InitialPriority
-
-Returns the current value of InitialPriority. 
-(In the database, InitialPriority is stored as int(11).)
-
-
-
-=head2 SetInitialPriority VALUE
-
-
-Set InitialPriority to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, InitialPriority will be stored as a int(11).)
-
-
-=cut
-
-
-=head2 FinalPriority
-
-Returns the current value of FinalPriority. 
-(In the database, FinalPriority is stored as int(11).)
-
-
-
-=head2 SetFinalPriority VALUE
-
-
-Set FinalPriority to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, FinalPriority will be stored as a int(11).)
-
-
-=cut
-
-
-=head2 DefaultDueIn
-
-Returns the current value of DefaultDueIn. 
-(In the database, DefaultDueIn is stored as int(11).)
-
-
-
-=head2 SetDefaultDueIn VALUE
-
-
-Set DefaultDueIn to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, DefaultDueIn will be stored as a int(11).)
+Returns the current value of SortOrder. 
+(In the database, SortOrder is stored as int(11).)
 
 
 =cut
@@ -1077,11 +1004,7 @@ sub _CoreAccessible {
         {read => 1, write => 1, sql_type => 12, length => 120,  is_blob => 0,  is_numeric => 0,  type => 'varchar(120)', default => ''},
         Lifecycle => 
         {read => 1, write => 1, sql_type => 12, length => 32,  is_blob => 0, is_numeric => 0,  type => 'varchar(32)', default => 'default'},
-        InitialPriority => 
-        {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
-        FinalPriority => 
-        {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
-        DefaultDueIn => 
+        SortOrder => 
         {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Creator => 
         {read => 1, auto => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
@@ -1091,6 +1014,8 @@ sub _CoreAccessible {
         {read => 1, auto => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         LastUpdated => 
         {read => 1, auto => 1, sql_type => 11, length => 0,  is_blob => 0,  is_numeric => 0,  type => 'datetime', default => ''},
+        SLADisabled => 
+        {read => 1, write => 1, sql_type => 5, length => 6,  is_blob => 0,  is_numeric => 1,  type => 'smallint(6)', default => '1'},
         Disabled => 
         {read => 1, write => 1, sql_type => 5, length => 6,  is_blob => 0,  is_numeric => 1,  type => 'smallint(6)', default => '0'},
 
@@ -1154,6 +1079,11 @@ sub FindDependencies {
     $objs->Limit( FIELD => "Queue", VALUE => $self->Id );
     $objs->{allow_deleted_search} = 1;
     $deps->Add( in => $objs );
+
+    # Object Custom Roles
+    $objs = RT::ObjectCustomRoles->new( $self->CurrentUser );
+    $objs->LimitToObjectId($self->Id);
+    $deps->Add( in => $objs );
 }
 
 sub __DependsOn {
@@ -1193,6 +1123,11 @@ sub __DependsOn {
     $objs->LimitToQueue( $self->id );
     push( @$list, $objs );
 
+# Object Custom Roles
+    $objs = RT::ObjectCustomRoles->new( $self->CurrentUser );
+    $objs->LimitToObjectId($self->Id);
+    push( @$list, $objs );
+
     $deps->_PushDependencies(
         BaseObject => $self,
         Flags => RT::Shredder::Constants::DEPENDS_ON,
@@ -1217,7 +1152,142 @@ sub PreInflate {
     return 1;
 }
 
+sub DefaultValue {
+    my $self = shift;
+    my $field = shift;
+    my $attr = $self->FirstAttribute('DefaultValues');
+    return undef unless $attr && $attr->Content;
+    return $attr->Content->{$field};
+}
 
+sub SetDefaultValue {
+    my $self = shift;
+    my %args = (
+        Name  => undef,
+        Value => undef,
+        @_
+    );
+    my $field = shift;
+    my $attr = $self->FirstAttribute('DefaultValues');
+
+    my ($old_value, $old_content, $new_value);
+    if ( $attr && $attr->Content ) {
+        $old_content = $attr->Content;
+        $old_value = $old_content->{$args{Name}};
+    }
+
+    unless ( defined $old_value && length $old_value ) {
+        $old_value = $self->loc('(no value)');
+    }
+
+    $new_value = $args{Value};
+    unless ( defined $new_value && length $new_value ) {
+        $new_value = $self->loc( '(no value)' );
+    }
+
+    return 1 if $new_value eq $old_value;
+
+    my ($ret, $msg) = $self->SetAttribute(
+        Name    => 'DefaultValues',
+        Content => {
+            %{ $old_content || {} }, $args{Name} => $args{Value},
+        },
+    );
+
+    if ( $ret ) {
+        return ( $ret, $self->loc( 'Default value of [_1] changed from [_2] to [_3]', $args{Name}, $old_value, $new_value ) );
+    }
+    else {
+        return ( $ret, $self->loc( "Can't change default value of [_1] from [_2] to [_3]: [_4]", $args{Name}, $old_value, $new_value, $msg ) );
+    }
+}
+
+sub SLA {
+    my $self = shift;
+    my $value = shift;
+    return undef unless $self->CurrentUserHasRight('SeeQueue');
+
+    my $attr = $self->FirstAttribute('SLA') or return undef;
+    return $attr->Content;
+}
+
+sub SetSLA {
+    my $self = shift;
+    my $value = shift;
+
+    return ( 0, $self->loc('Permission Denied') )
+        unless $self->CurrentUserHasRight('AdminQueue');
+
+    my ($status, $msg) = $self->SetAttribute(
+        Name        => 'SLA',
+        Description => 'Default Queue SLA',
+        Content     => $value,
+    );
+    return ($status, $msg) unless $status;
+    return ($status, $self->loc("Queue's default service level has been changed"));
+}
+
+sub InitialPriority {
+    my $self = shift;
+    RT->Deprecated( Instead => "DefaultValue('InitialPriority')", Remove => '4.6' );
+    return $self->DefaultValue('InitialPriority');
+}
+
+sub FinalPriority {
+    my $self = shift;
+    RT->Deprecated( Instead => "DefaultValue('FinalPriority')", Remove => '4.6' );
+    return $self->DefaultValue('FinalPriority');
+}
+
+sub DefaultDueIn {
+    my $self = shift;
+    RT->Deprecated( Instead => "DefaultValue('Due')", Remove => '4.6' );
+
+    # DefaultDueIn used to be a number of days; so if the DefaultValue is,
+    # say, "3 days" then return 3
+    my $due = $self->DefaultValue('Due');
+    if (defined($due) && $due =~ /^(\d+) days?$/i) {
+        return $1;
+    }
+
+    return $due;
+}
+
+sub SetInitialPriority {
+    my $self = shift;
+    my $value = shift;
+    RT->Deprecated( Instead => "SetDefaultValue", Remove => '4.6' );
+    return $self->SetDefaultValue(
+        Name => 'InitialPriority',
+        Value => $value,
+    );
+}
+
+sub SetFinalPriority {
+    my $self = shift;
+    my $value = shift;
+    RT->Deprecated( Instead => "SetDefaultValue", Remove => '4.6' );
+    return $self->SetDefaultValue(
+        Name => 'FinalPriority',
+        Value => $value,
+    );
+}
+
+sub SetDefaultDueIn {
+    my $self = shift;
+    my $value = shift;
+
+    # DefaultDueIn used to be a number of days; so if we're setting to,
+    # say, "3" then add the word "days" to match the way the new
+    # DefaultValues works
+    $value .= " days" if defined($value) && $value =~ /^\d+$/;
+
+    RT->Deprecated( Instead => "SetDefaultValue", Remove => '4.6' );
+    return $self->SetDefaultValue(
+        Name => 'Due',
+        Value => $value,
+    );
+}
 
 RT::Base->_ImportOverlays();
 

@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -678,6 +678,10 @@ sub InsertInitialData {
 
     my @warns;
 
+    # avoid trying to canonicalize system users through ExternalAuth
+    no warnings 'redefine';
+    local *RT::User::CanonicalizeUserInfo = sub { 1 };
+
     # create RT_System user and grant him rights
     {
         require RT::CurrentUser;
@@ -806,6 +810,25 @@ sub InsertInitialData {
         return ($val, $msg) unless $val;
     }
 
+    # assets role groups
+    foreach my $name (RT::Asset->Roles) {
+        next if $name eq "Owner";
+
+        my $group = RT->System->RoleGroup( $name );
+        if ( $group->id ) {
+            push @warns, "Assets role '$name' already exists.";
+            next;
+        }
+
+        $group = RT::Group->new( RT->SystemUser );
+        my ($val, $msg) = $group->CreateRoleGroup(
+            Object              => RT->System,
+            Name                => $name,
+            InsideTransaction   => 0,
+        );
+        return ($val, $msg) unless $val;
+    }
+
     push @warns, "You appear to have a functional RT database."
         if @warns;
 
@@ -828,10 +851,12 @@ sub InsertData {
     );
 
     # Slurp in stuff to insert from the datafile. Possible things to go in here:-
-    our (@Groups, @Users, @Members, @ACL, @Queues, @ScripActions, @ScripConditions,
-           @Templates, @CustomFields, @Scrips, @Attributes, @Initial, @Final);
-    local (@Groups, @Users, @Members, @ACL, @Queues, @ScripActions, @ScripConditions,
-           @Templates, @CustomFields, @Scrips, @Attributes, @Initial, @Final);
+    our (@Groups, @Users, @Members, @ACL, @Queues, @Classes, @ScripActions, @ScripConditions,
+           @Templates, @CustomFields, @CustomRoles, @Scrips, @Attributes, @Initial, @Final,
+           @Catalogs, @Assets);
+    local (@Groups, @Users, @Members, @ACL, @Queues, @Classes, @ScripActions, @ScripConditions,
+           @Templates, @CustomFields, @CustomRoles, @Scrips, @Attributes, @Initial, @Final,
+           @Catalogs, @Assets);
 
     local $@;
     $RT::Logger->debug("Going to load '$datafile' data file");
@@ -911,6 +936,11 @@ sub InsertData {
                 $item->{'Password'} = $root_password;
             }
             my $attributes = delete $item->{ Attributes };
+
+            no warnings 'redefine';
+            local *RT::User::CanonicalizeUserInfo = sub { 1 }
+                if delete $item->{ SkipCanonicalize };
+
             my $new_entry = RT::User->new( RT->SystemUser );
             my ( $return, $msg ) = $new_entry->Create(%$item);
             unless ( $return ) {
@@ -997,6 +1027,80 @@ sub InsertData {
         }
         $RT::Logger->debug("done.");
     }
+    if ( @Classes ) {
+        $RT::Logger->debug("Creating classes...");
+        for my $item (@Classes) {
+            my $attributes = delete $item->{ Attributes };
+            # Back-compat for the old "Queue" argument
+            if ( exists $item->{'Queue'} ) {
+                $item->{'ApplyTo'} = delete $item->{'Queue'};
+            }
+
+            my $apply_to = delete $item->{'ApplyTo'};
+            my $new_entry = RT::Class->new(RT->SystemUser);
+            my ( $return, $msg ) = $new_entry->Create(%$item);
+            unless ( $return ) {
+                $RT::Logger->error( $msg );
+            } else {
+                $RT::Logger->debug( $return ."." );
+                if ( !$apply_to ) {
+                    ( $return, $msg) = $new_entry->AddToObject( RT::Queue->new(RT->SystemUser) );
+                    $RT::Logger->error( $msg ) unless $return;
+                } else {
+                    $apply_to = [ $apply_to ] unless ref $apply_to;
+                    for my $name ( @{ $apply_to } ) {
+                        my $queue = RT::Queue->new( RT->SystemUser );
+                        $queue->Load( $name );
+                        if ( $queue->id ) {
+                            ( $return, $msg) = $new_entry->AddToObject( $queue );
+                            $RT::Logger->error( $msg ) unless $return;
+                        }
+                        else {
+                            $RT::Logger->error( "Could not find RT::Queue $name to apply " . $new_entry->Name . " to" );
+                        }
+                    }
+                }
+                $_->{Object} = $new_entry for @{$attributes || []};
+                push @Attributes, @{$attributes || []};
+            }
+        }
+        $RT::Logger->debug("done.");
+    }
+
+    if ( @Catalogs ) {
+        $RT::Logger->debug("Creating Catalogs...");
+
+        for my $item (@Catalogs) {
+            my $new_entry = RT::Catalog->new(RT->SystemUser);
+            my ( $return, $msg ) = $new_entry->Create(%$item);
+            unless ( $return ) {
+                $RT::Logger->error( $msg );
+            }
+            else {
+                $RT::Logger->debug( $return ."." );
+            }
+        }
+
+        $RT::Logger->debug("done.");
+    }
+    if ( @Assets ) {
+        $RT::Logger->debug("Creating Assets...");
+
+        for my $item (@Catalogs) {
+            my $new_entry = RT::Asset->new(RT->SystemUser);
+            my ( $return, $msg ) = $new_entry->Create(%$item);
+            unless ( $return ) {
+                $RT::Logger->error( $msg );
+            }
+            else {
+                $RT::Logger->debug( $return ."." );
+            }
+        }
+
+        $RT::Logger->debug("done.");
+    }
+
+
     if ( @CustomFields ) {
         $RT::Logger->debug("Creating custom fields...");
         for my $item ( @CustomFields ) {
@@ -1083,6 +1187,36 @@ sub InsertData {
 
         $RT::Logger->debug("done.");
     }
+
+    if ( @CustomRoles ) {
+        $RT::Logger->debug("Creating custom roles...");
+        for my $item ( @CustomRoles ) {
+            my $attributes = delete $item->{ Attributes };
+            my $apply_to = delete $item->{'ApplyTo'};
+
+            my $new_entry = RT::CustomRole->new( RT->SystemUser );
+
+            my ( $ok, $msg ) = $new_entry->Create(%$item);
+            if (!$ok) {
+                $RT::Logger->error($msg);
+                next;
+            }
+
+            if ($apply_to) {
+                $apply_to = [ $apply_to ] unless ref $apply_to;
+                for my $name ( @{ $apply_to } ) {
+                    my ($ok, $msg) = $new_entry->AddToObject($name);
+                    $RT::Logger->error( $msg ) if !$ok;
+                }
+            }
+
+            $_->{Object} = $new_entry for @{$attributes || []};
+            push @Attributes, @{$attributes || []};
+        }
+
+        $RT::Logger->debug("done.");
+    }
+
     if ( @ACL ) {
         $RT::Logger->debug("Creating ACL...");
         for my $item (@ACL) {
@@ -1121,6 +1255,12 @@ sub InsertData {
 
             # Group rights or user rights?
             if ( $item->{'GroupDomain'} ) {
+                if (my $role_name = delete $item->{CustomRole}) {
+                    my $role = RT::CustomRole->new(RT->SystemUser);
+                    $role->Load($role_name);
+                    $item->{'GroupType'} = $role->GroupType;
+                }
+
                 $princ = RT::Group->new(RT->SystemUser);
                 if ( $item->{'GroupDomain'} eq 'UserDefined' ) {
                   $princ->LoadUserDefinedGroup( $item->{'GroupId'} );

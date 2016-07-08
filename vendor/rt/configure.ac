@@ -34,6 +34,16 @@ if test "$PERL" = 'not found'; then
 	AC_MSG_ERROR([cannot use $PACKAGE_NAME without perl])
 fi
 
+dnl BSD find uses -perm +xxxx, GNU find has deprecated this syntax in favour of
+dnl -perm /xxx.
+AC_MSG_CHECKING([checking version of find])
+AS_IF([find --version 2>&1 | grep 'GNU'],
+      [   FINDPERM="/"
+          AC_MSG_RESULT([configuring for GNU find]) ],
+      [   FINDPERM="+"
+          AC_MSG_RESULT([configuring for BSD find]) ])
+
+AC_SUBST([FINDPERM])
 
 dnl WEB_HANDLER
 AC_ARG_WITH(web-handler,
@@ -324,6 +334,30 @@ fi
 AC_SUBST(RT_SMIME_DEPS)
 AC_SUBST(RT_SMIME)
 
+dnl Dependencies for external auth
+AC_ARG_WITH(externalauth,[],RT_EXTERNALAUTH=$withval,RT_EXTERNALAUTH="0")
+AC_ARG_ENABLE(externalauth,
+            AC_HELP_STRING([--enable-externalauth],
+                           [Add dependencies needed for external auth]),
+            RT_EXTERNALAUTH=$enableval,
+            RT_EXTERNALAUTH=$RT_EXTERNALAUTH)
+if test "$RT_EXTERNALAUTH" = yes; then
+        RT_EXTERNALAUTH="1"
+else
+        RT_EXTERNALAUTH="0"
+fi
+AC_SUBST(RT_EXTERNALAUTH)
+
+dnl ExternalStorage
+AC_ARG_WITH(attachment-store,
+	    AC_HELP_STRING([--with-attachment-store=TYPE],
+	    		   [which attachment storage RT will use for attachments (default: database) (database, disk, S3 and Dropbox are valid)]), 
+            ATTACHMENT_STORE=$withval,
+            ATTACHMENT_STORE=database)
+if test "$ATTACHMENT_STORE" != 'database' -a "$ATTACHMENT_STORE" != 'disk' -a "$ATTACHMENT_STORE" != 'S3' -a "$ATTACHMENT_STORE" != 'Dropbox' ; then
+	AC_MSG_ERROR([Only database, disk, S3 and Dropbox are valid db types])
+fi
+AC_SUBST(ATTACHMENT_STORE)
 
 dnl This section maps the variable names this script 'natively' generates
 dnl to their existing names. They should be removed from here as the .in
@@ -423,11 +457,13 @@ AC_CONFIG_FILES([
                  etc/upgrade/sanity-check-stylesheets
                  etc/upgrade/shrink-cgm-table
                  etc/upgrade/shrink-transactions-table
-                 etc/upgrade/split-out-cf-categories
                  etc/upgrade/switch-templates-to
                  etc/upgrade/time-worked-history
                  etc/upgrade/upgrade-articles
+                 etc/upgrade/upgrade-assets
                  etc/upgrade/vulnerable-passwords
+                 etc/upgrade/upgrade-sla
+                 sbin/rt-ldapimport
                  sbin/rt-attributes-viewer
                  sbin/rt-preferences-viewer
                  sbin/rt-session-viewer
@@ -436,6 +472,7 @@ AC_CONFIG_FILES([
                  sbin/rt-test-dependencies
                  sbin/rt-email-digest
                  sbin/rt-email-dashboards
+                 sbin/rt-externalize-attachments
                  sbin/rt-clean-sessions
                  sbin/rt-shredder
                  sbin/rt-validator

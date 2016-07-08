@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -101,7 +101,6 @@ sub bootstrap_more_config {
             Keyring => q{$keyring},
             CAPath  => q{$ca},
         );
-        Set(\@MailPlugins => qw(Auth::MailFrom Auth::Crypt));
     };
 
 }

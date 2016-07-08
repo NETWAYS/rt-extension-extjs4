@@ -67,7 +67,6 @@
     top: 6.05em;
     right: 0em;
     left: auto;
-    z-index: 9995;
     font-size: 0.9em;
 }
 
@@ -101,11 +100,15 @@
     vertical-align: top;
 }
 
-#topactions button, #topactions select, #topactions input{
+#topactions button, #topactions select, #topactions input {
  padding-top: 0em;
  padding-bottom: 0em;
  width: 8em;
+}
 
+#topactions .asset-search input,
+#topactions .article-search input {
+ width: 16em;
 }
 
 #topactions #simple-search .field{
@@ -116,17 +119,6 @@
 #topactions #simple-search .field:focus {
  color: #000;
  }
-
-/* The bookmark star is too tall without adjusting the padding and height */
-
-.sf-menu .toggle-bookmark a {
-    padding: 0 1em;
-    height: 2.5em;
-}
-
-.sf-menu .toggle-bookmark a img {
-    padding-top: 0.6em;
-}
 
 /* Pin page menu to top left corner once you scroll past it */
 
@@ -168,3 +160,14 @@
     -moz-border-radius:     0 0 0 5px;
     -webkit-border-radius:  0 0 0 5px;
 }
+
+#topactions input.field {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+#topactions input.select-queue {
+    border: none;
+}
+

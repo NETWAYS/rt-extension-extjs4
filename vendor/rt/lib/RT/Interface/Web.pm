@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -64,6 +64,7 @@ use warnings;
 package RT::Interface::Web;
 
 use RT::SavedSearches;
+use RT::CustomRoles;
 use URI qw();
 use RT::Interface::Web::Menu;
 use RT::Interface::Web::Session;
@@ -106,9 +107,9 @@ sub SquishedJS {
 
 sub JSFiles {
     return qw{
-      jquery-1.9.1.min.js
+      jquery-1.11.3.min.js
       jquery_noconflict.js
-      jquery-ui-1.10.0.custom.min.js
+      jquery-ui.min.js
       jquery-ui-timepicker-addon.js
       jquery-ui-patch-datepicker.js
       jquery.modal.min.js
@@ -122,12 +123,17 @@ sub JSFiles {
       superfish.js
       supersubs.js
       jquery.supposition.js
+      chosen.jquery.min.js
       history-folding.js
       cascaded.js
       forms.js
       event-registration.js
       late.js
+      mousetrap.min.js
+      keyboard-shortcuts.js
+      assets.js
       /static/RichText/ckeditor.js
+      dropzone.min.js
       }, RT->Config->Get('JSFiles');
 }
 
@@ -160,16 +166,6 @@ sub EscapeHTML {
     $$ref =~ s/\)/&#41;/g;
     $$ref =~ s/"/&#34;/g;
     $$ref =~ s/'/&#39;/g;
-}
-
-# Back-compat
-# XXX: Remove in 4.4
-sub EscapeUTF8 {
-    RT->Deprecated(
-        Instead => "EscapeHTML",
-        Remove => "4.4",
-    );
-    EscapeHTML(@_);
 }
 
 =head2 EscapeURI SCALARREF
@@ -222,12 +218,12 @@ sub EscapeJS {
 
 Different web servers set different environmental varibles. This
 function must return something suitable for REMOTE_USER. By default,
-just downcase $ENV{'REMOTE_USER'}
+just downcase REMOTE_USER env
 
 =cut
 
 sub WebCanonicalizeInfo {
-    return $ENV{'REMOTE_USER'} ? lc $ENV{'REMOTE_USER'} : $ENV{'REMOTE_USER'};
+    return RequestENV('REMOTE_USER') ? lc RequestENV('REMOTE_USER') : RequestENV('REMOTE_USER');
 }
 
 
@@ -293,6 +289,8 @@ sub HandleRequest {
     InitializeMenu();
     MaybeShowInstallModePage();
 
+    MaybeRebuildCustomRolesCache();
+
     $HTML::Mason::Commands::m->comp( '/Elements/SetupSessionCookie', %$ARGS );
     SendSessionCookie();
 
@@ -306,6 +304,10 @@ sub HandleRequest {
         $HTML::Mason::Commands::session{'CurrentUser'} = RT::CurrentUser->new();
     }
 
+    # attempt external auth
+    $HTML::Mason::Commands::m->comp( '/Elements/DoAuth', %$ARGS )
+        if RT->Config->Get('ExternalAuth');
+
     # Process session-related callbacks before any auth attempts
     $HTML::Mason::Commands::m->callback( %$ARGS, CallbackName => 'Session', CallbackPage => '/autohandler' );
 
@@ -316,6 +318,10 @@ sub HandleRequest {
     AttemptExternalAuth($ARGS) if RT->Config->Get('WebRemoteUserContinuous') or not _UserLoggedIn();
 
     _ForceLogout() unless _UserLoggedIn();
+
+    # attempt external auth
+    $HTML::Mason::Commands::m->comp( '/Elements/DoAuth', %$ARGS )
+        if RT->Config->Get('ExternalAuth');
 
     # Process per-page authentication callbacks
     $HTML::Mason::Commands::m->callback( %$ARGS, CallbackName => 'Auth', CallbackPage => '/autohandler' );
@@ -524,8 +530,8 @@ sub IntuitNextPage {
 
     # This includes any query parameters.  Redirect will take care of making
     # it an absolute URL.
-    if ($ENV{'REQUEST_URI'}) {
-        $req_uri = $ENV{'REQUEST_URI'};
+    if (RequestENV('REQUEST_URI')) {
+        $req_uri = RequestENV('REQUEST_URI');
 
         # collapse multiple leading slashes so the first part doesn't look like
         # a hostname of a schema-less URI
@@ -659,6 +665,15 @@ sub ShowRequestedPage {
 
     # precache all system level rights for the current user
     $HTML::Mason::Commands::session{CurrentUser}->PrincipalObj->HasRights( Object => RT->System );
+
+    if ( $HTML::Mason::Commands::r->path_info =~ m{^(/+)User/Prefs.html} ) {
+        RT->Deprecated(
+            Message => '/User/Prefs.html is deprecated',
+            Instead => "/Prefs/AboutMe.html",
+            Stack   => 0,
+        );
+        RT::Interface::Web::Redirect( RT->Config->Get('WebURL') . 'Prefs/AboutMe.html' );
+    }
 
     # If the user isn't privileged, they can only see SelfService
     unless ( $HTML::Mason::Commands::session{'CurrentUser'}->Privileged ) {
@@ -806,13 +821,14 @@ sub AttemptPasswordAuthentication {
 
     my $m = $HTML::Mason::Commands::m;
 
+    my $remote_addr = RequestENV('REMOTE_ADDR');
     unless ( $user_obj->id && $user_obj->IsPassword( $ARGS->{pass} ) ) {
-        $RT::Logger->error("FAILED LOGIN for @{[$ARGS->{user}]} from $ENV{'REMOTE_ADDR'}");
+        $RT::Logger->error("FAILED LOGIN for @{[$ARGS->{user}]} from $remote_addr");
         $m->callback( %$ARGS, CallbackName => 'FailedLogin', CallbackPage => '/autohandler' );
         return (0, HTML::Mason::Commands::loc('Your username or password is incorrect'));
     }
     else {
-        $RT::Logger->info("Successful login for @{[$ARGS->{user}]} from $ENV{'REMOTE_ADDR'}");
+        $RT::Logger->info("Successful login for @{[$ARGS->{user}]} from $remote_addr");
 
         # It's important to nab the next page from the session before we blow
         # the session away
@@ -846,13 +862,13 @@ Load or setup a session cookie for the current user.
 
 sub _SessionCookieName {
     my $cookiename = "RT_SID_" . RT->Config->Get('rtname');
-    $cookiename .= "." . $ENV{'SERVER_PORT'} if $ENV{'SERVER_PORT'};
+    $cookiename .= "." . RequestENV('SERVER_PORT') if RequestENV('SERVER_PORT');
     return $cookiename;
 }
 
 sub LoadSessionFromCookie {
 
-    my %cookies       = CGI::Cookie->fetch;
+    my %cookies       = CGI::Cookie->parse(RequestENV('HTTP_COOKIE'));
     my $cookiename    = _SessionCookieName();
     my $SessionCookie = ( $cookies{$cookiename} ? $cookies{$cookiename}->value : undef );
     tie %HTML::Mason::Commands::session, 'RT::Interface::Web::Session', $SessionCookie;
@@ -901,16 +917,11 @@ sub GetWebURLFromRequest {
 
     my $uri = URI->new( RT->Config->Get('WebURL') );
 
-    if ( defined $ENV{HTTPS} and $ENV{'HTTPS'} eq 'on' ) {
-        $uri->scheme('https');
-    }
-    else {
-        $uri->scheme('http');
-    }
+    $uri->scheme(RequestENV('psgi.url_scheme') || 'http');
 
     # [rt3.fsck.com #12716] Apache recommends use of $SERVER_HOST
-    $uri->host( $ENV{'SERVER_HOST'} || $ENV{'HTTP_HOST'} || $ENV{'SERVER_NAME'} );
-    $uri->port( $ENV{'SERVER_PORT'} );
+    $uri->host( RequestENV('SERVER_HOST') || RequestENV('HTTP_HOST') || RequestENV('SERVER_NAME') );
+    $uri->port( RequestENV('SERVER_PORT') );
     return "$uri"; # stringify to be consistent with WebURL in config
 }
 
@@ -1144,7 +1155,7 @@ sub MobileClient {
     my $self = shift;
 
 
-if (($ENV{'HTTP_USER_AGENT'} || '') =~ /(?:hiptop|Blazer|Novarra|Vagabond|SonyEricsson|Symbian|NetFront|UP.Browser|UP.Link|Windows CE|MIDP|J2ME|DoCoMo|J-PHONE|PalmOS|PalmSource|iPhone|iPod|AvantGo|Nokia|Android|WebOS|S60|Mobile)/io && !$HTML::Mason::Commands::session{'NotMobile'})  {
+if ((RequestENV('HTTP_USER_AGENT') || '') =~ /(?:hiptop|Blazer|Novarra|Vagabond|SonyEricsson|Symbian|NetFront|UP.Browser|UP.Link|Windows CE|MIDP|J2ME|DoCoMo|J-PHONE|PalmOS|PalmSource|iPhone|iPod|AvantGo|Nokia|Android|WebOS|S60|Mobile)/io && !$HTML::Mason::Commands::session{'NotMobile'})  {
     return 1;
 } else {
     return undef;
@@ -1255,6 +1266,15 @@ sub MaybeEnableSQLStatementLog {
 
 }
 
+my $role_cache_time = time;
+sub MaybeRebuildCustomRolesCache {
+    my $needs_update = RT->System->CustomRoleCacheNeedsUpdate;
+    if ($needs_update > $role_cache_time) {
+        RT::CustomRoles->RegisterRoles;
+        $role_cache_time = $needs_update;
+    }
+}
+
 sub LogRecordedSQLStatements {
     my %args = @_;
 
@@ -1299,12 +1319,12 @@ sub ValidateWebConfig {
     return if $_has_validated_web_config;
     $_has_validated_web_config = 1;
 
-    my $port = $ENV{SERVER_PORT};
-    my $host = $ENV{HTTP_X_FORWARDED_HOST} || $ENV{HTTP_X_FORWARDED_SERVER}
-            || $ENV{HTTP_HOST}             || $ENV{SERVER_NAME};
+    my $port = RequestENV('SERVER_PORT');
+    my $host = RequestENV('HTTP_X_FORWARDED_HOST') || RequestENV('HTTP_X_FORWARDED_SERVER')
+            || RequestENV('HTTP_HOST')             || RequestENV('SERVER_NAME');
     ($host, $port) = ($1, $2) if $host =~ /^(.*?):(\d+)$/;
 
-    if ( $port != RT->Config->Get('WebPort') and not $ENV{'rt.explicit_port'}) {
+    if ( $port != RT->Config->Get('WebPort') and not RequestENV('rt.explicit_port')) {
         $RT::Logger->warn("The requested port ($port) does NOT match the configured WebPort ($RT::WebPort).  "
                          ."Perhaps you should Set(\$WebPort, $port); in RT_SiteConfig.pm, "
                          ."otherwise your internal hyperlinks may be broken.");
@@ -1319,10 +1339,10 @@ sub ValidateWebConfig {
     # Unfortunately, there is no reliable way to get the _path_ that was
     # requested at the proxy level; simply disable this warning if we're
     # proxied and there's a mismatch.
-    my $proxied = $ENV{HTTP_X_FORWARDED_HOST} || $ENV{HTTP_X_FORWARDED_SERVER};
-    if ($ENV{SCRIPT_NAME} ne RT->Config->Get('WebPath') and not $proxied) {
-        $RT::Logger->warn("The requested path ($ENV{SCRIPT_NAME}) does NOT match the configured WebPath ($RT::WebPath).  "
-                         ."Perhaps you should Set(\$WebPath, '$ENV{SCRIPT_NAME}'); in RT_SiteConfig.pm, "
+    my $proxied = RequestENV('HTTP_X_FORWARDED_HOST') || RequestENV('HTTP_X_FORWARDED_SERVER');
+    if (RequestENV('SCRIPT_NAME') ne RT->Config->Get('WebPath') and not $proxied) {
+        $RT::Logger->warn("The requested path ('" . RequestENV('SCRIPT_NAME') . "') does NOT match the configured WebPath ($RT::WebPath).  "
+                         ."Perhaps you should Set(\$WebPath, '" .  RequestENV('SCRIPT_NAME') . "' in RT_SiteConfig.pm, "
                          ."otherwise your internal hyperlinks may be broken.");
     }
 }
@@ -1405,6 +1425,8 @@ our %WHITELISTED_COMPONENT_ARGS = (
     '/Ticket/Update.html' => ['QuoteTransaction', 'Action', 'DefaultStatus'],
     # Action->Extract Article on a ticket's menu
     '/Articles/Article/ExtractIntoClass.html' => ['Ticket'],
+    # Only affects display
+    '/Ticket/Display.html' => ['HideUnsetFields'],
 );
 
 # Components which are blacklisted from automatic, argument-based whitelisting.
@@ -1441,13 +1463,15 @@ sub IsCompCSRFWhitelisted {
     return 0 if $IS_BLACKLISTED_COMPONENT{$comp};
 
     if ( my %csrf_config = RT->Config->Get('ReferrerComponents') ) {
-        my $value = $csrf_config{$comp};
-        if ( ref $value eq 'ARRAY' ) {
-            delete $args{$_} for @$value;
-            return %args ? 0 : 1;
-        }
-        else {
-            return $value ? 1 : 0;
+        if (exists $csrf_config{$comp}) {
+            my $value = $csrf_config{$comp};
+            if ( ref $value eq 'ARRAY' ) {
+                delete $args{$_} for @$value;
+                return %args ? 0 : 1;
+            }
+            else {
+                return $value ? 1 : 0;
+            }
         }
     }
 
@@ -1548,9 +1572,9 @@ EOT
     # if there is no Referer header then assume the worst
     return (1,
             "your browser did not supply a Referrer header", # loc
-        ) if !$ENV{HTTP_REFERER};
+        ) if !RequestENV('HTTP_REFERER');
 
-    my ($whitelisted, $browser, $configs) = IsRefererCSRFWhitelisted($ENV{HTTP_REFERER});
+    my ($whitelisted, $browser, $configs) = IsRefererCSRFWhitelisted(RequestENV('HTTP_REFERER'));
     return 0 if $whitelisted;
 
     if ( @$configs > 1 ) {
@@ -1839,6 +1863,12 @@ sub GetCustomFieldInputNamePrefix {
     return $prefix;
 }
 
+sub RequestENV {
+    my $name = shift;
+    my $env = $HTML::Mason::Commands::m->cgi_object->env;
+    return $name ? $env->{$name} : $env;
+}
+
 package HTML::Mason::Commands;
 
 use vars qw/$r $m %session/;
@@ -2072,7 +2102,7 @@ sub MaybeRedirectToApproval {
         @_
     );
 
-    return unless $ENV{REQUEST_METHOD} eq 'GET';
+    return unless RT::Interface::Web::RequestENV('REQUEST_METHOD') eq 'GET';
 
     my $id = $args{ARGSRef}->{id};
 
@@ -2106,7 +2136,7 @@ sub CreateTicket {
     my (@Actions);
 
     my $current_user = $session{'CurrentUser'};
-    my $Ticket = RT::Ticket->new( $current_user );
+    my $Ticket = delete $ARGS{TicketObj} || RT::Ticket->new( $current_user );
 
     my $Queue = RT::Queue->new( $current_user );
     unless ( $Queue->Load( $ARGS{'Queue'} ) ) {
@@ -2175,12 +2205,7 @@ sub CreateTicket {
     my %create_args = (
         Type => $ARGS{'Type'} || 'ticket',
         Queue => $ARGS{'Queue'},
-        Owner => $ARGS{'Owner'},
-
-        # note: name change
-        Requestor       => $ARGS{'Requestors'},
-        Cc              => $ARGS{'Cc'},
-        AdminCc         => $ARGS{'AdminCc'},
+        SLA => $ARGS{'SLA'},
         InitialPriority => $ARGS{'InitialPriority'},
         FinalPriority   => $ARGS{'FinalPriority'},
         TimeLeft        => $ARGS{'TimeLeft'},
@@ -2193,22 +2218,21 @@ sub CreateTicket {
         MIMEObj         => $MIMEObj,
         SquelchMailTo   => $ARGS{'SquelchMailTo'},
         TransSquelchMailTo => $ARGS{'TransSquelchMailTo'},
+
+        (map { $_ => $ARGS{$_} } $Queue->Roles),
+        # note: name change
+        Requestor       => $ARGS{'Requestors'},
     );
 
-    if ($ARGS{'DryRun'}) {
-        $create_args{DryRun} = 1;
-        $create_args{Owner}     ||= $RT::Nobody->Id;
-        $create_args{Requestor} ||= $session{CurrentUser}->EmailAddress;
-        $create_args{Subject}   ||= '';
-        $create_args{Status}    ||= $Queue->Lifecycle->DefaultOnCreate,
-    } else {
-        my @txn_squelch;
-        foreach my $type (qw(Requestor Cc AdminCc)) {
-            push @txn_squelch, map $_->address, Email::Address->parse( $create_args{$type} )
-                if grep $_ eq $type || $_ eq ( $type . 's' ), @{ $ARGS{'SkipNotification'} || [] };
-        }
-        push @{$create_args{TransSquelchMailTo}}, @txn_squelch;
+    my @txn_squelch;
+    foreach my $type (qw(Requestor Cc AdminCc)) {
+        push @txn_squelch, map $_->address, Email::Address->parse( $create_args{$type} )
+            if grep $_ eq $type || $_ eq ( $type . 's' ), @{ $ARGS{'SkipNotification'} || [] };
     }
+    foreach my $role (grep { /^RT::CustomRole-\d+$/ } @{ $ARGS{'SkipNotification'} || [] }) {
+        push @txn_squelch, map $_->address, Email::Address->parse( $create_args{$role} );
+    }
+    push @{$create_args{TransSquelchMailTo}}, @txn_squelch;
 
     if ( $ARGS{'AttachTickets'} ) {
         require RT::Action::SendEmail;
@@ -2226,7 +2250,6 @@ sub CreateTicket {
     my %links = ProcessLinksForCreate( ARGSRef => \%ARGS );
 
     my ( $id, $Trans, $ErrMsg ) = $Ticket->Create(%create_args, %links, %cfs);
-    return $Trans if $ARGS{DryRun};
 
     unless ($id) {
         Abort($ErrMsg);
@@ -2372,7 +2395,8 @@ sub ProcessUpdateMessage {
         Sign         => $args{ARGSRef}->{'Sign'},
         Encrypt      => $args{ARGSRef}->{'Encrypt'},
         MIMEObj      => $Message,
-        TimeTaken    => $args{ARGSRef}->{'UpdateTimeWorked'}
+        TimeTaken    => $args{ARGSRef}->{'UpdateTimeWorked'},
+        AttachExisting => $args{ARGSRef}->{'AttachExisting'},
     );
 
     _ProcessUpdateMessageRecipients(
@@ -2420,6 +2444,11 @@ sub _ProcessUpdateMessageRecipients {
             push @txn_squelch, $args{TicketObj}->QueueObj->$type->MemberEmailAddresses;
         }
     }
+    for my $role (grep { /^RT::CustomRole-\d+$/ } @{ $args{ARGSRef}->{'SkipNotification'} || [] }) {
+        push @txn_squelch, map $_->address, Email::Address->parse( $message_args->{$role} );
+        push @txn_squelch, $args{TicketObj}->RoleGroup($role)->MemberEmailAddresses;
+        push @txn_squelch, $args{TicketObj}->QueueObj->RoleGroup($role)->MemberEmailAddresses;
+    }
     if (grep $_ eq 'Requestor' || $_ eq 'Requestors', @{ $args{ARGSRef}->{'SkipNotification'} || [] }) {
         push @txn_squelch, map $_->address, Email::Address->parse( $message_args->{Requestor} );
         push @txn_squelch, $args{TicketObj}->Requestors->MemberEmailAddresses;
@@ -2428,6 +2457,8 @@ sub _ProcessUpdateMessageRecipients {
     push @txn_squelch, @{$args{ARGSRef}{SquelchMailTo}} if $args{ARGSRef}{SquelchMailTo};
     $message_args->{SquelchMailTo} = \@txn_squelch
         if @txn_squelch;
+
+    $args{TicketObj}->{TransSquelchMailTo} ||= $message_args->{'SquelchMailTo'};
 
     unless ( $args{'ARGSRef'}->{'UpdateIgnoreAddressCheckboxes'} ) {
         foreach my $key ( keys %{ $args{ARGSRef} } ) {
@@ -2904,6 +2935,7 @@ sub ProcessTicketBasics {
         Type
         Status
         Queue
+        SLA
     );
 
     # Canonicalize Queue and Owner to their IDs if they aren't numeric
@@ -3123,8 +3155,9 @@ sub _ParseObjectCustomFieldArgs {
     foreach my $arg ( keys %$ARGSRef ) {
 
         # format: Object-<object class>-<object id>-CustomField[:<grouping>]-<CF id>-<commands>
+        # or: Bulk-<Add or Delete>-CustomField[:<grouping>]-<CF id>-<commands>
         # you can use GetCustomFieldInputName to generate the complement input name
-        next unless $arg =~ /^Object-([\w:]+)-(\d*)-CustomField(?::(\w+))?-(\d+)-(.*)$/;
+        next unless $arg =~ /^(?:Bulk-(?:Add|Delete)|Object-([\w:]+)-(\d*))-CustomField(?::(\w+))?-(\d+)-(.*)$/;
 
         # For each of those objects, find out what custom fields we want to work with.
         #                   Class     ID     CF  grouping command
@@ -3180,6 +3213,10 @@ sub _ProcessObjectCustomFieldUpdates {
 
         if ( $arg eq 'AddValue' || $arg eq 'Value' ) {
             foreach my $value (@values) {
+                next if $args{'Object'}->CustomFieldValueIsEmpty(
+                    Field => $cf,
+                    Value => $value,
+                );
                 my ( $val, $msg ) = $args{'Object'}->AddCustomFieldValue(
                     Field => $cf->id,
                     Value => $value
@@ -3210,10 +3247,22 @@ sub _ProcessObjectCustomFieldUpdates {
 
             my %values_hash;
             foreach my $value (@values) {
-                if ( my $entry = $cf_values->HasEntry($value) ) {
+                my $value_in_db = $value;
+                if ( $cf->Type eq 'DateTime' ) {
+                    my $date = RT::Date->new($session{CurrentUser});
+                    $date->Set(Format => 'unknown', Value => $value);
+                    $value_in_db = $date->ISO;
+                }
+
+                if ( my $entry = $cf_values->HasEntry($value_in_db) ) {
                     $values_hash{ $entry->id } = 1;
                     next;
                 }
+
+                next if $args{'Object'}->CustomFieldValueIsEmpty(
+                    Field => $cf,
+                    Value => $value,
+                );
 
                 my ( $val, $msg ) = $args{'Object'}->AddCustomFieldValue(
                     Field => $cf,
@@ -3222,9 +3271,6 @@ sub _ProcessObjectCustomFieldUpdates {
                 push( @results, $msg );
                 $values_hash{$val} = 1 if $val;
             }
-
-            # For Date Cfs, @values is empty when there is no changes (no datas in form input)
-            return @results if ( $cf->Type =~ /^Date(?:Time)?$/ && ! @values );
 
             $cf_values->RedoSearch;
             while ( my $cf_value = $cf_values->Next ) {
@@ -3263,6 +3309,7 @@ sub ProcessObjectCustomFieldUpdatesForCreate {
         # we're only interested in new objects, so only look at $id == 0
         for my $cfid (keys %{ $custom_fields{$class}{0} || {} }) {
             my $cf = RT::CustomField->new( $session{'CurrentUser'} );
+            $cf->{include_set_initial} = 1;
             if ($context) {
                 my $system_cf = RT::CustomField->new( RT->SystemUser );
                 $system_cf->LoadById($cfid);
@@ -3382,7 +3429,7 @@ sub ProcessTicketWatchers {
         }
 
         # Delete watchers in the simple style demanded by the bulk manipulator
-        elsif ( $key =~ /^Delete(Requestor|Cc|AdminCc)$/ ) {
+        elsif ( $key =~ /^Delete(Requestor|Cc|AdminCc|RT::CustomRole-\d+)$/ ) {
             my ( $code, $msg ) = $Ticket->DeleteWatcher(
                 Email => $ARGSRef->{$key},
                 Type  => $1
@@ -3390,8 +3437,8 @@ sub ProcessTicketWatchers {
             push @results, $msg;
         }
 
-        # Add new wathchers by email address
-        elsif ( ( $ARGSRef->{$key} || '' ) =~ /^(?:AdminCc|Cc|Requestor)$/
+        # Add new watchers by email address
+        elsif ( ( $ARGSRef->{$key} || '' ) =~ /^(?:AdminCc|Cc|Requestor|RT::CustomRole-\d+)$/
             and $key =~ /^WatcherTypeEmail(\d*)$/ )
         {
 
@@ -3404,7 +3451,7 @@ sub ProcessTicketWatchers {
         }
 
         #Add requestors in the simple style demanded by the bulk manipulator
-        elsif ( $key =~ /^Add(Requestor|Cc|AdminCc)$/ ) {
+        elsif ( $key =~ /^Add(Requestor|Cc|AdminCc|RT::CustomRole-\d+)$/ ) {
             my ( $code, $msg ) = $Ticket->AddWatcher(
                 Type  => $1,
                 Email => $ARGSRef->{$key}
@@ -3417,7 +3464,7 @@ sub ProcessTicketWatchers {
             my $principal_id = $1;
             my $form         = $ARGSRef->{$key};
             foreach my $value ( ref($form) ? @{$form} : ($form) ) {
-                next unless $value =~ /^(?:AdminCc|Cc|Requestor)$/i;
+                next unless $value =~ /^(?:AdminCc|Cc|Requestor|RT::CustomRole-\d+)$/i;
 
                 my ( $code, $msg ) = $Ticket->AddWatcher(
                     Type        => $value,
@@ -3425,6 +3472,17 @@ sub ProcessTicketWatchers {
                 );
                 push @results, $msg;
             }
+        }
+        # Single-user custom roles
+        elsif ( $key =~ /^RT::CustomRole-(\d*)$/ ) {
+            # clearing the field sets value to nobody
+            my $user = $ARGSRef->{$key} || RT->Nobody;
+
+            my ( $code, $msg ) = $Ticket->AddWatcher(
+                Type => $key,
+                User => $user,
+            );
+            push @results, $msg;
         }
 
     }
@@ -3462,21 +3520,28 @@ sub ProcessTicketDates {
     #Run through each field in this list. update the value if apropriate
     foreach my $field (@date_fields) {
         next unless exists $ARGSRef->{ $field . '_Date' };
-        next if $ARGSRef->{ $field . '_Date' } eq '';
-
-        my ( $code, $msg );
-
-        my $DateObj = RT::Date->new( $session{'CurrentUser'} );
-        $DateObj->Set(
-            Format => 'unknown',
-            Value  => $ARGSRef->{ $field . '_Date' }
-        );
-
         my $obj = $field . "Obj";
-        if ( $DateObj->Unix != $Ticket->$obj()->Unix() ) {
-            my $method = "Set$field";
-            my ( $code, $msg ) = $Ticket->$method( $DateObj->ISO );
-            push @results, "$msg";
+        my $method = "Set$field";
+
+        if ( $ARGSRef->{ $field . '_Date' } eq '' ) {
+            if ( $Ticket->$obj->IsSet ) {
+                my ( $code, $msg ) = $Ticket->$method( '1970-01-01 00:00:00' );
+                push @results, $msg;
+            }
+        }
+        else {
+
+            my $DateObj = RT::Date->new( $session{'CurrentUser'} );
+            $DateObj->Set(
+                Format => 'unknown',
+                Value  => $ARGSRef->{ $field . '_Date' }
+            );
+
+            if ( $DateObj->Unix != $Ticket->$obj()->Unix() )
+            {
+                my ( $code, $msg ) = $Ticket->$method( $DateObj->ISO );
+                push @results, $msg;
+            }
         }
     }
 
@@ -3640,6 +3705,12 @@ sub ProcessTransactionSquelching {
         (    ref $args->{'TxnSendMailTo'} eq "ARRAY"  ? @{$args->{'TxnSendMailTo'}} :
          defined $args->{'TxnSendMailTo'}             ?  ($args->{'TxnSendMailTo'}) :
                                                                              () );
+    for my $type ( qw/Cc Bcc/ ) {
+        next unless $args->{"Update$type"};
+        for my $addr ( Email::Address->parse( $args->{"Update$type"} ) ) {
+            $checked{$addr->address} ||= 1;
+        }
+    }
     my %squelched = map { $_ => 1 } grep { not $checked{$_} } split /,/, ($args->{'TxnRecipients'}||'');
     return %squelched;
 }
@@ -3716,6 +3787,11 @@ sub ProcessRecordBulkCustomFields {
         }
         foreach my $value ( @{ $data->{'Add'} || [] } ) {
             next if $current_values->HasEntry($value);
+
+            next if $args{'RecordObj'}->CustomFieldValueIsEmpty(
+                Field => $cfid,
+                Value => $value,
+            );
 
             my ( $id, $msg ) = $args{'RecordObj'}->AddCustomFieldValue(
                 Field => $cfid,
@@ -3801,6 +3877,13 @@ sub ProcessColumnMapValue {
 Returns an array suitable for passing to /Admin/Elements/EditRights with the
 principal collections mapped from the categories given.
 
+The return value is an array of arrays, where the inner arrays are like:
+
+    [ 'Category name' => $CollectionObj => 'DisplayColumn' => 1 ]
+
+The last value is a boolean determining if the value of DisplayColumn
+should be loc()-ed before display.
+
 =cut
 
 sub GetPrincipalsMap {
@@ -3831,7 +3914,7 @@ sub GetPrincipalsMap {
 
             push @map, [
                 'User Groups' => $groups,   # loc_left_pair
-                'Name'        => 0
+                'Label'       => 0
             ];
         }
         elsif (/Roles/) {
@@ -3861,7 +3944,7 @@ sub GetPrincipalsMap {
                 $roles->OrderBy( FIELD => 'Name', ORDER => 'ASC' );
                 push @map, [
                     'Roles' => $roles,  # loc_left_pair
-                    'Name'  => 1
+                    'Label' => 0
                 ];
             }
         }
@@ -3894,6 +3977,251 @@ sub GetPrincipalsMap {
         }
     }
     return @map;
+}
+
+sub LoadCatalog {
+    my $id = shift
+        or Abort(loc("No catalog specified."));
+
+    my $catalog = RT::Catalog->new( $session{CurrentUser} );
+    $catalog->Load($id);
+
+    Abort(loc("Unable to find catalog [_1]", $id))
+        unless $catalog->id;
+
+    Abort(loc("You don't have permission to view this catalog."))
+        unless $catalog->CurrentUserCanSee;
+
+    return $catalog;
+}
+
+sub LoadAsset {
+    my $id = shift
+        or Abort(loc("No asset ID specified."));
+
+    my $asset = RT::Asset->new( $session{CurrentUser} );
+    $asset->Load($id);
+
+    Abort(loc("Unable to find asset #[_1]", $id))
+        unless $asset->id;
+
+    Abort(loc("You don't have permission to view this asset."))
+        unless $asset->CurrentUserCanSee;
+
+    return $asset;
+}
+
+sub ProcessAssetRoleMembers {
+    my $object = shift;
+    my %ARGS   = (@_);
+    my @results;
+
+    for my $arg (keys %ARGS) {
+        if ($arg =~ /^Add(User|Group)RoleMember$/) {
+            next unless $ARGS{$arg} and $ARGS{"$arg-Role"};
+
+            my ($ok, $msg) = $object->AddRoleMember(
+                Type => $ARGS{"$arg-Role"},
+                $1   => $ARGS{$arg},
+            );
+            push @results, $msg;
+        }
+        elsif ($arg =~ /^SetRoleMember-(.+)$/) {
+            my $role = $1;
+            my $group = $object->RoleGroup($role);
+            next unless $group->id and $group->SingleMemberRoleGroup;
+            next if $ARGS{$arg} eq $group->UserMembersObj->First->Name;
+            my ($ok, $msg) = $object->AddRoleMember(
+                Type => $role,
+                User => $ARGS{$arg} || 'Nobody',
+            );
+            push @results, $msg;
+        }
+        elsif ($arg =~ /^(Add|Remove)RoleMember-(.+)$/) {
+            my $role = $2;
+            my $method = $1 eq 'Add'? 'AddRoleMember' : 'DeleteRoleMember';
+
+            my $is = 'User';
+            if ( ($ARGS{"$arg-Type"}||'') =~ /^(User|Group)$/ ) {
+                $is = $1;
+            }
+
+            my ($ok, $msg) = $object->$method(
+                Type        => $role,
+                ($ARGS{$arg} =~ /\D/
+                    ? ($is => $ARGS{$arg})
+                    : (PrincipalId => $ARGS{$arg})
+                ),
+            );
+            push @results, $msg;
+        }
+        elsif ($arg =~ /^RemoveAllRoleMembers-(.+)$/) {
+            my $role = $1;
+            my $group = $object->RoleGroup($role);
+            next unless $group->id;
+
+            my $gms = $group->MembersObj;
+            while ( my $gm = $gms->Next ) {
+                my ($ok, $msg) = $object->DeleteRoleMember(
+                    Type        => $role,
+                    PrincipalId => $gm->MemberId,
+                );
+                push @results, $msg;
+            }
+        }
+    }
+    return @results;
+}
+
+
+# If provided a catalog, load it and return the object.
+# If no catalog is passed, load the first active catalog.
+
+sub LoadDefaultCatalog {
+    my $catalog = shift;
+    my $catalog_obj = RT::Catalog->new($session{CurrentUser});
+
+    if ( $catalog ){
+        $catalog_obj->Load($catalog);
+        RT::Logger->error("Unable to load catalog: " . $catalog)
+            unless $catalog_obj->Id;
+    }
+    elsif ( $session{'DefaultCatalog'} ){
+        $catalog_obj->Load($session{'DefaultCatalog'});
+        RT::Logger->error("Unable to load remembered catalog: " .
+                          $session{'DefaultCatalog'})
+            unless $catalog_obj->Id;
+    }
+    elsif ( RT->Config->Get("DefaultCatalog") ){
+        $catalog_obj->Load( RT->Config->Get("DefaultCatalog") );
+        RT::Logger->error("Unable to load default catalog: "
+                          . RT->Config->Get("DefaultCatalog"))
+            unless $catalog_obj->Id;
+    }
+    else {
+        # If no catalog, default to the first active catalog
+        my $catalogs = RT::Catalogs->new($session{CurrentUser});
+        $catalogs->UnLimit;
+        my $candidate = $catalogs->First;
+        $catalog_obj = $candidate if $candidate;
+        RT::Logger->error("No active catalogs.")
+            unless $catalog_obj and $catalog_obj->Id;
+    }
+
+    return $catalog_obj;
+}
+
+sub ProcessAssetsSearchArguments {
+    my %args = (
+        Catalog => undef,
+        Assets => undef,
+        ARGSRef => undef,
+        @_
+    );
+    my $ARGSRef = $args{'ARGSRef'};
+
+    my @PassArguments;
+
+    if ($ARGSRef->{q}) {
+        if ($ARGSRef->{q} =~ /^\d+$/) {
+            my $asset = RT::Asset->new( $session{CurrentUser} );
+            $asset->Load( $ARGSRef->{q} );
+            RT::Interface::Web::Redirect(
+                RT->Config->Get('WebURL')."Asset/Display.html?id=".$ARGSRef->{q}
+            ) if $asset->id;
+        }
+        $args{'Assets'}->SimpleSearch( Term => $ARGSRef->{q}, Catalog => $args{Catalog} );
+        push @PassArguments, "q";
+    } elsif ( $ARGSRef->{'SearchAssets'} ){
+        for my $key (keys %$ARGSRef) {
+            my $value = ref $ARGSRef->{$key} ? $ARGSRef->{$key}[0] : $ARGSRef->{$key};
+            next unless defined $value and length $value;
+
+            my $orig_key = $key;
+            my $negative = ($key =~ s/^!// ? 1 : 0);
+            if ($key =~ /^(Name|Description)$/) {
+                $args{'Assets'}->Limit(
+                    FIELD => $key,
+                    OPERATOR => ($negative ? 'NOT LIKE' : 'LIKE'),
+                    VALUE => $value,
+                    ENTRYAGGREGATOR => "AND",
+                );
+            } elsif ($key eq 'Catalog') {
+                $args{'Assets'}->LimitCatalog(
+                    OPERATOR => ($negative ? '!=' : '='),
+                    VALUE => $value,
+                    ENTRYAGGREGATOR => "AND",
+                );
+            } elsif ($key eq 'Status') {
+                $args{'Assets'}->Limit(
+                    FIELD => $key,
+                    OPERATOR => ($negative ? '!=' : '='),
+                    VALUE => $value,
+                    ENTRYAGGREGATOR => "AND",
+                );
+            } elsif ($key =~ /^Role\.(.+)/) {
+                my $role = $1;
+                $args{'Assets'}->RoleLimit(
+                    TYPE      => $role,
+                    FIELD     => $_,
+                    OPERATOR  => ($negative ? '!=' : '='),
+                    VALUE     => $value,
+                    SUBCLAUSE => $role,
+                    ENTRYAGGREGATOR => ($negative ? "AND" : "OR"),
+                    CASESENSITIVE   => 0,
+                ) for qw/EmailAddress Name/;
+            } elsif ($key =~ /^CF\.\{(.+?)\}$/ or $key =~ /^CF\.(.*)/) {
+                my $cf = RT::Asset->new( $session{CurrentUser} )
+                  ->LoadCustomFieldByIdentifier( $1 );
+                next unless $cf->id;
+                if ( $value eq 'NULL' ) {
+                    $args{'Assets'}->LimitCustomField(
+                        CUSTOMFIELD => $cf->Id,
+                        OPERATOR    => ($negative ? "IS NOT" : "IS"),
+                        VALUE       => 'NULL',
+                        QUOTEVALUE  => 0,
+                        ENTRYAGGREGATOR => "AND",
+                    );
+                } else {
+                    $args{'Assets'}->LimitCustomField(
+                        CUSTOMFIELD => $cf->Id,
+                        OPERATOR    => ($negative ? "NOT LIKE" : "LIKE"),
+                        VALUE       => $value,
+                        ENTRYAGGREGATOR => "AND",
+                    );
+                }
+            }
+            else {
+                next;
+            }
+            push @PassArguments, $orig_key;
+        }
+        push @PassArguments, 'SearchAssets';
+    }
+
+    my $Format = RT->Config->Get('AssetSearchFormat');
+    $Format = $Format->{$args{'Catalog'}->id}
+        || $Format->{$args{'Catalog'}->Name}
+        || $Format->{''} if ref $Format;
+    $Format ||= q[
+        '<b><a href="__WebPath__/Asset/Display.html?id=__id__">__id__</a></b>/TITLE:#',
+        '<b><a href="__WebPath__/Asset/Display.html?id=__id__">__Name__</a></b>/TITLE:Name',
+        Description,
+        Status,
+    ];
+
+    $ARGSRef->{OrderBy} ||= 'id';
+
+    push @PassArguments, qw/OrderBy Order Page/;
+
+    return (
+        OrderBy         => 'id',
+        Order           => 'ASC',
+        Rows            => 50,
+        (map { $_ => $ARGSRef->{$_} } grep { defined $ARGSRef->{$_} } @PassArguments),
+        PassArguments   => \@PassArguments,
+        Format          => $Format,
+    );
 }
 
 =head2 _load_container_object ( $type, $id );
@@ -3996,6 +4324,10 @@ our %SCRUBBER_ALLOWED_ATTRIBUTES = (
     }ix,
     dir    => qr/^(rtl|ltr)$/i,
     lang   => qr/^\w+(-\w+)?$/,
+
+    # timeworked per user attributes
+    'data-ticket-id'    => 1,
+    'data-ticket-class' => 1,
 );
 
 our %SCRUBBER_RULES = ();

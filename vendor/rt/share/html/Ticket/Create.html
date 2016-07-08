@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -72,6 +72,8 @@
     <table width="100%" border="0">
     <& /Ticket/Elements/EditBasics,
         InTable => 1,
+        QueueObj => $QueueObj,
+        defaults => \%ARGS,
         fields  => [
             {   name => 'Queue',
                 comp => '/Ticket/Elements/ShowQueue',
@@ -94,7 +96,20 @@
                     DefaultValue    => 0,
                     QueueObj        => $QueueObj,
                 },
-            }
+            },
+
+            { special => 'roles' },
+
+            $QueueObj->SLADisabled ? () : (
+            {   name => 'SLA',
+                comp => '/Elements/SelectSLA',
+                args => {
+                    Name            => "SLA",
+                    Default         => $ARGS{SLA} || RT::SLA->GetDefaultServiceLevel(Queue => $QueueObj),
+                    DefaultValue    => RT::SLA->GetDefaultServiceLevel(Queue => $QueueObj) ? 0 : 1,
+                    QueueObj        => $QueueObj,
+                },
+            }),
         ]
         &>
 
@@ -106,18 +121,21 @@
           CustomFields => $QueueObj->TicketCustomFields,
           Grouping => 'Basics',
           InTable => 1,
-          KeepValue => 1,
+          ForCreation => 1,
       &>
-      <& /Ticket/Elements/EditTransactionCustomFields, %ARGS, QueueObj => $QueueObj, InTable => 1, KeepValue => 1, &>
+      <& /Ticket/Elements/EditTransactionCustomFields, %ARGS, QueueObj => $QueueObj, InTable => 1 &>
     </table>
   </&>
+
+<& /Ticket/Elements/ShowAssetsOnCreate, QueueObj => $QueueObj, ARGSRef => \%ARGS &>
+
 % $m->callback( CallbackName => 'AfterBasics', QueueObj => $QueueObj, ARGSRef => \%ARGS );
 
 <& /Elements/EditCustomFieldCustomGroupings,
     %ARGS,
     Object => $ticket,
     CustomFieldGenerator => sub { $QueueObj->TicketCustomFields },
-    KeepValue => 1,
+    ForCreation => 1,
 &>
 
 </div>
@@ -166,13 +184,35 @@
   </td>
 </tr>
 
+% my $roles = $QueueObj->CustomRoles;
+% $roles->LimitToMultipleValue;
+% while (my $role = $roles->Next) {
+<tr>
+<td class="label">
+<% $role->Name %>:
+</td>
+<td class="value" colspan="5"><& /Elements/EmailInput, Name => $role->GroupType, Size => undef, Default => $ARGS{$role->GroupType}, AutocompleteMultiple => 1 &></td>
+</tr>
+
+% if ($role->EntryHint) {
+<tr>
+  <td class="label">&nbsp;</td>
+  <td class="comment" colspan="5">
+    <i><font size="-2">
+      <% $role->EntryHint %>
+    </font></i>
+  </td>
+</tr>
+% }
+% }
+
 <& /Elements/EditCustomFields,
     %ARGS,
     Object => $ticket,
     CustomFields => $QueueObj->TicketCustomFields,
     Grouping => 'People',
     InTable => 1,
-    KeepValue => 1,
+    ForCreation => 1,
 &>
 
 <tr>
@@ -229,12 +269,12 @@
 <tr><td class="label"><&|/l&>Priority</&>:</td>
 <td><& /Elements/SelectPriority,
     Name => "InitialPriority",
-    Default => $ARGS{InitialPriority} ? $ARGS{InitialPriority} : $QueueObj->InitialPriority,
+    Default => $ARGS{InitialPriority} ? $ARGS{InitialPriority} : $QueueObj->DefaultValue('InitialPriority'),
 &></td></tr>
 <tr><td class="label"><&|/l&>Final Priority</&>:</td>
 <td><& /Elements/SelectPriority,
     Name => "FinalPriority",
-    Default => $ARGS{FinalPriority} ? $ARGS{FinalPriority} : $QueueObj->FinalPriority,
+    Default => $ARGS{FinalPriority} ? $ARGS{FinalPriority} : $QueueObj->DefaultValue('FinalPriority'),
 &></td></tr>
 <tr><td class="label"><&|/l&>Time Estimated</&>:</td>
 <td>
@@ -259,15 +299,15 @@
   color => "#663366" &>
 
 <table>
-<tr><td class="label"><&|/l&>Starts</&>:</td><td><& /Elements/SelectDate, Name => "Starts", Default => $ARGS{Starts} || '' &></td></tr>
-<tr><td class="label"><&|/l&>Due</&>:</td><td><& /Elements/SelectDate, Name => "Due", Default => $ARGS{Due} || '' &></td></tr>
+<tr><td class="label"><&|/l&>Starts</&>:</td><td><& /Elements/SelectDate, Name => "Starts", Default => $ARGS{Starts} || $QueueObj->DefaultValue('Starts') || '' &></td></tr>
+<tr><td class="label"><&|/l&>Due</&>:</td><td><& /Elements/SelectDate, Name => "Due", Default => $ARGS{Due} || $QueueObj->DefaultValue('Due') || '' &></td></tr>
 <& /Elements/EditCustomFields,
     %ARGS,
     Object => $ticket,
     CustomFields => $QueueObj->TicketCustomFields,
     Grouping => 'Dates',
     InTable => 1,
-    KeepValue => 1,
+    ForCreation => 1,
 &>
 </table>
 </&>
@@ -315,8 +355,7 @@ if ($CloneTicket) {
     };
 
     $clone->{$_} = $CloneTicketObj->$_()
-        for qw/Owner Subject FinalPriority TimeEstimated TimeWorked
-        Status TimeLeft/;
+        for qw/Owner Subject FinalPriority Status/;
 
     $clone->{$_} = $CloneTicketObj->$_->AsString
         for grep { $CloneTicketObj->$_->IsSet }
@@ -377,10 +416,10 @@ if ($CloneTicket) {
 
 my @results;
 
-my $title = loc("Create a new ticket");
-
 my $QueueObj = RT::Queue->new($current_user);
 $QueueObj->Load($Queue) || Abort(loc("Queue [_1] could not be loaded.", $Queue||''));
+
+my $title = loc("Create a new ticket in [_1]", $m->scomp("/Ticket/Elements/ShowQueue", QueueObj => $QueueObj));
 
 $m->callback( QueueObj => $QueueObj, title => \$title, results => \@results, ARGSRef => \%ARGS );
 

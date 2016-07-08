@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -58,6 +58,7 @@ use base qw(RT::Action);
 use RT::EmailParser;
 use RT::Interface::Email;
 use Email::Address;
+use List::MoreUtils qw(uniq);
 our @EMAIL_RECIPIENT_HEADERS = qw(To Cc Bcc);
 
 
@@ -392,6 +393,49 @@ sub AddAttachments {
             $seen_attachment = 1;
         }
         $self->AddAttachment($attach);
+    }
+
+    # attach any attachments requested by the transaction or template
+    # that aren't part of the transaction itself
+    $self->AddAttachmentsFromHeaders;
+}
+
+=head2 AddAttachmentsFromHeaders
+
+Add attachments requested by the transaction or template that aren't part of
+the transaction itself.
+
+This inspects C<RT-Attach> headers, which are expected to contain an
+L<RT::Attachment> ID that the transaction's creator can See.
+
+L<RT::Ticket->_RecordNote> accepts an C<AttachExisting> argument which sets
+C<RT-Attach> headers appropriately on Comment/Correspond.
+
+=cut
+
+sub AddAttachmentsFromHeaders {
+    my $self  = shift;
+    my $email = $self->TemplateObj->MIMEObj;
+
+    # Add the RT-Attach headers from the transaction to the email
+    if (my $attachment = $self->TransactionObj->Attachments->First) {
+        for my $id ($attachment->GetAllHeaders('RT-Attach')) {
+            $email->head->add('RT-Attach' => $id);
+        }
+    }
+
+    # Take all RT-Attach headers and add the attachments to the outgoing mail
+    for my $id (uniq $email->head->get_all('RT-Attach')) {
+        $id =~ s/(?:^\s*|\s*$)//g;
+
+        my $attach = RT::Attachment->new( $self->TransactionObj->CreatorObj );
+        $attach->Load($id);
+        next unless $attach->Id
+                and $attach->TransactionObj->CurrentUserCanSee;
+
+        $email->make_multipart( 'mixed', Force => 1 )
+          unless $email->effective_type eq 'multipart/mixed';
+        $self->AddAttachment($attach, $email);
     }
 }
 

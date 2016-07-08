@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -52,53 +52,42 @@
 <form method="post" action="Edit.html" name="EditArticle" id="EditArticle" enctype="multipart/form-data">
 <input type="hidden" name="next" value="<%$ARGS{next}||''%>" />
 <input type="hidden" name="id" value="<%$id%>" />
-<table width="100%">
-<tr>
-<td><h2><&|/l&>Basics</&></h2></td>
-<td></td>
-</tr>
+
+<&| /Widgets/TitleBox, title => $title, class => 'article-basics', &>
 <& Elements/EditBasics, ArticleObj => $ArticleObj,
                         EditClass =>$EditClass,
-                        ClassObj => $ClassObj,  
+                        ClassObj => $ClassObj,
                         %ARGS ,
                         id => $id
                         &>
+</&>
 
-<tr>
-<td><h2><&|/l&>Content</&></h2></td>
-<td></td>
-</tr>
-<& Elements/EditCustomFields, ArticleObj => $ArticleObj, 
-                              CFContent => \%CFContent, 
-                              ClassObj => $ClassObj, 
+<&| /Widgets/TitleBox, title => 'Content', class => 'article-content', &>
+<& Elements/EditCustomFields, ArticleObj => $ArticleObj,
+                              CFContent => \%CFContent,
+                              ClassObj => $ClassObj,
                               %ARGS,
-                              id =>$id,
+                              id => $id,
+                              ForCreation => ($id eq 'new'),
                               &>
+</&>
 
-<tr>
-<td><h2><&|/l&>Links</&></h2></td>
-<td></td>
-</tr>
-<& Elements/EditLinks, ArticleObj => $ArticleObj, 
+<&| /Widgets/TitleBox, title => 'Links', class => 'article-links', &>
+<& Elements/EditLinks, ArticleObj => $ArticleObj,
                        %ARGS,
                         id => $id
                        &>
-<tr>
-<td><h2><&|/l&>Topics</&></h2></td>
-<td></td>
-</tr>
-<tr>
-<td class="label"><&|/l&>Topics</&></td>
-<td>
+</&>
+
+<&| /Widgets/TitleBox, title => 'Topics', class => 'article-topics', &>
 <& Elements/EditTopics, ArticleObj => $ArticleObj,
                         Classes => [$ArticleObj->Id ? $ArticleObj->ClassObj : $ClassObj],
                         OnlyThisClass => 1,
                         %ARGS,
                         id => $id
                         &>
-</td>
-</tr>
-</table>
+</&>
+
 <& /Elements/Submit, Label => ($id eq 'new' ? loc('Create') : loc('Save Changes')), color => "#993333" &>
 </form>
 
@@ -124,6 +113,11 @@ if ($Class) {
 my %create_args;
 my %CFContent;
 my $EditClass = 1;
+
+if ( $ARGS{SetEnabled} ) {
+    $ARGS{Disabled} = $ARGS{Enabled} ? 0 : 1;
+}
+
 if ( !$id ) {
     $title = loc('Create a new article');
     foreach my $arg ( sort keys %ARGS ) {
@@ -161,6 +155,7 @@ elsif ( $id eq 'new' ) {
         Name    => $ARGS{'Name'},
         Class   => $ARGS{'Class'},
         Topics  => $ARGS{'Topics'},
+        Disabled => $ARGS{'Disabled'},
         %create_args,
         %cfs
     );
@@ -175,7 +170,7 @@ elsif ( $id eq 'new' ) {
 
         if ( $ARGS{next} ) {
             $m->redirect($ARGS{next});
-        }        
+        }
         else {
             MaybeRedirectForResults(
                 Actions   => \@results,
@@ -198,7 +193,7 @@ else {
             Why => loc("Unable to load article") );
     }
 
-    my @attribs = qw(Name Summary Class);
+    my @attribs = qw(Name Summary Class Disabled);
 
     @results = UpdateRecordObject(
         AttributesRef => \@attribs,

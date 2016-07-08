@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -214,6 +214,7 @@ __PACKAGE__->AddRight( General => SeeCustomField         => 'View custom fields'
 __PACKAGE__->AddRight( Admin   => AdminCustomField       => 'Create, modify and delete custom fields'); # loc
 __PACKAGE__->AddRight( Admin   => AdminCustomFieldValues => 'Create, modify and delete custom fields values'); # loc
 __PACKAGE__->AddRight( Staff   => ModifyCustomField      => 'Add, modify and delete custom field values for objects'); # loc
+__PACKAGE__->AddRight( Staff   => SetInitialCustomField  => 'Add custom field values only at object creation time'); # loc
 
 =head1 NAME
 
@@ -234,6 +235,7 @@ Create takes a hash of values and creates a row in the database:
   varchar(255) 'Description'.
   int(11) 'SortOrder'.
   varchar(255) 'LookupType'.
+  varchar(255) 'EntryHint'.
   smallint(6) 'Disabled'.
 
 C<LookupType> is generally the result of either
@@ -253,6 +255,7 @@ sub Create {
         LookupType  => '',
         LinkValueTo => '',
         IncludeContentForValue => '',
+        EntryHint   => undef,
         @_,
     );
 
@@ -341,6 +344,8 @@ sub Create {
         if ( exists $args{'LinkValueTo'}) {
             $self->SetLinkValueTo($args{'LinkValueTo'});
         }
+
+        $self->SetEntryHint( $args{EntryHint} // $self->FriendlyType );
 
         if ( exists $args{'IncludeContentForValue'}) {
             $self->SetIncludeContentForValue($args{'IncludeContentForValue'});
@@ -606,7 +611,7 @@ sub Values {
     my $cf_values = $class->new( $self->CurrentUser );
     $cf_values->SetCustomFieldObject( $self );
     # if the user has no rights, return an empty object
-    if ( $self->id && $self->CurrentUserHasRight( 'SeeCustomField') ) {
+    if ( $self->id && $self->CurrentUserCanSee ) {
         $cf_values->LimitToCustomField( $self->Id );
     } else {
         $cf_values->Limit( FIELD => 'id', VALUE => 0, SUBCLAUSE => 'acl' );
@@ -820,14 +825,6 @@ sub ValidateType {
     my $self = shift;
     my $type = shift;
 
-    if ( $type =~ s/(?:Single|Multiple)$// ) {
-        RT->Deprecated(
-            Arguments => "suffix 'Single' or 'Multiple'",
-            Instead   => "MaxValues",
-            Remove    => "4.4",
-        );
-    }
-
     if ( $FieldTypes{$type} ) {
         return 1;
     }
@@ -840,15 +837,11 @@ sub ValidateType {
 sub SetType {
     my $self = shift;
     my $type = shift;
-    if ($type =~ s/(?:(Single)|Multiple)$//) {
-        RT->Deprecated(
-            Arguments => "suffix 'Single' or 'Multiple'",
-            Instead   => "MaxValues",
-            Remove    => "4.4",
-        );
-        $self->SetMaxValues($1 ? 1 : 0);
-    }
-    $self->_Set(Field => 'Type', Value =>$type);
+    my $need_to_update_hint;
+    $need_to_update_hint = 1 if $self->EntryHint && $self->EntryHint eq $self->FriendlyType;
+    my ( $ret, $msg ) = $self->_Set( Field => 'Type', Value => $type );
+    $self->SetEntryHint($self->FriendlyType) if $need_to_update_hint && $ret;
+    return ( $ret, $msg );
 }
 
 =head2 SetPattern STRING
@@ -1032,12 +1025,15 @@ sub ValidateContextObject {
 
 sub _Set {
     my $self = shift;
-
+    my %args = @_;
     unless ( $self->CurrentUserHasRight('AdminCustomField') ) {
         return ( 0, $self->loc('Permission Denied') );
     }
-    return $self->SUPER::_Set( @_ );
-
+    my ($ret, $msg) = $self->SUPER::_Set( @_ );
+    if ( $args{Field} =~ /^(?:MaxValues|Type|LookupType|ValuesClass)$/ ) {
+        $self->CleanupDefaultValues;
+    }
+    return ($ret, $msg);
 }
 
 
@@ -1054,7 +1050,7 @@ sub _Value {
     return undef unless $self->id;
 
     # we need to do the rights check
-    unless ( $self->CurrentUserHasRight('SeeCustomField') ) {
+    unless ( $self->CurrentUserCanSee ) {
         $RT::Logger->debug(
             "Permission denied. User #". $self->CurrentUser->id
             ." has no SeeCustomField right on CF #". $self->id
@@ -1073,6 +1069,22 @@ Takes a boolean.
 
 =cut
 
+sub SetDisabled {
+    my $self = shift;
+    my $val = shift;
+
+    my ($status, $msg) = $self->_Set(Field => 'Disabled', Value => $val);
+
+    unless ($status) {
+        return ($status, $msg);
+    }
+
+    if ( $val == 1 ) {
+        return (1, $self->loc("Disabled"));
+    } else {
+        return (1, $self->loc("Enabled"));
+    }
+}
 
 =head2 SetTypeComposite
 
@@ -1459,13 +1471,6 @@ sub IsOnlyGlobal {
     return ($self->LookupType =~ /^RT::(?:Group|User)/io);
 
 }
-sub ApplyGlobally {
-    RT->Deprecated(
-        Instead   => "IsOnlyGlobal",
-        Remove    => "4.4",
-    );
-    return shift->IsOnlyGlobal(@_);
-}
 
 =head1 AddedTo
 
@@ -1482,13 +1487,6 @@ sub AddedTo {
     return RT::ObjectCustomField->new( $self->CurrentUser )
         ->AddedTo( CustomField => $self );
 }
-sub AppliedTo {
-    RT->Deprecated(
-        Instead   => "AddedTo",
-        Remove    => "4.4",
-    );
-    shift->AddedTo(@_);
-};
 
 =head1 NotAddedTo
 
@@ -1505,13 +1503,6 @@ sub NotAddedTo {
     return RT::ObjectCustomField->new( $self->CurrentUser )
         ->NotAddedTo( CustomField => $self );
 }
-sub NotAppliedTo {
-    RT->Deprecated(
-        Instead   => "NotAddedTo",
-        Remove    => "4.4",
-    );
-    shift->NotAddedTo(@_)
-};
 
 =head2 IsAdded
 
@@ -1529,13 +1520,6 @@ sub IsAdded {
     return undef unless $ocf->id;
     return $ocf;
 }
-sub IsApplied {
-    RT->Deprecated(
-        Instead   => "IsAdded",
-        Remove    => "4.4",
-    );
-    shift->IsAdded(@_);
-};
 
 sub IsGlobal { return shift->IsAdded(0) }
 
@@ -1575,9 +1559,18 @@ sub AddToObject {
     }
 
     my $ocf = RT::ObjectCustomField->new( $self->CurrentUser );
-    my ( $oid, $msg ) = $ocf->Add(
+    my $oid = $ocf->Add(
         CustomField => $self->id, ObjectId => $id,
     );
+
+    my $msg;
+    # If object has no id, it represents all objects
+    if ($object->id) {
+        $msg = $self->loc( 'Added custom field [_1] to [_2].', $self->Name, $object->Name );
+    } else {
+        $msg = $self->loc( 'Globally added custom field [_1].', $self->Name );
+    }
+
     return ( $oid, $msg );
 }
 
@@ -1609,7 +1602,16 @@ sub RemoveFromObject {
     }
 
     # XXX: Delete doesn't return anything
-    my ( $oid, $msg ) = $ocf->Delete;
+    my $oid = $ocf->Delete;
+
+    my $msg;
+    # If object has no id, it represents all objects
+    if ($object->id) {
+        $msg = $self->loc( 'Removed custom field [_1] from [_2].', $self->Name, $object->Name );
+    } else {
+        $msg = $self->loc( 'Globally removed custom field [_1].', $self->Name );
+    }
+
     return ( $oid, $msg );
 }
 
@@ -1638,11 +1640,15 @@ sub AddValueForObject {
         Content      => undef,
         LargeContent => undef,
         ContentType  => undef,
+        ForCreation  => 0,
         @_
     );
     my $obj = $args{'Object'} or return ( 0, $self->loc('Invalid object') );
 
-    unless ( $self->CurrentUserHasRight('ModifyCustomField') ) {
+    unless (
+        $self->CurrentUserHasRight('ModifyCustomField') ||
+        ($args{ForCreation} && $self->CurrentUserHasRight('SetInitialCustomField'))
+    ) {
         return ( 0, $self->loc('Permission Denied') );
     }
 
@@ -1700,7 +1706,7 @@ sub _CanonicalizeValue {
     my $self = shift;
     my $args = shift;
 
-    my $type = $self->_Value('Type');
+    my $type = $self->__Value('Type');
     return 1 unless $type;
 
     my $method = '_CanonicalizeValue'. $type;
@@ -1864,7 +1870,7 @@ sub ValuesForObject {
     my $object = shift;
 
     my $values = RT::ObjectCustomFieldValues->new($self->CurrentUser);
-    unless ($self->id and $self->CurrentUserHasRight('SeeCustomField')) {
+    unless ($self->id and $self->CurrentUserCanSee) {
         # Return an empty object if they have no rights to see
         $values->Limit( FIELD => "id", VALUE => 0, SUBCLAUSE => "ACL" );
         return ($values);
@@ -1876,6 +1882,26 @@ sub ValuesForObject {
     return ($values);
 }
 
+=head2 CurrentUserCanSee
+
+If the user has SeeCustomField they can see this custom field and its details.
+
+Otherwise, if the user has SetInitialCustomField and this is being used in a
+"create" context, then they can see this custom field and its details. This
+allows you to set up custom fields that are only visible on create pages and
+are then inaccessible.
+
+=cut
+
+sub CurrentUserCanSee {
+    my $self = shift;
+    return 1 if $self->CurrentUserHasRight('SeeCustomField');
+
+    return 1 if $self->{include_set_initial}
+             && $self->CurrentUserHasRight('SetInitialCustomField');
+
+    return 0;
+}
 
 =head2 RegisterLookupType LOOKUPTYPE FRIENDLYNAME
 
@@ -1901,16 +1927,6 @@ sub RegisterLookupType {
 
     $FRIENDLY_LOOKUP_TYPES{$path} = $friendly_name;
 }
-
-sub _ForObjectType {
-    RT->Deprecated(
-        Instead => 'RegisterLookupType',
-        Remove  => '4.4',
-    );
-    my $self = shift;
-    $self->RegisterLookupType(@_);
-}
-
 
 =head2 IncludeContentForValue [VALUE] (and SetIncludeContentForValue)
 
@@ -1975,7 +1991,7 @@ sub _URLTemplate {
         }
         return ( 1, $self->loc('Updated') );
     } else {
-        unless ( $self->id && $self->CurrentUserHasRight('SeeCustomField') ) {
+        unless ( $self->id && $self->CurrentUserCanSee ) {
             return (undef);
         }
 
@@ -1997,7 +2013,7 @@ sub SetBasedOn {
     $cf->Load( ref $value ? $value->id : $value );
 
     return (0, "Permission Denied")
-        unless $cf->id && $cf->CurrentUserHasRight('SeeCustomField');
+        unless $cf->id && $cf->CurrentUserCanSee;
 
     # XXX: Remove this restriction once we support lists and cascaded selects
     if ( $self->RenderType =~ /List/ ) {
@@ -2019,9 +2035,155 @@ sub BasedOnObj {
 }
 
 
+sub SupportDefaultValues {
+    my $self = shift;
+    return 0 unless $self->id;
+    return 0 unless $self->LookupType =~ /RT::(?:Ticket|Transaction)$/;
+    return $self->Type !~ /^(?:Image|Binary)$/;
+}
 
+sub DefaultValues {
+    my $self = shift;
+    my %args = (
+        Object => RT->System,
+        @_,
+    );
+    my $attr = $args{Object}->FirstAttribute('CustomFieldDefaultValues');
+    my $values;
+    $values = $attr->Content->{$self->id} if $attr && $attr->Content;
+    return $values if defined $values;
 
+    if ( !$args{Object}->isa( 'RT::System' ) ) {
+        my $system_attr = RT::System->FirstAttribute( 'CustomFieldDefaultValues' );
+        $values = $system_attr->Content->{$self->id} if $system_attr && $system_attr->Content;
+        return $values if defined $values;
+    }
+    return undef;
+}
 
+sub SetDefaultValues {
+    my $self = shift;
+    my %args = (
+        Object => RT->System,
+        Values => undef,
+        @_,
+    );
+    my $attr = $args{Object}->FirstAttribute( 'CustomFieldDefaultValues' );
+    my ( $old_values, $old_content, $new_values );
+    if ( $attr && $attr->Content ) {
+        $old_content = $attr->Content;
+        $old_values = $old_content->{ $self->id };
+    }
+
+    if ( !$args{Object}->isa( 'RT::System' ) && !defined $old_values ) {
+        my $system_attr = RT::System->FirstAttribute( 'CustomFieldDefaultValues' );
+        if ( $system_attr && $system_attr->Content ) {
+            $old_values = $system_attr->Content->{ $self->id };
+        }
+    }
+
+    if ( defined $old_values && length $old_values ) {
+        $old_values = join ', ', @$old_values if ref $old_values eq 'ARRAY';
+    }
+
+    $new_values = $args{Values};
+    if ( defined $new_values && length $new_values ) {
+        $new_values = join ', ', @$new_values if ref $new_values eq 'ARRAY';
+    }
+
+    return 1 if ( $new_values // '' ) eq ( $old_values // '' );
+
+    my ($ret, $msg) = $args{Object}->SetAttribute(
+        Name    => 'CustomFieldDefaultValues',
+        Content => {
+            %{ $old_content || {} }, $self->id => $args{Values},
+        },
+    );
+
+    $old_values = $self->loc('(no value)') unless defined $old_values && length $old_values;
+    $new_values = $self->loc( '(no value)' ) unless defined $new_values && length $new_values;
+
+    if ( $ret ) {
+        return ( $ret, $self->loc( 'Default values changed from [_1] to [_2]', $old_values, $new_values ) );
+    }
+    else {
+        return ( $ret, $self->loc( "Can't change default values from [_1] to [_2]: [_3]", $old_values, $new_values, $msg ) );
+    }
+}
+
+sub CleanupDefaultValues {
+    my $self  = shift;
+    my $attrs = RT::Attributes->new( $self->CurrentUser );
+    $attrs->Limit( FIELD => 'Name', VALUE => 'CustomFieldDefaultValues' );
+
+    my @values;
+    if ( $self->Type eq 'Select' ) {
+        # Select has a limited list valid values, we need to exclude invalid ones
+        @values = map { $_->Name } @{ $self->Values->ItemsArrayRef || [] };
+    }
+
+    while ( my $attr = $attrs->Next ) {
+        my $content = $attr->Content;
+        next unless $content;
+        my $changed;
+        if ( $self->SupportDefaultValues ) {
+            if ( $self->MaxValues == 1 && ref $content->{ $self->id } eq 'ARRAY' ) {
+                $content->{ $self->id } = $content->{ $self->id }[ 0 ];
+                $changed = 1;
+            }
+
+            my $default_values = $content->{ $self->id };
+            if ( $default_values ) {
+                if ( $self->Type eq 'Select' ) {
+                    if ( ref $default_values ne 'ARRAY' && $default_values =~ /\n/ ) {
+
+                        # e.g. multiple values Freeform cf has 2 default values: foo and "bar",
+                        # the values will be stored as "foo\nbar".  so we need to convert it to ARRAY for Select cf.
+                        # this could happen when we change a Freeform cf into a Select one
+
+                        $default_values = [ split /\s*\n+\s*/, $default_values ];
+                        $content->{ $self->id } = $default_values;
+                        $changed = 1;
+                    }
+
+                    if ( ref $default_values eq 'ARRAY' ) {
+                        my @new_defaults;
+                        for my $default ( @$default_values ) {
+                            if ( grep { $_ eq $default } @values ) {
+                                push @new_defaults, $default;
+                            }
+                            else {
+                                $changed = 1;
+                            }
+                        }
+
+                        $content->{ $self->id } = \@new_defaults if $changed;
+                    }
+                    elsif ( !grep { $_ eq $default_values } @values ) {
+                        delete $content->{ $self->id };
+                        $changed = 1;
+                    }
+                }
+                else {
+                    # ARRAY default values only happen for Select cf. we need to convert it to a scalar for other cfs.
+                    # this could happen when we change a Select cf into a Freeform one
+
+                    if ( ref $default_values eq 'ARRAY' ) {
+                        $content->{ $self->id } = join "\n", @$default_values;
+                        $changed = 1;
+                    }
+                }
+            }
+        }
+        else {
+            if ( exists $content->{ $self->id } ) {
+                delete $content->{ $self->id };
+                $changed = 1;
+            }
+        }
+        $attr->SetContent( $content ) if $changed;
+    }
+}
 
 =head2 id
 
@@ -2193,6 +2355,16 @@ Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 
 =cut
 
+=head2 SetEntryHint VALUE
+
+
+Set EntryHint to VALUE.
+Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
+(In the database, EntryHint will be stored as a varchar(255).)
+
+
+=cut
+
 
 =head2 Creator
 
@@ -2274,6 +2446,8 @@ sub _CoreAccessible {
         {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         LookupType => 
         {read => 1, write => 1, sql_type => 12, length => 255,  is_blob => 0,  is_numeric => 0,  type => 'varchar(255)', default => ''},
+        EntryHint =>
+        {read => 1, write => 1, sql_type => 12, length => 255,  is_blob => 0, is_numeric => 0,  type => 'varchar(255)', default => undef },
         Creator => 
         {read => 1, auto => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Created => 
@@ -2335,6 +2509,91 @@ sub __DependsOn {
     );
     return $self->SUPER::__DependsOn( %args );
 }
+
+=head2 LoadByNameAndCatalog
+
+Loads the described asset custom field, if one is found, into the current
+object.  This method only consults custom fields applied to L<RT::Catalog> for
+L<RT::Asset> objects.
+
+Takes a hash with the keys:
+
+=over
+
+=item Name
+
+A L<RT::CustomField> ID or Name which applies to L<assets|RT::Asset>.
+
+=item Catalog
+
+Optional.  An L<RT::Catalog> ID or Name.
+
+=back
+
+If Catalog is specified, only a custom field added to that Catalog will be loaded.
+
+If Catalog is C<0>, only global asset custom fields will be loaded.
+
+If no Catalog is specified, all asset custom fields are searched including
+global and catalog-specific CFs.
+
+Please note that this method may load a Disabled custom field if no others
+matching the same criteria are found.  Enabled CFs are preferentially loaded.
+
+=cut
+
+# To someday be merged into RT::CustomField::LoadByName
+sub LoadByNameAndCatalog {
+    my $self = shift;
+    my %args = (
+                Catalog => undef,
+                Name  => undef,
+                @_,
+               );
+
+    unless ( defined $args{'Name'} && length $args{'Name'} ) {
+        $RT::Logger->error("Couldn't load Custom Field without Name");
+        return wantarray ? (0, $self->loc("No name provided")) : 0;
+    }
+
+    # if we're looking for a catalog by name, make it a number
+    if ( defined $args{'Catalog'} && ($args{'Catalog'} =~ /\D/ || !$self->ContextObject) ) {
+        my $CatalogObj = RT::Catalog->new( $self->CurrentUser );
+        my ($ok, $msg) = $CatalogObj->Load( $args{'Catalog'} );
+        if ( $ok ){
+            $args{'Catalog'} = $CatalogObj->Id;
+        }
+        elsif ($args{'Catalog'}) {
+            RT::Logger->error("Unable to load catalog " . $args{'Catalog'} . $msg);
+            return (0, $msg);
+        }
+        $self->SetContextObject( $CatalogObj )
+          unless $self->ContextObject;
+    }
+
+    my $CFs = RT::CustomFields->new( $self->CurrentUser );
+    $CFs->SetContextObject( $self->ContextObject );
+    my $field = $args{'Name'} =~ /\D/? 'Name' : 'id';
+    $CFs->Limit( FIELD => $field, VALUE => $args{'Name'}, CASESENSITIVE => 0);
+
+    # Limit to catalog, if provided. This will also limit to RT::Asset types.
+    $CFs->LimitToCatalog( $args{'Catalog'} );
+
+    # When loading by name, we _can_ load disabled fields, but prefer
+    # non-disabled fields.
+    $CFs->FindAllRows;
+    $CFs->OrderByCols(
+                      {
+                       FIELD => "Disabled", ORDER => 'ASC' },
+                     );
+
+    # We only want one entry.
+    $CFs->RowsPerPage(1);
+
+    return (0, $self->loc("Not found")) unless my $first = $CFs->First;
+    return $self->LoadById( $first->id );
+}
+
 
 RT::Base->_ImportOverlays();
 

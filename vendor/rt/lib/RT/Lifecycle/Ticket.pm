@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -65,18 +65,6 @@ sub Queues {
     my $queues = RT::Queues->new( RT->SystemUser );
     $queues->Limit( FIELD => 'Lifecycle', VALUE => $self->Name );
     return $queues;
-}
-
-=head3 DefaultOnMerge
-
-Returns the status that should be used when tickets
-are merged.
-
-=cut
-
-sub DefaultOnMerge {
-    my $self = shift;
-    return $self->DefaultStatus('on_merge');
 }
 
 =head3 ReminderStatusOnOpen

@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -139,12 +139,33 @@ foreach my $field (qw(Told Starts Started Due Resolved LastUpdated Created)) {
 }
 foreach my $field (qw(Members DependedOnBy ReferredToBy)) {
     $property_cb{ $field } = sub {
-        return join ', ', map $_->BaseObj->id, @{ $_[0]->$field->ItemsArrayRef };
+        my $links = $_[0]->$field;
+        my @string;
+        while ( my $link = $links->Next ) {
+            next if UNIVERSAL::isa($link->BaseObj, 'RT::Article') && $link->BaseObj->Disabled;
+            next if $field eq 'ReferredToBy' && UNIVERSAL::isa($link->BaseObj, 'RT::Ticket') && $link->BaseObj->Type eq 'reminder';
+            my $prefix =
+                UNIVERSAL::isa( $link->BaseObj, 'RT::Ticket' ) ? ''
+              : UNIVERSAL::isa( $link->BaseObj, 'RT::Article' ) ? 'a:'
+              :                                                   $link->BaseURI->Scheme . ':';
+            push @string, $prefix . $link->BaseObj->id;
+        }
+        return join ', ', @string;
     };
 }
 foreach my $field (qw(MemberOf DependsOn RefersTo)) {
     $property_cb{ $field } = sub {
-        return join ', ', map $_->TargetObj->id, @{ $_[0]->$field->ItemsArrayRef };
+        my $links = $_[0]->$field;
+        my @string;
+        while ( my $link = $links->Next ) {
+            next if UNIVERSAL::isa($link->TargetObj, 'RT::Article') && $link->TargetObj->Disabled;
+            my $prefix =
+                UNIVERSAL::isa( $link->TargetObj, 'RT::Ticket' ) ? ''
+              : UNIVERSAL::isa( $link->TargetObj, 'RT::Article' ) ? 'a:'
+              :                                                   $link->TargetURI->Scheme . ':';
+            push @string, $prefix . $link->TargetObj->id;
+        }
+        return join ', ', @string;
     };
 }
 

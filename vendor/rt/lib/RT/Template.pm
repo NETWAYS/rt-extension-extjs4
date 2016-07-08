@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -78,6 +78,7 @@ use Text::Template;
 use MIME::Entity;
 use MIME::Parser;
 use Scalar::Util 'blessed';
+use RT::Interface::Web;
 
 sub _Accessible {
     my $self = shift;
@@ -499,6 +500,18 @@ sub _ParseContent {
     } else {
         $args{'loc'} = sub { $self->loc(@_) };
     }
+
+    $args{'EscapeURI'} = sub {
+        my $str = shift;
+        RT::Interface::Web::EscapeURI( \$str );
+        return $str;
+    };
+
+    $args{'EscapeHTML'} = sub {
+        my $str = shift;
+        RT::Interface::Web::EscapeHTML( \$str );
+        return $str;
+    };
 
     if ($self->Type eq 'Perl') {
         return $self->_ParseContentPerl(

@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -229,7 +229,7 @@ $showrows->(
     loc("Subject") => '<input type="text" name="Subject" size="30" maxsize="200" value="'.$escape->($ARGS{Subject} || '').'" />');
 </%perl>
     <span class="content-label label"><%loc("Describe the issue below")%></span>
-        <& /Elements/MessageBox, exists $ARGS{Content}  ? (Default => $ARGS{Content}, IncludeSignature => 0 ) : ( QuoteTransaction => $QuoteTransaction ), Height => 5  &>
+        <& /Elements/MessageBox, exists $ARGS{Content}  ? (Default => $ARGS{Content}, IncludeSignature => 0 ) : ( QuoteTransaction => $QuoteTransaction ), Height => 5, SuppressAttachmentWarning => 1  &>
 
 
 <&/Elements/Submit, Label => loc("Create") &>
@@ -342,12 +342,12 @@ $showrows->(
     loc("Priority") => $m->scomp(
         "/Elements/SelectPriority",
         Name    => "InitialPriority",
-        Default => $ARGS{InitialPriority} ? $ARGS{InitialPriority} : $QueueObj->InitialPriority,
+        Default => $ARGS{InitialPriority} ? $ARGS{InitialPriority} : $QueueObj->DefaultValue('InitialPriority'),
     ),
     loc("Final Priority") => $m->scomp(
         "/Elements/SelectPriority",
         Name    => "FinalPriority",
-        Default => $ARGS{FinalPriority} ? $ARGS{FinalPriority} : $QueueObj->FinalPriority,
+        Default => $ARGS{FinalPriority} ? $ARGS{FinalPriority} : $QueueObj->DefaultValue('FinalPriority'),
     ),
 
     loc("Time Estimated") => '<span class="timefield">'.$m->scomp(
@@ -377,8 +377,8 @@ $showrows->(
 
 <%perl>
 $showrows->(
-    loc("Starts") => $m->scomp( "/Elements/SelectDate", Name => "Starts", Default => ( $ARGS{Starts} || '' )),
-    loc("Due")    => $m->scomp( "/Elements/SelectDate", Name => "Due",    Default => ($ARGS{Due}    || '' ))
+    loc("Starts") => $m->scomp( "/Elements/SelectDate", Name => "Starts", Default => ( $ARGS{Starts} || $QueueObj->DefaultValue('Starts') || '' )),
+    loc("Due")    => $m->scomp( "/Elements/SelectDate", Name => "Due",    Default => ($ARGS{Due} || $QueueObj->DefaultValue('Due') || '' ))
 );
 
 </%perl>
