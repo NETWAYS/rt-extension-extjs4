@@ -92,6 +92,12 @@ RUN apt-get clean && apt-get update \
                 libdatetime-perl \
                 libnet-ssleay-perl \
                 libnet-ldap-perl \
+                libnet-ip-perl \
+                libjavascript-minifier-xs-perl \
+                libcss-minifier-xs-perl \
+                libhtml-formattext-withlinks-andtables-perl \
+                libdata-pageset-perl \
+                libscope-upper-perl \
         && rm -rf lib/apt/lists/*
 
 COPY ["rootfs/generic/opt/rt4-build/cpanfile", "/opt/rt4-build/cpanfile"]
