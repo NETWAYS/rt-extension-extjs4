@@ -1,13 +1,14 @@
 # Initial data for a fresh RT installation.
 
 @Users = (
-    {  Name         => 'root',
-       Gecos        => 'root',
-       RealName     => 'Enoch Root',
-       Password     => 'password',
-       EmailAddress => "root\@localhost",
-       Comments     => 'SuperUser',
-       Privileged   => '1',
+    {  Name             => 'root',
+       Gecos            => 'root',
+       RealName         => 'Enoch Root',
+       Password         => 'password',
+       EmailAddress     => "root\@localhost",
+       Comments         => 'SuperUser',
+       Privileged       => '1',
+       SkipCanonicalize => '1',
     },
 );
 
@@ -22,6 +23,11 @@
              Lifecycle   => 'approvals',
              Description => 'A system-internal queue for the approvals system',
              Disabled    => 2, } );
+
+@Catalogs = ({
+    Name        => "General assets",      # loc
+    Description => "The default catalog", # loc
+});
 
 @ScripActions = (
 
@@ -111,6 +117,22 @@
     { Name        => 'Send Forward',                 # loc
       Description => 'Send forwarded message',       # loc
       ExecModule  => 'SendForward', },
+    {  Name        => 'Set starts date according to SLA', # loc
+       Description => 'Set the starts date according to an agreement' , # loc
+       ExecModule  => 'SLA_SetStarts',
+    },
+    {  Name        => 'Set due date according to SLA', # loc
+       Description => 'Set the due date according to an agreement' , # loc
+       ExecModule  => 'SLA_SetDue',
+    },
+    { Name        => 'Update Parent TimeWorked',     # loc
+      Description => 'Update Parent TimeWorked',     # loc
+      ExecModule  => 'UpdateParentTimeWorked',
+    },
+    { Name        => 'Update User TimeWorked',       # loc
+      Description => 'Update User TimeWorked',       # loc
+      ExecModule  => 'UpdateUserTimeWorked',
+    },
 );
 
 @ScripConditions = (
@@ -218,6 +240,22 @@
        Description          => 'Whenever a ticket is reopened', # loc
        ApplicableTransTypes => 'Status,Set',
        ExecModule           => 'ReopenTicket',
+    },
+    {  Name        => 'Require Starts set according to SLA', # loc
+       Description => 'Detect a situation when we should set Starts date' , # loc
+       ApplicableTransTypes => 'Create,Set',
+       ExecModule => 'SLA_RequireStartsSet',
+    },
+    {  Name        => 'Require Due set according to SLA', # loc
+       Description => 'Detect a situation when we should set Due date' , # loc
+       ApplicableTransTypes => 'Create,Correspond,Set,Status',
+       ExecModule => 'SLA_RequireDueSet',
+    },
+    {
+       Name                 => 'On TimeWorked Change',                    # loc
+       Description          => 'When TimeWorked Change',                  # loc
+       ApplicableTransTypes => 'Any',
+       ExecModule           => 'TimeWorkedChange',
     },
 
 );
@@ -792,6 +830,22 @@ Hour:         { $SubscriptionObj->SubValue('Hour') }
        ScripCondition => 'On Forward Ticket',
        ScripAction    => 'Send Forward',
        Template       => 'Forward Ticket' },
+    {  Description       => "Set starts date if needed according to SLA",
+       ScripCondition    => 'Require starts set according to SLA',
+       ScripAction       => 'Set starts date according to SLA',
+       Template          => 'Blank' },
+    {  Description       => "Set due date if needed according to SLA",
+       ScripCondition    => 'Require due set according to SLA',
+       ScripAction       => 'Set due date according to SLA',
+       Template          => 'Blank' },
+    {  Description    => 'On TimeWorked Change Update Parent TimeWorked',
+       ScripCondition => 'On TimeWorked Change',
+       ScripAction    => 'Update Parent TimeWorked',
+       Template       => 'Blank' },
+    {  Description    => 'On TimeWorked Change Update User TimeWorked',
+       ScripCondition => 'On TimeWorked Change',
+       ScripAction    => 'Update User TimeWorked',
+       Template       => 'Blank' },
 );
 
 @ACL = (
@@ -813,7 +867,7 @@ Hour:         { $SubscriptionObj->SubValue('Hour') }
       { Format =>  q{'<a href="__WebPath__/Ticket/Display.html?id=__id__">__id__</a>/TITLE:#',}
                  . q{'<a href="__WebPath__/Ticket/Display.html?id=__id__">__Subject__</a>/TITLE:Subject',}
                  . q{Priority, QueueName, ExtendedStatus},
-        Query   => " Owner = '__CurrentUser__' AND ( Status = 'new' OR Status = 'open')",
+        Query   => " Owner = '__CurrentUser__' AND Status = '__Active__'",
         OrderBy => 'Priority',
         Order   => 'DESC'
       },
@@ -826,7 +880,7 @@ Hour:         { $SubscriptionObj->SubValue('Hour') }
                  . q{'<a href="__WebPath__/Ticket/Display.html?id=__id__">__Subject__</a>/TITLE:Subject',}
                  . q{QueueName, ExtendedStatus, CreatedRelative, }
                  . q{'<A HREF="__WebPath__/Ticket/Display.html?Action=Take&id=__id__">__loc(Take)__</a>/TITLE:NBSP'},
-        Query   => " Owner = 'Nobody' AND ( Status = 'new' OR Status = 'open')",
+        Query   => " Owner = 'Nobody' AND Status = '__Active__'",
         OrderBy => 'Created',
         Order   => 'DESC'
       },
@@ -872,7 +926,7 @@ Hour:         { $SubscriptionObj->SubValue('Hour') }
                 },
                 {
                     type => 'component',
-                    name => 'Quicksearch'           # loc
+                    name => 'QueueList'           # loc
                 },
                 {
                     type => 'component',
@@ -884,5 +938,23 @@ Hour:         { $SubscriptionObj->SubValue('Hour') }
                 },
               ],
         },
+    },
+);
+
+@Classes = (
+    {
+        Name              => 'General',
+        Description       => 'The default class',
+        HotList           => 1,
+    },
+);
+
+@CustomFields = (
+    {
+        Name              => 'Content',
+        Description       => 'Content',
+        LookupType        => 'RT::Class-RT::Article',
+        Type              => 'Text',
+        MaxValues         => 1,
     },
 );

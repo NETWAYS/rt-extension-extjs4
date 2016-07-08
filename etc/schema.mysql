@@ -26,13 +26,12 @@ CREATE TABLE Queues (
   CommentAddress varchar(120) NULL,
   Lifecycle varchar(32) NULL,
   SubjectTag varchar(120) NULL,
-  InitialPriority integer NOT NULL DEFAULT 0  ,
-  FinalPriority integer NOT NULL DEFAULT 0  ,
-  DefaultDueIn integer NOT NULL DEFAULT 0  ,
+  SortOrder integer NOT NULL DEFAULT 0 ,
   Creator integer NOT NULL DEFAULT 0  ,
   Created DATETIME NULL  ,
   LastUpdatedBy integer NOT NULL DEFAULT 0  ,
   LastUpdated DATETIME NULL  ,
+  SLADisabled int2 NOT NULL DEFAULT 1 ,
   Disabled int2 NOT NULL DEFAULT 0 ,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB CHARACTER SET utf8;
@@ -65,13 +64,9 @@ CREATE INDEX Links4 ON Links (Type,LocalBase);
 CREATE TABLE Principals (
         id INTEGER  AUTO_INCREMENT not null,
         PrincipalType VARCHAR(16) not null,
-        ObjectId integer, # foreign key to Users or Groups, depending
         Disabled int2 NOT NULL DEFAULT 0 ,
         PRIMARY KEY (id)
 ) ENGINE=InnoDB CHARACTER SET ascii;
-
-CREATE INDEX Principals2 ON Principals (ObjectId);
-
 
 
 CREATE TABLE Groups (
@@ -79,7 +74,6 @@ CREATE TABLE Groups (
   Name varchar(200) NULL  ,
   Description varchar(255) NULL  ,
   Domain varchar(64) CHARACTER SET ascii NULL,
-  Type varchar(64) CHARACTER SET ascii NULL,
   Instance integer,
   Creator integer NOT NULL DEFAULT 0  ,
   Created DATETIME NULL  ,
@@ -88,9 +82,8 @@ CREATE TABLE Groups (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB CHARACTER SET utf8;
 
-CREATE INDEX Groups1 ON Groups (Domain, Type, Instance);
-CREATE INDEX Groups2 ON Groups (Domain, Name, Instance);
-CREATE INDEX Groups3 On Groups (Instance);
+CREATE INDEX Groups1 ON Groups (Domain, Name, Instance);
+CREATE INDEX Groups2 On Groups (Instance);
 
 CREATE TABLE ScripConditions (
   id INTEGER NOT NULL  AUTO_INCREMENT,
@@ -233,12 +226,6 @@ CREATE TABLE Users (
   RealName varchar(120) NULL  ,
   NickName varchar(16) NULL  ,
   Lang varchar(16) NULL  ,
-  EmailEncoding varchar(16) NULL  ,
-  WebEncoding varchar(16) NULL  ,
-  ExternalContactInfoId varchar(100) NULL  ,
-  ContactInfoSystem varchar(30) NULL  ,
-  ExternalAuthId varchar(100) NULL  ,
-  AuthSystem varchar(30) NULL  ,
   Gecos varchar(16) NULL  ,
   HomePhone varchar(30) NULL  ,
   WorkPhone varchar(30) NULL  ,
@@ -251,7 +238,6 @@ CREATE TABLE Users (
   Zip varchar(16) NULL  ,
   Country varchar(50) NULL  ,
   Timezone varchar(50) NULL  ,
-  PGPKey text NULL,
   SMIMECertificate text NULL,
 
   Creator integer NOT NULL DEFAULT 0  ,
@@ -274,8 +260,6 @@ CREATE TABLE Tickets (
   IsMerged int2 NULL DEFAULT NULL,
   Queue integer NOT NULL DEFAULT 0  ,
   Type varchar(16) CHARACTER SET ascii NULL  ,
-  IssueStatement integer NOT NULL DEFAULT 0  ,
-  Resolution integer NOT NULL DEFAULT 0  ,
   Owner integer NOT NULL DEFAULT 0  ,
   Subject varchar(200) NULL DEFAULT '[no subject]' ,
   InitialPriority integer NOT NULL DEFAULT 0  ,
@@ -284,6 +268,7 @@ CREATE TABLE Tickets (
   TimeEstimated integer NOT NULL DEFAULT 0  ,
   TimeWorked integer NOT NULL DEFAULT 0  ,
   Status varchar(64) NULL  ,
+  SLA varchar(64) NULL  ,
   TimeLeft integer NOT NULL DEFAULT 0  ,
   Told DATETIME NULL  ,
   Starts DATETIME NULL  ,
@@ -296,7 +281,6 @@ CREATE TABLE Tickets (
   LastUpdated DATETIME NULL  ,
   Creator integer NOT NULL DEFAULT 0  ,
   Created DATETIME NULL  ,
-  Disabled int2 NOT NULL DEFAULT 0 ,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB CHARACTER SET utf8;
 
@@ -374,6 +358,7 @@ CREATE TABLE CustomFields (
   Description varchar(255) NULL  ,
   SortOrder integer NOT NULL DEFAULT 0  ,
   LookupType varchar(255) CHARACTER SET ascii NOT NULL,
+  EntryHint varchar(255) NULL,
 
   Creator integer NOT NULL DEFAULT 0  ,
   Created DATETIME NULL  ,
@@ -472,6 +457,7 @@ CREATE TABLE Articles (
   Class int(11) NOT NULL default '0',
   Parent int(11) NOT NULL default '0',
   URI varchar(255) character set ascii default NULL,
+  Disabled int(2) NOT NULL default '0',
   Creator int(11) NOT NULL default '0',
   Created datetime default NULL,
   LastUpdatedBy int(11) NOT NULL default '0',
@@ -508,3 +494,66 @@ CREATE TABLE ObjectClasses (
   LastUpdated datetime default NULL,
   PRIMARY KEY  (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE Assets (
+    id                int(11)         NOT NULL AUTO_INCREMENT,
+    Name              varchar(255)    NOT NULL DEFAULT '',
+    Catalog           int(11)         NOT NULL DEFAULT 0,
+    Status            varchar(64)     NOT NULL DEFAULT '',
+    Description       varchar(255)    NOT NULL DEFAULT '',
+    Creator           int(11)         NOT NULL DEFAULT 0,
+    Created           datetime                 DEFAULT NULL,
+    LastUpdatedBy     int(11)         NOT NULL DEFAULT 0,
+    LastUpdated       datetime                 DEFAULT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX AssetsName ON Assets (Name);
+CREATE INDEX AssetsStatus ON Assets (Status);
+CREATE INDEX AssetsCatalog ON Assets (Catalog);
+
+CREATE TABLE Catalogs (
+    id                int(11)         NOT NULL AUTO_INCREMENT,
+    Name              varchar(255)    NOT NULL DEFAULT '',
+    Lifecycle         varchar(32)     NOT NULL DEFAULT 'assets',
+    Description       varchar(255)    NOT NULL DEFAULT '',
+    Disabled          int2            NOT NULL DEFAULT 0,
+    Creator           int(11)         NOT NULL DEFAULT 0,
+    Created           datetime                 DEFAULT NULL,
+    LastUpdatedBy     int(11)         NOT NULL DEFAULT 0,
+    LastUpdated       datetime                 DEFAULT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX CatalogsName ON Catalogs (Name);
+CREATE INDEX CatalogsDisabled ON Catalogs (Disabled);
+
+CREATE TABLE CustomRoles (
+  id INTEGER NOT NULL  AUTO_INCREMENT,
+  Name varchar(200) NULL  ,
+  Description varchar(255) NULL  ,
+  MaxValues integer,
+  EntryHint varchar(255) NULL  ,
+
+  Creator integer NOT NULL DEFAULT 0  ,
+  Created DATETIME NULL  ,
+  LastUpdatedBy integer NOT NULL DEFAULT 0  ,
+  LastUpdated DATETIME NULL  ,
+  Disabled int2 NOT NULL DEFAULT 0 ,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+
+CREATE TABLE ObjectCustomRoles (
+  id INTEGER NOT NULL  AUTO_INCREMENT,
+  CustomRole integer NOT NULL  ,
+  ObjectId integer NOT NULL,
+  SortOrder integer NOT NULL DEFAULT 0  ,
+
+  Creator integer NOT NULL DEFAULT 0  ,
+  Created DATETIME NULL  ,
+  LastUpdatedBy integer NOT NULL DEFAULT 0  ,
+  LastUpdated DATETIME NULL  ,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+
+CREATE UNIQUE INDEX ObjectCustomRoles1 ON ObjectCustomRoles (ObjectId, CustomRole);

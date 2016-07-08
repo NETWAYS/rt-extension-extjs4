@@ -12,6 +12,8 @@
 /etc/upgrade/switch-templates-to
 /etc/upgrade/time-worked-history
 /etc/upgrade/upgrade-articles
+/etc/upgrade/upgrade-sla
+/etc/upgrade/upgrade-assets
 /etc/upgrade/vulnerable-passwords
 /lib/RT/Generated.pm
 /Makefile
@@ -27,6 +29,7 @@
 /sbin/rt-email-dashboards
 /sbin/rt-email-digest
 /sbin/rt-email-group-admin
+/sbin/rt-externalize-attachments
 /sbin/rt-fulltext-indexer
 /sbin/rt-preferences-viewer
 /sbin/rt-server
@@ -40,6 +43,7 @@
 /sbin/rt-validate-aliases
 /sbin/rt-serializer
 /sbin/rt-importer
+/sbin/rt-ldapimport
 /sbin/standalone_httpd
 /var/mason_data/
 /autom4te.cache/
@@ -47,9 +51,6 @@
 /config.status
 /config.log
 /config.pld
-/jsmin.c
-/jsmin
-/bin/jsmin
 /nytprof.out*
 /.prove
 *~

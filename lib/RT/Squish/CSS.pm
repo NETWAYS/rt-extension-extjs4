@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -64,6 +64,8 @@ use warnings;
 
 package RT::Squish::CSS;
 use base 'RT::Squish', 'CSS::Squish';
+use CSS::Minifier::XS ();
+
 __PACKAGE__->mk_accessors(qw/Style/);
 
 =head2 Squish
@@ -75,12 +77,18 @@ use CSS::Squish to squish css
 sub Squish {
     my $self = shift;
     my $style = $self->Style;
-    return $self->concatenate( "$style/main.css", RT->Config->Get('CSSFiles') );
+    return $self->Filter(
+      $self->concatenate( "$style/main.css", RT->Config->Get('CSSFiles') )
+    );
 }
 
 sub roots {
     map { "$_/css" } RT::Interface::Web->StaticRoots
 }
 
-1;
+sub Filter {
+    my ( $self, $content ) = @_;
+    return CSS::Minifier::XS::minify($content);
+}
 
+1;

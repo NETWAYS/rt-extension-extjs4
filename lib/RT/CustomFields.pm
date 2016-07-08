@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -325,6 +325,19 @@ sub LimitToGlobal  {
   $self->LimitToLookupType( 'RT::Queue-RT::Ticket' );
 }
 
+=head2 LimitToDefaultValuesSupportedTypes
+
+Limits the Custom Field collection to ones of which types support default values.
+
+=cut
+
+sub LimitToDefaultValuesSupportedTypes {
+    my $self = shift;
+    $self->Limit( FIELD => 'Type', VALUE => 'Binary', OPERATOR => '!=', ENTRYAGGREGATOR => 'AND' );
+    $self->Limit( FIELD => 'Type', VALUE => 'Image', OPERATOR => '!=', ENTRYAGGREGATOR => 'AND' );
+    return $self;
+}
+
 
 =head2 ApplySortOrder
 
@@ -390,7 +403,10 @@ sub AddRecord {
     my ($record) = @_;
 
     $record->SetContextObject( $self->ContextObject );
-    return unless $record->CurrentUserHasRight('SeeCustomField');
+    $record->{include_set_initial} = $self->{include_set_initial};
+
+    return unless $record->CurrentUserCanSee;
+
     return $self->SUPER::AddRecord( $record );
 }
 
@@ -407,6 +423,37 @@ sub NewItem {
     my $res = RT::CustomField->new($self->CurrentUser);
     $res->SetContextObject($self->ContextObject);
     return $res;
+}
+
+=head2 LimitToCatalog
+
+Takes a numeric L<RT::Catalog> ID.  Limits the L<RT::CustomFields> collection
+to only those fields applied directly to the specified catalog.  This limit is
+OR'd with other L</LimitToCatalog> and L<RT::CustomFields/LimitToObjectId>
+calls.
+
+Note that this will cause the collection to only return asset CFs.
+
+=cut
+
+sub LimitToCatalog  {
+    my $self = shift;
+    my $catalog = shift;
+
+    $self->Limit (ALIAS => $self->_OCFAlias,
+                  ENTRYAGGREGATOR => 'OR',
+                  FIELD => 'ObjectId',
+                  VALUE => "$catalog")
+      if defined $catalog;
+
+    $self->LimitToLookupType( RT::Asset->CustomFieldLookupType );
+    $self->ApplySortOrder;
+
+    unless ($self->ContextObject) {
+        my $obj = RT::Catalog->new( $self->CurrentUser );
+        $obj->Load( $catalog );
+        $self->SetContextObject( $obj );
+    }
 }
 
 RT::Base->_ImportOverlays();

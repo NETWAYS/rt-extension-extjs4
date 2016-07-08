@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -102,10 +102,6 @@ sub _RoleGroupsJoin {
     $args{'Class'} ||= $self->_RoleGroupClass;
 
     my $name = $args{'Name'};
-    if ( exists $args{'Type'} ) {
-        RT->Deprecated( Arguments => 'Type', Instead => 'Name', Remove => '4.4' );
-        $name = $args{'Type'};
-    }
 
     return $self->{'_sql_role_group_aliases'}{ $args{'Class'} .'-'. $name }
         if $self->{'_sql_role_group_aliases'}{ $args{'Class'} .'-'. $name }
@@ -118,8 +114,10 @@ sub _RoleGroupsJoin {
     my $instance = $self->_RoleGroupClass eq $args{Class} ? "id" : $args{Class};
        $instance =~ s/^RT:://;
 
-    # Watcher groups are always created for each record, so we use INNER join.
+    # Watcher groups are no longer always created for each record, so we now use left join.
+    # Previously (before 4.4) this used an inner join.
     my $groups = $self->Join(
+        TYPE            => 'left',
         ALIAS1          => 'main',
         FIELD1          => $instance,
         TABLE2          => 'Groups',
@@ -262,7 +260,7 @@ sub RoleLimit {
     $args{FIELD} ||= 'EmailAddress';
 
     my ($groups, $group_members, $users);
-    if ( $args{'BUNDLE'} ) {
+    if ( $args{'BUNDLE'} and @{$args{'BUNDLE'}}) {
         ($groups, $group_members, $users) = @{ $args{'BUNDLE'} };
     } else {
         $groups = $self->_RoleGroupsJoin( Name => $type, Class => $class, New => !$type );
@@ -393,6 +391,9 @@ sub RoleLimit {
         }
     }
     $self->_CloseParen( $args{SUBCLAUSE} ) if $args{SUBCLAUSE};
+    if ($args{BUNDLE} and not @{$args{BUNDLE}}) {
+        @{$args{BUNDLE}} = ($groups, $group_members, $users);
+    }
     return ($groups, $group_members, $users);
 }
 

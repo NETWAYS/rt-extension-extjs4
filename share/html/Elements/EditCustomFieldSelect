@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -51,63 +51,21 @@
 % my $selected = 0;
 % my @category;
 % my $out = $m->scomp('SELF:options', %ARGS, SelectedRef => \$selected, CategoryRef => \@category);
-% if (!$HideCategory and @category and not $CustomField->BasedOnObj->id) {
-%# XXX - Hide this select from w3m?
-  <select onchange="filter_cascade_by_id(<% $name |n,j %>, this.value)" name="<% $name %>-Category" class="CF-<%$CustomField->id%>-Edit">
-    <option value=""<% !$selected && qq[ selected="selected"] |n %>><&|/l&>-</&></option>
-%   foreach my $cat (@category) {
-%     my ($depth, $name) = @$cat;
-      <option value="<% $name %>"><% '&nbsp;' x $depth |n %><% $name %></option>
-%   }
-    </select><br />
-% } elsif ($CustomField->BasedOnObj->id) {
-
-<script type="text/javascript"><!--
-jQuery(  function () {
-    var basedon = jQuery('[name^="'+<% $BasedOnName || $NamePrefix . $CustomField->BasedOnObj->id . '-Value' |n,j %>+'"][type!="hidden"]:input:not(.hidden)');
-    basedon.each( function() {
-        var oldchange = jQuery(this).onchange;
-        jQuery(this).change( function () {
-            var vals;
-            if ( jQuery(this).is('select') ) {
-                vals = basedon.first().val();
-            }
-            else {
-                vals = [];
-                jQuery(basedon).each( function() {
-                    if ( jQuery(this).is(':checked') ) {
-                        vals.push(jQuery(this).val());
-                    }
-                });
-            }
-            filter_cascade_by_id(
-                <% $name |n,j%>,
-                vals,
-                true
-            );
-            if (oldchange != null)
-                oldchange();
-        });
-    });
-
-    if ( basedon.is('select') ) {
-        basedon.change();
-    }
-    else {
-        basedon.first().change();
-    }
-});
---></script>
-% }
 
 % if ( $RenderType eq 'List' ) {
 <fieldset class="cfedit">
-<div data-name="<%$name%>" id="<%$name%>">
+<div data-name="<%$name%>" id="<%$name%>"
+% if ($CustomField->BasedOnObj->id) {
+  data-cascade-based-on-name="<% $BasedOnName || $NamePrefix . $CustomField->BasedOnObj->id . '-Value' |n %>"
+% }
+>
 %   if ( $checktype eq 'radio' ) {
+% if ( $show_empty_option ) {
   <div class="none">
   <input class="none" type="<% $checktype %>" name="<% $name %>" id="<% $name %>-none" value="" <% keys %default ? '' : ' checked="checked"' |n%> />
   <label for="<% $name %>-none"><&|/l&>(no value)</&></label><br />
   </div>
+% }
 %   }
 %   my $CFVs = $CustomField->Values;
 %   while ( my $value = $CFVs->Next ) {
@@ -125,17 +83,24 @@ jQuery(  function () {
 %# this hidden select is to supply a full list of values,
 %# see filter_cascade_select() in js/cascaded.js
       <select name="<%$name%>-Complete" id="<%$name%>-Complete" class="hidden" disabled="disabled">
+% if ( $show_empty_option ) {
         <option value=""<% !$selected && qq[ selected="selected"] |n %>><&|/l&>(no value)</&></option>
+% }
 %       $m->out($out);
       </select>
 % }
 <select
-  name="<%$name%>" id="<%$name%>" class="CF-<%$CustomField->id%>-Edit"
+  name="<%$name%>" id="<%$name%>" class="CF-Edit CF-<%$CustomField->id%>-Edit<% $use_chosen ? ' chosen' : '' %>"
+% if ($CustomField->BasedOnObj->id) {
+  data-cascade-based-on-name="<% $BasedOnName || $NamePrefix . $CustomField->BasedOnObj->id . '-Value' |n %>"
+% }
 % if ( $Rows && ( $Multiple || !@category || $RenderType eq 'Select box') ) {
   size="<% $Rows %>"
 % }
 <% $Multiple && qq[multiple="multiple"] |n %> >
+% if ( $show_empty_option ) {
 <option value=""<% !$selected && qq[ selected="selected"] |n %>><&|/l&>(no value)</&></option>
+% }
 % $m->out($out);
 </select>
 % }
@@ -159,6 +124,27 @@ if ( !@Default && $Values ) {
     @Default = map $_->Content, @{ $Values->ItemsArrayRef };
 }
 my %default = map {lc $_ => 1} @Default;
+
+my $show_empty_option;
+if ( exists $ARGS{ShowEmptyOption} ) {
+    $show_empty_option = $ARGS{ShowEmptyOption};
+}
+else {
+    if ( $CustomField->MatchPattern('') ) {
+        $show_empty_option = 1;
+    }
+    elsif ( $CustomField->SupportDefaultValues ) {
+        my ( $on ) = grep { $_->isa( $CustomField->RecordClassFromLookupType ) } $CustomField->ACLEquivalenceObjects;
+        my $default_values = $CustomField->DefaultValues( Object => $on || RT->System );
+        $show_empty_option = 1 unless defined $default_values && length $default_values;
+    }
+}
+
+my $use_chosen = $CustomField->Values->Count >= 10 ? 1 : 0;
+$m->callback( CallbackName => 'Chosen', UseChosen => \$use_chosen, CustomField => $CustomField );
+
+# it's weird to see "(no value) X" in the input when selecting multiple values
+$show_empty_option = 0 if $use_chosen && $Multiple;
 </%init>
 <%ARGS>
 $Object => undef

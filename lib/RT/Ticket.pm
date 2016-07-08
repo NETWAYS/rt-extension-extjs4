@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -90,6 +90,7 @@ use RT::Transactions;
 use RT::Reminders;
 use RT::URI::fsck_com_rt;
 use RT::URI;
+use RT::SLA;
 use MIME::Entity;
 use Devel::GlobalDestruction;
 
@@ -235,9 +236,9 @@ sub Create {
         Starts             => undef,
         Started            => undef,
         Resolved           => undef,
+        SLA                => undef,
         MIMEObj            => undef,
         _RecordTransaction => 1,
-        DryRun             => 0,
         @_
     );
 
@@ -300,12 +301,12 @@ sub Create {
 
     #Initial Priority
     # If there's no queue default initial priority and it's not set, set it to 0
-    $args{'InitialPriority'} = $QueueObj->InitialPriority || 0
+    $args{'InitialPriority'} = $QueueObj->DefaultValue('InitialPriority') || 0
         unless defined $args{'InitialPriority'};
 
     #Final priority
     # If there's no queue default final priority and it's not set, set it to 0
-    $args{'FinalPriority'} = $QueueObj->FinalPriority || 0
+    $args{'FinalPriority'} = $QueueObj->DefaultValue('FinalPriority') || 0
         unless defined $args{'FinalPriority'};
 
     # Priority may have changed from InitialPriority, for the case
@@ -326,14 +327,16 @@ sub Create {
     if ( defined $args{'Due'} ) {
         $Due->Set( Format => 'ISO', Value => $args{'Due'} );
     }
-    elsif ( my $due_in = $QueueObj->DefaultDueIn ) {
-        $Due->Set( Format => 'ISO', Value => $Now->ISO );
-        $Due->AddDays( $due_in );
+    elsif ( my $default = $QueueObj->DefaultValue('Due') ) {
+        $Due->Set( Format => 'unknown', Value => $default );
     }
 
     my $Starts = RT::Date->new( $self->CurrentUser );
     if ( defined $args{'Starts'} ) {
         $Starts->Set( Format => 'ISO', Value => $args{'Starts'} );
+    }
+    elsif ( my $default = $QueueObj->DefaultValue('Starts') ) {
+        $Starts->Set( Format => 'unknown', Value => $default );
     }
 
     my $Started = RT::Date->new( $self->CurrentUser );
@@ -367,7 +370,7 @@ sub Create {
 
     # Figure out users for roles
     my $roles = {};
-    push @non_fatal_errors, $self->_ResolveRoles( $roles, %args );
+    push @non_fatal_errors, $QueueObj->_ResolveRoles( $roles, %args );
 
     $args{'Type'} = lc $args{'Type'}
         if $args{'Type'} =~ /^(ticket|approval|reminder)$/i;
@@ -391,7 +394,10 @@ sub Create {
         Starts          => $Starts->ISO,
         Started         => $Started->ISO,
         Resolved        => $Resolved->ISO,
-        Due             => $Due->ISO
+        Due             => $Due->ISO,
+        $args{ 'Type' } eq 'ticket'
+          ? ( SLA => $args{ SLA } || RT::SLA->GetDefaultServiceLevel( Queue => $QueueObj ), )
+          : (),
     );
 
 # Parameters passed in during an import that we probably don't want to touch, otherwise
@@ -445,9 +451,10 @@ sub Create {
     }
 
     # Codify what it takes to add each kind of group
+    my $always_ok = sub { 1 };
     my %acls = (
-        Cc        => sub { 1 },
-        Requestor => sub { 1 },
+        (map { $_ => $always_ok } $QueueObj->Roles),
+
         AdminCc   => sub {
             my $principal = shift;
             return 1 if $self->CurrentUserHasRight('ModifyTicket');
@@ -477,12 +484,16 @@ sub Create {
         next unless $arg =~ /^CustomField-(\d+)$/i;
         my $cfid = $1;
         my $cf = $self->LoadCustomFieldByIdentifier($cfid);
+        $cf->{include_set_initial} = 1;
         next unless $cf->ObjectTypeFromLookupType($cf->__Value('LookupType'))->isa(ref $self);
 
         foreach my $value (
             UNIVERSAL::isa( $args{$arg} => 'ARRAY' ) ? @{ $args{$arg} } : ( $args{$arg} ) )
         {
-            next unless defined $value && length $value;
+            next if $self->CustomFieldValueIsEmpty(
+                Field => $cf,
+                Value => $value,
+            );
 
             # Allow passing in uploaded LargeContent etc by hash reference
             my ($status, $msg) = $self->_AddCustomFieldValue(
@@ -492,10 +503,14 @@ sub Create {
                 ),
                 Field             => $cfid,
                 RecordTransaction => 0,
+                ForCreation       => 1,
             );
             push @non_fatal_errors, $msg unless $status;
         }
     }
+
+    my ( $status, @msgs ) = $self->AddCustomFieldDefaultValues;
+    push @non_fatal_errors, @msgs unless $status;
 
     # Deal with setting up links
 
@@ -542,7 +557,6 @@ sub Create {
             Type         => "Create",
             TimeTaken    => $args{'TimeWorked'},
             MIMEObj      => $args{'MIMEObj'},
-            CommitScrips => !$args{'DryRun'},
             SquelchMailTo => $args{'TransSquelchMailTo'},
         );
 
@@ -562,10 +576,6 @@ sub Create {
             return ( 0, 0, $self->loc( "Ticket could not be created due to an internal error"));
         }
 
-        if ( $args{'DryRun'} ) {
-            $RT::Handle->Rollback();
-            return ($self->id, $TransObj, $ErrStr);
-        }
         $RT::Handle->Commit();
         return ( $self->Id, $TransObj->Id, $ErrStr );
     }
@@ -638,16 +648,44 @@ sub AddWatcher {
         @_
     );
 
-    $args{ACL} = sub { $self->_HasModifyWatcherRight( @_ ) };
     $args{User} ||= delete $args{Email};
-    my ($principal, $msg) = $self->AddRoleMember(
-        %args,
+    my ($principal, $msg) = $self->CanonicalizePrincipal(%args);
+    if (!$principal) {
+        return (0, $msg);
+    }
+
+    my $original_user;
+    my $group = $self->RoleGroup( $args{Type} );
+    if ($group->id && $group->SingleMemberRoleGroup) {
+        my $users = $group->UserMembersObj( Recursively => 0 );
+        $original_user = $users->First;
+        if ($original_user->PrincipalId == $principal->Id) {
+            return 1;
+        }
+    }
+    else {
+        $original_user = RT->Nobody;
+    }
+
+    ((my $ok), $msg) = $self->AddRoleMember(
+        Principal         => $principal,
+        ACL               => sub { $self->_HasModifyWatcherRight( @_ ) },
+        Type              => $args{Type},
         InsideTransaction => 1,
     );
-    return ( 0, $msg) unless $principal;
+    return ( 0, $msg) unless $ok;
 
-    return ( 1, $self->loc('Added [_1] as a [_2] for this ticket',
-                $principal->Object->Name, $self->loc($args{'Type'})) );
+    # reload group in case it was lazily created
+    $group = $self->RoleGroup( $args{Type} );
+
+    if ($group->SingleMemberRoleGroup) {
+        return ( 1, $self->loc( "[_1] changed from [_2] to [_3]",
+                       $group->Label, $original_user->Name, $principal->Object->Name ) );
+    }
+    else {
+        return ( 1, $self->loc('Added [_1] as [_2] for this ticket',
+                    $principal->Object->Name, $group->Label) );
+    }
 }
 
 
@@ -675,10 +713,11 @@ sub DeleteWatcher {
     my ($principal, $msg) = $self->DeleteRoleMember( %args );
     return ( 0, $msg ) unless $principal;
 
+    my $group = $self->RoleGroup( $args{Type} );
     return ( 1,
-             $self->loc( "[_1] is no longer a [_2] for this ticket.",
+             $self->loc( "[_1] is no longer [_2] for this ticket",
                          $principal->Object->Name,
-                         $self->loc($args{'Type'}) ) );
+                         $group->Label ) );
 }
 
 
@@ -753,12 +792,7 @@ B<Returns> String: All Ticket Requestor email addresses as a string.
 
 sub RequestorAddresses {
     my $self = shift;
-
-    unless ( $self->CurrentUserHasRight('ShowTicket') ) {
-        return undef;
-    }
-
-    return ( $self->Requestors->MemberEmailAddressesAsString );
+    return $self->RoleAddresses('Requestor');
 }
 
 
@@ -770,13 +804,7 @@ returns String: All Ticket AdminCc email addresses as a string
 
 sub AdminCcAddresses {
     my $self = shift;
-
-    unless ( $self->CurrentUserHasRight('ShowTicket') ) {
-        return undef;
-    }
-
-    return ( $self->AdminCc->MemberEmailAddressesAsString )
-
+    return $self->RoleAddresses('AdminCc');
 }
 
 =head2 CcAddresses
@@ -787,14 +815,25 @@ returns String: All Ticket Ccs as a string of email addresses
 
 sub CcAddresses {
     my $self = shift;
+    return $self->RoleAddresses('Cc');
+}
+
+=head2 RoleAddresses
+
+Takes a role name and returns a string of all the email addresses for
+users in that role
+
+=cut
+
+sub RoleAddresses {
+    my $self = shift;
+    my $role = shift;
 
     unless ( $self->CurrentUserHasRight('ShowTicket') ) {
         return undef;
     }
-    return ( $self->Cc->MemberEmailAddressesAsString);
-
+    return ( $self->RoleGroup($role)->MemberEmailAddressesAsString);
 }
-
 
 
 
@@ -1181,28 +1220,6 @@ sub DueObj {
     return $time;
 }
 
-
-
-=head2 DueAsString
-
-Returns this ticket's due date as a human readable string.
-
-B<DEPRECATED> and will be removed in 4.4; use C<<
-$ticket->DueObj->AsString >> instead.
-
-=cut
-
-sub DueAsString {
-    my $self = shift;
-    RT->Deprecated(
-        Instead => "->DueObj->AsString",
-        Remove => "4.4",
-    );
-    return $self->DueObj->AsString();
-}
-
-
-
 =head2 ResolvedObj
 
   Returns an RT::Date object of this ticket's 'resolved' time.
@@ -1247,7 +1264,7 @@ sub FirstActiveStatus {
 Returns the first inactive status that the ticket could transition to,
 according to its current Queue's lifecycle.  May return undef if there
 is no such possible status to transition to, or we are already in it.
-This is used in resolve action in UnsafeEmailCommands, for instance.
+This is used in L<RT::Interface::Email::Action::Resolve>, for instance.
 
 =cut
 
@@ -1348,39 +1365,16 @@ sub ToldObj {
     return $time;
 }
 
-
-
-=head2 ToldAsString
-
-A convenience method that returns ToldObj->AsString
-
-B<DEPRECATED> and will be removed in 4.4; use C<<
-$ticket->ToldObj->AsString >> instead.
-
-=cut
-
-sub ToldAsString {
-    my $self = shift;
-    RT->Deprecated(
-        Instead => "->ToldObj->AsString",
-        Remove => "4.4",
-    );
-    if ( $self->Told ) {
-        return $self->ToldObj->AsString();
-    }
-    else {
-        return ("Never");
-    }
-}
-
-
-
 sub _DurationAsString {
     my $self = shift;
     my $value = shift;
     return "" unless $value;
-    return RT::Date->new( $self->CurrentUser )
-        ->DurationAsString( $value * 60 );
+    if ($value < 60) {
+        return $self->loc("[quant,_1,minute,minutes]", $value);
+    } else {
+        my $h = sprintf("%.2f", $value / 60 );
+        return $self->loc("[quant,_1,hour,hours] ([quant,_2,minute,minutes])", $h, $value);
+    }
 }
 
 =head2 TimeWorkedAsString
@@ -1426,10 +1420,7 @@ Takes a hash with the following attributes:
 If MIMEObj is undefined, Content will be used to build a MIME::Entity for this
 comment.
 
-MIMEObj, TimeTaken, CcMessageTo, BccMessageTo, Content, DryRun
-
-If DryRun is defined, this update WILL NOT BE RECORDED. Scrips will not be committed.
-They will, however, be prepared and you'll be able to access them through the TransactionObj
+MIMEObj, TimeTaken, CcMessageTo, BccMessageTo, Content
 
 Returns: Transaction id, Error Message, Transaction Object
 (note the different order from Create()!)
@@ -1444,7 +1435,6 @@ sub Comment {
                  MIMEObj      => undef,
                  Content      => undef,
                  TimeTaken => 0,
-                 DryRun     => 0, 
                  @_ );
 
     unless (    ( $self->CurrentUserHasRight('CommentOnTicket') )
@@ -1454,15 +1444,13 @@ sub Comment {
     $args{'NoteType'} = 'Comment';
 
     $RT::Handle->BeginTransaction();
-    if ($args{'DryRun'}) {
-        $args{'CommitScrips'} = 0;
-    }
 
     my @results = $self->_RecordNote(%args);
-    if ($args{'DryRun'}) {
+
+    if ( not $results[0] ) {
         $RT::Handle->Rollback();
     } else {
-        $RT::Handle->Commit();
+        $RT::Handle->Commit;
     }
 
     return(@results);
@@ -1475,12 +1463,9 @@ Correspond on this ticket.
 Takes a hashref with the following attributes:
 
 
-MIMEObj, TimeTaken, CcMessageTo, BccMessageTo, Content, DryRun
+MIMEObj, TimeTaken, CcMessageTo, BccMessageTo, Content
 
 if there's no MIMEObj, Content is used to build a MIME::Entity object
-
-If DryRun is defined, this update WILL NOT BE RECORDED. Scrips will not be committed.
-They will, however, be prepared and you'll be able to access them through the TransactionObj
 
 Returns: Transaction id, Error Message, Transaction Object
 (note the different order from Create()!)
@@ -1504,9 +1489,6 @@ sub Correspond {
     $args{'NoteType'} = 'Correspond';
 
     $RT::Handle->BeginTransaction();
-    if ($args{'DryRun'}) {
-        $args{'CommitScrips'} = 0;
-    }
 
     my @results = $self->_RecordNote(%args);
 
@@ -1524,11 +1506,7 @@ sub Correspond {
             if grep {not $squelch{$_}} $self->Requestors->MemberEmailAddresses;
     }
 
-    if ($args{'DryRun'}) {
-        $RT::Handle->Rollback();
-    } else {
-        $RT::Handle->Commit();
-    }
+    $RT::Handle->Commit;
 
     return (@results);
 
@@ -1555,8 +1533,8 @@ sub _RecordNote {
         Content      => undef,
         NoteType     => 'Correspond',
         TimeTaken    => 0,
-        CommitScrips => 1,
         SquelchMailTo => undef,
+        AttachExisting => [],
         @_
     );
 
@@ -1578,6 +1556,17 @@ sub _RecordNote {
 
     # convert text parts into utf-8
     RT::I18N::SetMIMEEntityToUTF8( $args{'MIMEObj'} );
+
+    # Set the magic RT headers which include existing attachments on this note
+    if ($args{'AttachExisting'}) {
+        $args{'AttachExisting'} = [$args{'AttachExisting'}]
+            if not ref $args{'AttachExisting'} eq 'ARRAY';
+
+        for my $attach (@{$args{'AttachExisting'}}) {
+            next if $attach =~ /\D/;
+            $args{'MIMEObj'}->head->add( 'RT-Attach' => $attach );
+        }
+    }
 
     # If we've been passed in CcMessageTo and BccMessageTo fields,
     # add them to the mime object for passing on to the transaction handler
@@ -1620,7 +1609,6 @@ sub _RecordNote {
              Data => ( Encode::decode( "UTF-8", $args{'MIMEObj'}->head->get('Subject') ) || 'No Subject' ),
              TimeTaken => $args{'TimeTaken'},
              MIMEObj   => $args{'MIMEObj'}, 
-             CommitScrips => $args{'CommitScrips'},
              SquelchMailTo => $args{'SquelchMailTo'},
     );
 
@@ -1640,89 +1628,32 @@ sub _RecordNote {
 
 =head2 DryRun
 
-Builds a MIME object from the given C<UpdateSubject> and
-C<UpdateContent>, then calls L</Comment> or L</Correspond> with
-C<< DryRun => 1 >>, and returns the transaction so produced.
 
 =cut
 
 sub DryRun {
     my $self = shift;
-    my %args = @_;
-    my $action;
-    if (($args{'UpdateType'} || $args{Action}) =~ /^respon(d|se)$/i ) {
-        $action = 'Correspond';
-    } else {
-        $action = 'Comment';
+
+    my ($subref) = @_;
+
+    my @transactions;
+
+    $RT::Handle->BeginTransaction();
+    {
+        # Getting nested "commit"s inside this rollback is fine
+        local %DBIx::SearchBuilder::Handle::TRANSROLLBACK;
+        local $self->{DryRun} = \@transactions;
+        eval { $subref->() };
+        warn "Error is $@" if $@;
+        $self->ApplyTransactionBatch;
     }
 
-    my $Message = MIME::Entity->build(
-        Subject => defined $args{UpdateSubject} ? Encode::encode( "UTF-8", $args{UpdateSubject} ) : "",
-        Type    => 'text/plain',
-        Charset => 'UTF-8',
-        Data    => Encode::encode("UTF-8", $args{'UpdateContent'} || ""),
-    );
+    @transactions = grep {$_} @transactions;
 
-    my ( $Transaction, $Description, $Object ) = $self->$action(
-        CcMessageTo  => $args{'UpdateCc'},
-        BccMessageTo => $args{'UpdateBcc'},
-        MIMEObj      => $Message,
-        TimeTaken    => $args{'UpdateTimeWorked'},
-        DryRun       => 1,
-        SquelchMailTo => $args{'SquelchMailTo'},
-    );
-    unless ( $Transaction ) {
-        $RT::Logger->error("Couldn't fire '$action' action: $Description");
-    }
+    $RT::Handle->Rollback();
 
-    return $Object;
+    return wantarray ? @transactions : $transactions[0];
 }
-
-=head2 DryRunCreate
-
-Prepares a MIME mesage with the given C<Subject>, C<Cc>, and
-C<Content>, then calls L</Create> with C<< DryRun => 1 >> and returns
-the resulting L<RT::Transaction>.
-
-=cut
-
-sub DryRunCreate {
-    my $self = shift;
-    my %args = @_;
-    my $Message = MIME::Entity->build(
-        Subject => defined $args{Subject} ? Encode::encode( "UTF-8", $args{'Subject'} ) : "",
-        (defined $args{'Cc'} ?
-             ( Cc => Encode::encode( "UTF-8", $args{'Cc'} ) ) : ()),
-        Type    => 'text/plain',
-        Charset => 'UTF-8',
-        Data    => Encode::encode( "UTF-8", $args{'Content'} || ""),
-    );
-
-    my ( $Transaction, $Object, $Description ) = $self->Create(
-        Type            => $args{'Type'} || 'ticket',
-        Queue           => $args{'Queue'},
-        Owner           => $args{'Owner'},
-        Requestor       => $args{'Requestors'},
-        Cc              => $args{'Cc'},
-        AdminCc         => $args{'AdminCc'},
-        InitialPriority => $args{'InitialPriority'},
-        FinalPriority   => $args{'FinalPriority'},
-        TimeLeft        => $args{'TimeLeft'},
-        TimeEstimated   => $args{'TimeEstimated'},
-        TimeWorked      => $args{'TimeWorked'},
-        Subject         => $args{'Subject'},
-        Status          => $args{'Status'},
-        MIMEObj         => $Message,
-        DryRun          => 1,
-    );
-    unless ( $Transaction ) {
-        $RT::Logger->error("Couldn't fire Create action: $Description");
-    }
-
-    return $Object;
-}
-
-
 
 sub _Links {
     my $self = shift;
@@ -1830,20 +1761,6 @@ sub _MergeInto {
     unless ($id_val) {
         $RT::Handle->Rollback();
         return ( 0, $self->loc("Merge failed. Couldn't set IsMerged") );
-    }
-
-    my $force_status = $self->LifecycleObj->DefaultOnMerge;
-    if ( $force_status && $force_status ne $self->__Value('Status') ) {
-        my ( $status_val, $status_msg )
-            = $self->__Set( Field => 'Status', Value => $force_status );
-
-        unless ($status_val) {
-            $RT::Handle->Rollback();
-            $RT::Logger->error(
-                "Couldn't set status to $force_status. RT's Database may be inconsistent."
-            );
-            return ( 0, $self->loc("Merge failed. Couldn't set Status") );
-        }
     }
 
     # update all the links that point to that old ticket
@@ -2604,7 +2521,8 @@ sub _ApplyTransactionBatch {
     my $types = join ',', grep !$seen{$_}++, grep defined, map $_->__Value('Type'), grep defined, @{$batch};
 
     require RT::Scrips;
-    RT::Scrips->new(RT->SystemUser)->Apply(
+    my $scrips = RT::Scrips->new(RT->SystemUser);
+    $scrips->Prepare(
         Stage          => 'TransactionBatch',
         TicketObj      => $self,
         TransactionObj => $batch->[0],
@@ -2618,7 +2536,16 @@ sub _ApplyTransactionBatch {
         TransactionObj => $batch->[0],
         Type           => $types,
     );
-    RT::Ruleset->CommitRules($rules);
+
+    if ($self->{DryRun}) {
+        my $fake_txn = RT::Transaction->new( $self->CurrentUser );
+        $fake_txn->{scrips} = $scrips;
+        $fake_txn->{rules} = $rules;
+        push @{$self->{DryRun}}, $fake_txn;
+    } else {
+        $scrips->Commit;
+        RT::Ruleset->CommitRules($rules);
+    }
 }
 
 sub DESTROY {
@@ -3052,8 +2979,6 @@ sub Forward {
         Bcc            => '',
         Content        => '',
         ContentType    => 'text/plain',
-        DryRun         => 0,
-        CommitScrips   => 1,
         @_
     );
 
@@ -3082,11 +3007,6 @@ sub Forward {
         )
     );
 
-    if ($args{'DryRun'}) {
-        $RT::Handle->BeginTransaction();
-        $args{'CommitScrips'} = 0;
-    }
-
     my ( $ret, $msg ) = $self->_NewTransaction(
         $args{Transaction}
         ? (
@@ -3099,17 +3019,26 @@ sub Forward {
         ),
         Data  => join( ', ', grep { length } $args{To}, $args{Cc}, $args{Bcc} ),
         MIMEObj => $mime,
-        CommitScrips => $args{'CommitScrips'},
     );
 
     unless ($ret) {
         $RT::Logger->error("Failed to create transaction: $msg");
     }
 
-    if ($args{'DryRun'}) {
-        $RT::Handle->Rollback();
-    }
     return ( $ret, $self->loc('Message recorded') );
+}
+
+=head2 CurrentUserCanSeeTime
+
+Returns true if the current user can see time worked, estimated, left
+
+=cut
+
+sub CurrentUserCanSeeTime {
+    my $self = shift;
+
+    return $self->CurrentUser->Privileged ||
+           !RT->Config->Get('HideTimeFieldsFromUnprivilegedUsers');
 }
 
 1;
@@ -3189,42 +3118,6 @@ Returns the current value of Type.
 Set Type to VALUE.
 Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 (In the database, Type will be stored as a varchar(16).)
-
-
-=cut
-
-
-=head2 IssueStatement
-
-Returns the current value of IssueStatement.
-(In the database, IssueStatement is stored as int(11).)
-
-
-
-=head2 SetIssueStatement VALUE
-
-
-Set IssueStatement to VALUE.
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, IssueStatement will be stored as a int(11).)
-
-
-=cut
-
-
-=head2 Resolution
-
-Returns the current value of Resolution.
-(In the database, Resolution is stored as int(11).)
-
-
-
-=head2 SetResolution VALUE
-
-
-Set Resolution to VALUE.
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, Resolution will be stored as a int(11).)
 
 
 =cut
@@ -3517,26 +3410,6 @@ Returns the current value of Created.
 
 =cut
 
-
-=head2 Disabled
-
-Returns the current value of Disabled.
-(In the database, Disabled is stored as smallint(6).)
-
-
-
-=head2 SetDisabled VALUE
-
-
-Set Disabled to VALUE.
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, Disabled will be stored as a smallint(6).)
-
-
-=cut
-
-
-
 sub _CoreAccessible {
     {
 
@@ -3550,10 +3423,6 @@ sub _CoreAccessible {
                 {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Type =>
                 {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
-        IssueStatement =>
-                {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
-        Resolution =>
-                {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Owner =>
                 {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Subject =>
@@ -3569,6 +3438,8 @@ sub _CoreAccessible {
         TimeWorked =>
                 {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Status =>
+                {read => 1, write => 1, sql_type => 12, length => 64,  is_blob => 0,  is_numeric => 0,  type => 'varchar(64)', default => ''},
+        SLA =>
                 {read => 1, write => 1, sql_type => 12, length => 64,  is_blob => 0,  is_numeric => 0,  type => 'varchar(64)', default => ''},
         TimeLeft =>
                 {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
@@ -3590,9 +3461,6 @@ sub _CoreAccessible {
                 {read => 1, auto => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => '0'},
         Created =>
                 {read => 1, auto => 1, sql_type => 11, length => 0,  is_blob => 0,  is_numeric => 0,  type => 'datetime', default => ''},
-        Disabled =>
-                {read => 1, write => 1, sql_type => 5, length => 6,  is_blob => 0,  is_numeric => 1,  type => 'smallint(6)', default => '0'},
-
  }
 };
 

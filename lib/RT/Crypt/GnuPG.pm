@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -92,9 +92,6 @@ Set to true value to enable this subsystem:
         Enable => 1,
         ... other options ...
     );
-
-However, note that you B<must> add the 'Auth::Crypt' email filter to enable
-the handling of incoming encrypted/signed messages.
 
 =head3 Format of outgoing messages
 
@@ -234,15 +231,6 @@ at the bottom and two checkboxes to choose default actions.
 As well, encryption is enabled for autoreplies and other notifications when
 an encypted message enters system via mailgate interface even if queue's
 option is disabled.
-
-=head2 Handling incoming messages
-
-To enable handling of encrypted and signed message in the RT you should add
-'Auth::Crypt' mail plugin.
-
-    Set(@MailPlugins, 'Auth::MailFrom', 'Auth::Crypt', ...other filter...);
-
-See also `perldoc lib/RT/Interface/Email/Auth/Crypt.pm`.
 
 =head2 Encrypting to untrusted keys
 

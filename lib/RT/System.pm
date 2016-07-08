@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -83,10 +83,12 @@ use Data::GUID;
 __PACKAGE__->AddRight( Admin   => SuperUser           => 'Do anything and everything'); # loc
 __PACKAGE__->AddRight( Staff   => ShowUserHistory     => 'Show history of public user properties'); # loc
 __PACKAGE__->AddRight( Admin   => AdminUsers          => 'Create, modify and delete users'); # loc
+__PACKAGE__->AddRight( Admin   => AdminCustomRoles    => 'Create, modify and delete custom roles'); # loc
 __PACKAGE__->AddRight( Staff   => ModifySelf          => "Modify one's own RT account"); # loc
 __PACKAGE__->AddRight( Staff   => ShowArticlesMenu    => 'Show Articles menu'); # loc
 __PACKAGE__->AddRight( Admin   => ShowConfigTab       => 'Show Admin menu'); # loc
 __PACKAGE__->AddRight( Admin   => ShowApprovalsTab    => 'Show Approvals tab'); # loc
+__PACKAGE__->AddRight( Staff   => ShowAssetsMenu      => 'Show Assets menu'); # loc
 __PACKAGE__->AddRight( Staff   => ShowGlobalTemplates => 'Show global templates'); # loc
 __PACKAGE__->AddRight( General => LoadSavedSearch     => 'Allow loading of saved searches'); # loc
 __PACKAGE__->AddRight( General => CreateSavedSearch   => 'Allow creation of saved searches'); # loc
@@ -212,6 +214,27 @@ sub QueueCacheNeedsUpdate {
     }
 }
 
+=head2 CustomRoleCacheNeedsUpdate ( 1 )
+
+Attribute to decide when we need to flush the list of custom roles
+and re-register any changes.  Set when roles are created, enabled/disabled, etc.
+
+If passed a true value, will update the attribute to be the current time.
+
+=cut
+
+sub CustomRoleCacheNeedsUpdate {
+    my $self = shift;
+    my $update = shift;
+
+    if ($update) {
+        return $self->SetAttribute(Name => 'CustomRoleCacheNeedsUpdate', Content => time);
+    } else {
+        my $cache = $self->FirstAttribute('CustomRoleCacheNeedsUpdate');
+        return (defined $cache ? $cache->Content : 0 );
+    }
+}
+
 =head2 AddUpgradeHistory package, data
 
 Adds an entry to the upgrade history database. The package can be either C<RT>
@@ -327,6 +350,44 @@ sub ParsedUpgradeHistory {
     return ($version_status, @lines);
 }
 
+=head2 ExternalStorage
+
+Accessor for the storage engine selected by L<RT::ExternalStorage>. Will
+be undefined if external storage is not configured.
+
+=cut
+
+sub ExternalStorage {
+    my $self = shift;
+    if (@_) {
+        $self->{ExternalStorage} = shift;
+    }
+    return $self->{ExternalStorage};
+}
+
+=head2 ExternalStorageURLFor object
+
+Returns a URL for direct linking to an L<RT::ExternalStorage>
+engine. Will return C<undef> if external storage is not configured, or
+if direct linking is disabled in config (C<$ExternalStorageDirectLink>),
+or if the external storage engine doesn't support hyperlinking (as in
+L<RT::ExternalStorage::Disk>), or finally, if the object is for whatever
+reason not present in external storage.
+
+=cut
+
+sub ExternalStorageURLFor {
+    my $self = shift;
+    my $Object = shift;
+
+    # external storage not configured
+    return undef if !$self->ExternalStorage;
+
+    # external storage direct links disabled
+    return undef if !RT->Config->Get('ExternalStorageDirectLink');
+
+    return $self->ExternalStorage->DownloadURLFor($Object);
+}
 
 RT::Base->_ImportOverlays();
 

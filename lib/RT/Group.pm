@@ -3,7 +3,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -84,6 +84,7 @@ use RT::Users;
 use RT::GroupMembers;
 use RT::Principals;
 use RT::ACL;
+use RT::CustomRole;
 
 __PACKAGE__->AddRight( Admin => AdminGroup           => 'Modify group metadata or delete group'); # loc
 __PACKAGE__->AddRight( Admin => AdminGroupMembership => 'Modify group membership roster'); # loc
@@ -261,88 +262,9 @@ sub LoadRoleGroup {
     return $self->LoadByCols(%args);
 }
 
-
-=head2 LoadTicketRoleGroup  { Ticket => TICKET_ID, Name => TYPE }
-
-Deprecated in favor of L</LoadRoleGroup> or L<RT::Record/RoleGroup>.
-
-=cut
-
-sub LoadTicketRoleGroup {
-    my $self = shift;
-    my %args = (
-        Ticket => '0',
-        Name => undef,
-        @_,
-    );
-    RT->Deprecated(
-        Instead => "RT::Group->LoadRoleGroup or RT::Ticket->RoleGroup",
-        Remove => "4.4",
-    );
-    $args{'Name'} = $args{'Type'} if exists $args{'Type'};
-    $self->LoadByCols(
-        Domain   => 'RT::Ticket-Role',
-        Instance => $args{'Ticket'},
-        Name     => $args{'Name'},
-    );
-}
-
-
-
-=head2 LoadQueueRoleGroup  { Queue => Queue_ID, Type => TYPE }
-
-Deprecated in favor of L</LoadRoleGroup> or L<RT::Record/RoleGroup>.
-
-=cut
-
-sub LoadQueueRoleGroup {
-    my $self = shift;
-    my %args = (
-        Queue => undef,
-        Name => undef,
-        @_,
-    );
-    RT->Deprecated(
-        Instead => "RT::Group->LoadRoleGroup or RT::Queue->RoleGroup",
-        Remove => "4.4",
-    );
-    $args{'Name'} = $args{'Type'} if exists $args{'Type'};
-    $self->LoadByCols(
-        Domain   => 'RT::Queue-Role',
-        Instance => $args{'Queue'},
-        Name     => $args{'Name'},
-    );
-}
-
-
-
-=head2 LoadSystemRoleGroup  Name
-
-Deprecated in favor of L</LoadRoleGroup> or L<RT::Record/RoleGroup>.
-
-=cut
-
-sub LoadSystemRoleGroup {
-    my $self = shift;
-    my $type = shift;
-    RT->Deprecated(
-        Instead => "RT::Group->LoadRoleGroup or RT::System->RoleGroup",
-        Remove => "4.4",
-    );
-    $self->LoadByCols(
-        Domain   => 'RT::System-Role',
-        Instance => RT::System->Id,
-        Name     => $type
-    );
-}
-
 sub LoadByCols {
     my $self = shift;
     my %args = ( @_ );
-    if ( exists $args{'Type'} ) {
-        RT->Deprecated( Instead => 'Name', Arguments => 'Type', Remove => '4.4' );
-        $args{'Name'} = $args{'Type'};
-    }
     return $self->SUPER::LoadByCols( %args );
 }
 
@@ -382,12 +304,6 @@ sub _Create {
         _RecordTransaction => 1,
         @_
     );
-    if ( $args{'Type'} ) {
-        RT->Deprecated( Instead => 'Name', Arguments => 'Type', Remove => '4.4' );
-        $args{'Name'} = $args{'Type'};
-    } else {
-        $args{'Type'} = $args{'Name'};
-    }
 
     # Enforce uniqueness on user defined group names
     if ($args{'Domain'} and $args{'Domain'} eq 'UserDefined') {
@@ -401,15 +317,12 @@ sub _Create {
     my $principal    = RT::Principal->new( $self->CurrentUser );
     my $principal_id = $principal->Create(
         PrincipalType => 'Group',
-        ObjectId      => '0'
     );
-    $principal->__Set(Field => 'ObjectId', Value => $principal_id);
 
     $self->SUPER::Create(
         id          => $principal_id,
         Name        => $args{'Name'},
         Description => $args{'Description'},
-        Type        => $args{'Type'},
         Domain      => $args{'Domain'},
         Instance    => ($args{'Instance'} || '0')
     );
@@ -623,11 +536,6 @@ sub CreateRoleGroup {
         return ( 0, $self->loc("Invalid Group Name and Domain") );
     }
 
-    if ( exists $args{'Type'} ) {
-        RT->Deprecated( Instead => 'Name', Arguments => 'Type', Remove => '4.4' );
-        $args{'Name'} = $args{'Type'};
-    }
-
     my %create = map { $_ => $args{$_} } qw(Domain Instance Name);
 
     my $duplicate = RT::Group->new( RT->SystemUser );
@@ -672,12 +580,12 @@ registered role on the specified Domain.  Otherwise returns false.
 sub ValidateRoleGroup {
     my $self = shift;
     my %args = (@_);
-    return 0 unless $args{Domain} and ($args{Type} or $args{'Name'});
+    return 0 unless $args{Domain} and $args{'Name'};
 
     my $class = $self->RoleClass($args{Domain});
     return 0 unless $class;
 
-    return $class->HasRole($args{Type}||$args{'Name'});
+    return $class->HasRole($args{'Name'});
 }
 
 =head2 SingleMemberRoleGroup
@@ -710,30 +618,11 @@ sub RoleGroupObject {
     return $obj;
 }
 
-sub Type {
-    my $self = shift;
-    RT->Deprecated( Instead => 'Name', Remove => '4.4' );
-    return $self->_Value('Type', @_);
-}
-
-sub SetType {
-    my $self = shift;
-    RT->Deprecated( Instead => 'Name', Remove => '4.4' );
-    return $self->SetName(@_);
-}
-
 sub SetName {
     my $self = shift;
     my $value = shift;
 
     my ($status, $msg) = $self->_Set( Field => 'Name', Value => $value );
-    return ($status, $msg) unless $status;
-
-    {
-        my ($status, $msg) = $self->__Set( Field => 'Type', Value => $value );
-        RT->Logger->error("Couldn't set Type: $msg") unless $status;
-    }
-
     return ($status, $msg);
 }
 
@@ -1425,6 +1314,34 @@ sub BasicColumns {
     );
 }
 
+=head2 Label
+
+Returns the group name suitable for displaying to end users. Override
+this instead of L</Name>, which is used internally.
+
+=cut
+
+sub Label {
+    my $self = shift;
+
+    # don't loc user-defined group names
+    if ($self->Domain eq 'UserDefined') {
+        return $self->Name;
+    }
+
+    if ($self->Domain =~ /-Role$/) {
+        my ($id) = $self->Name =~ /^RT::CustomRole-(\d+)$/;
+        if ($id) {
+            my $role = RT::CustomRole->new($self->CurrentUser);
+            $role->Load($id);
+
+            # don't loc user-defined role names
+            return $role->Name;
+        }
+    }
+
+    return $self->loc($self->Name);
+}
 
 =head1 AUTHOR
 
@@ -1502,26 +1419,6 @@ Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 
 =cut
 
-
-=head2 Type
-
-Returns the current value of Type.
-(In the database, Type is stored as varchar(64).)
-
-Deprecated, use Name instead, will be removed in 4.4.
-
-=head2 SetType VALUE
-
-
-Set Type to VALUE.
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, Type will be stored as a varchar(64).)
-
-Deprecated, use SetName instead, will be removed in 4.4.
-
-=cut
-
-
 =head2 Instance
 
 Returns the current value of Instance.
@@ -1587,8 +1484,6 @@ sub _CoreAccessible {
         Description =>
                 {read => 1, write => 1, sql_type => 12, length => 255,  is_blob => 0,  is_numeric => 0,  type => 'varchar(255)', default => ''},
         Domain =>
-                {read => 1, write => 1, sql_type => 12, length => 64,  is_blob => 0,  is_numeric => 0,  type => 'varchar(64)', default => ''},
-        Type =>
                 {read => 1, write => 1, sql_type => 12, length => 64,  is_blob => 0,  is_numeric => 0,  type => 'varchar(64)', default => ''},
         Instance =>
                 {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => ''},
@@ -1770,19 +1665,13 @@ sub PreInflate {
     my ($id) = $principal->Create(
         PrincipalType => 'Group',
         Disabled => $disabled,
-        ObjectId => 0,
     );
 
     # Now we have a principal id, set the id for the group record
     $data->{id} = $id;
 
     $importer->Resolve( $principal_uid => ref($principal), $id );
-
-    $importer->Postpone(
-        for => $uid,
-        uid => $principal_uid,
-        column => "ObjectId",
-    );
+    $data->{id} = $id;
 
     return 1;
 }

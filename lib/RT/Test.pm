@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -616,14 +616,20 @@ sub _get_dbh {
 }
 
 sub __create_database {
+    my %args = (
+        # already dropped db in parallel tests, need to do so for other cases.
+        DropDatabase => $ENV{RT_TEST_PARALLEL} ? 0 : 1,
+
+        @_,
+    );
+
     # bootstrap with dba cred
     my $dbh = _get_dbh(
         RT::Handle->SystemDSN,
         $ENV{RT_DBA_USER}, $ENV{RT_DBA_PASSWORD}
     );
 
-    unless ( $ENV{RT_TEST_PARALLEL} ) {
-        # already dropped db in parallel tests, need to do so for other cases.
+    if ($args{DropDatabase}) {
         __drop_database( $dbh );
 
     }
@@ -816,7 +822,7 @@ sub load_or_create_queue {
         my ($val, $msg) = $obj->Create( %args );
         die "$msg" unless $val;
     } else {
-        my @fields = qw(CorrespondAddress CommentAddress);
+        my @fields = qw(CorrespondAddress CommentAddress SLADisabled);
         foreach my $field ( @fields ) {
             next unless exists $args{ $field };
             next if $args{ $field } eq ($obj->$field || '');

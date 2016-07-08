@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -129,7 +129,7 @@ sub resolve_local_link {
         : '';
 
     my $local;
-    if ($name =~ /^RT(::(?!Extension::|Authen::)|$)/ or $self->batch->found($name)) {
+    if ($name =~ /^RT(::(?!Extension::|Authen::(?!ExternalAuth))|$)/ or $self->batch->found($name)) {
         $local = join "/",
                   map { $self->encode_entities($_) }
                 split /::/, $name;

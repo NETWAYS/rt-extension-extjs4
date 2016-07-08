@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -54,11 +54,11 @@
 % my $Values = $Object->CustomFieldValues( $CustomField->Id );
 % my $count = $Values->Count;
 % next if $HideEmpty and not $count;
-  <tr id="CF-<%$CustomField->id%>-ShowRow">
+  <tr class="custom-field custom-field-<% $CustomField->id%><% $count ? q{} : q{ unset-field}%>" id="CF-<%$CustomField->id%>-ShowRow">
     <td class="label"><% $CustomField->Name %>:</td>
-    <td class="value">
+    <td class="value<% $count ? '' : ' no-value' %>">
 % unless ( $count ) {
-<i><&|/l&>(no value)</&></i>
+<&|/l&>(no value)</&>
 % } elsif ( $count == 1 ) {
 %   $print_value->( $CustomField, $Values->First );
 % } else {

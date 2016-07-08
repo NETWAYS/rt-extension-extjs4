@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -474,8 +474,13 @@ sub Verify {
             return %res;
         }
 
+        my ($address) = Email::Address->parse($signer->{User}[0]{String});
         my $user = RT::User->new( $RT::SystemUser );
-        $user->LoadOrCreateByEmail( $signer->{User}[0]{String} );
+        $user->LoadOrCreateByEmail(
+            EmailAddress => $address->address,
+            RealName     => $address->phrase,
+            Comments     => 'Autocreated during SMIME parsing',
+        );
         my $current_key = $user->SMIMECertificate;
         last if $current_key && $current_key eq $key;
 

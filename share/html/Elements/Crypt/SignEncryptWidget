@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -159,11 +159,13 @@ if ( $self->{'Encrypt'} ) {
     my @recipients;
 
     if ( $Operation eq 'Update' ) {
-        @recipients = $TicketObj->DryRun(%$self)->Recipients;
+        @recipients = map {$_->Recipients} $TicketObj->DryRun(
+            sub { ProcessUpdateMessage( ARGSRef => {%$self}, TicketObj => $TicketObj ) } );
     }
     elsif ( $Operation eq 'Create' ) {
         $TicketObj = RT::Ticket->new( $session{'CurrentUser'} );
-        @recipients = $TicketObj->DryRunCreate(%$self)->Recipients;
+        @recipients = map {$_->Recipients} $TicketObj->DryRun(
+            sub { CreateTicket( %$self, TicketObj => $TicketObj ); } );
     }
     else {
         $RT::Logger->crit('Incorrect operation: '. $Operation );

@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -123,17 +123,23 @@ $COLUMN_MAP = {
         value     => sub {
             my $Ticket = shift;
 
-            if ( my $count = $Ticket->HasUnresolvedDependencies ) {
+            my $unresolved_dependencies = $Ticket->UnresolvedDependencies;
+            my $count = $unresolved_dependencies->Count;
+            if ( $count ) {
                 if (   $Ticket->HasUnresolvedDependencies( Type => 'approval' )
                     or $Ticket->HasUnresolvedDependencies( Type => 'code' ) )
                 {
                     return \'<em>', loc('(pending approval)'), \'</em>';
                 }
                 else {
-                    my $Query = "DependedOnBy = " . $Ticket->id;
-                    $Query .= " AND (" . join(" OR ", map { "Status = '$_'" } RT::Queue->ActiveStatusArray) . ")";
-
+                    my $Query = "DependedOnBy = " . $Ticket->id . " AND Status = '__Active__'";
                     my $SearchURL = RT->Config->Get('WebPath') . '/Search/Results.html?' . $m->comp('/Elements/QueryString', Query => $Query);
+
+                    if ($count == 1) {
+                        my $pending_ticket = $unresolved_dependencies->Next;
+                        my $pending_ticket_url = RT->Config->Get('WebPath') . '/Ticket/Display.html?id=' . $pending_ticket->id;
+                        return \'<a href="',$pending_ticket_url,\'">', loc('(pending ticket #[_1])',$pending_ticket->id), \'</a>';
+                    }
 
                     return \'<a href="',$SearchURL,\'">', loc('(pending [quant,_1,other ticket,other tickets])',$count), \'</a>';
                 }
@@ -174,7 +180,7 @@ $COLUMN_MAP = {
     TimeWorked => {
         attribute => 'TimeWorked',
         title     => 'Time Worked', # loc
-        value     => sub { return $_[0]->TimeWorked }
+        value     => sub { return $_[0]->TimeWorkedAsString }
     },
     TimeLeft => {
         attribute => 'TimeLeft',
@@ -184,7 +190,7 @@ $COLUMN_MAP = {
     TimeEstimated => {
         attribute => 'TimeEstimated',
         title     => 'Time Estimated', # loc
-        value     => sub { return $_[0]->TimeEstimated }
+        value     => sub { return $_[0]->TimeEstimatedAsString }
     },
     StartsRelative => {
         title     => 'Starts', # loc
@@ -251,6 +257,11 @@ $COLUMN_MAP = {
         title     => 'Resolved', # loc
         attribute => 'Resolved',
         value     => sub { return $_[0]->ResolvedObj->AsString }
+    },
+    SLA => {
+        attribute => 'SLA',
+        title     => 'SLA', # loc
+        value     => sub { return $_[0]->SLA }
     },
     UpdateStatus => {
         title => 'New messages', # loc

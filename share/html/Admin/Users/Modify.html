@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -242,10 +242,8 @@ $ARGS{Disabled} = $ARGS{Enabled} ? 0 : 1;
 delete $ARGS{Disabled} unless $ARGS{SetEnabled};
 
 my @fields = qw(Name Comments Signature EmailAddress FreeformContactInfo
-                Organization RealName NickName Lang EmailEncoding WebEncoding
-                ExternalContactInfoId ContactInfoSystem Gecos ExternalAuthId
-                AuthSystem HomePhone WorkPhone MobilePhone PagerPhone Address1
-                Address2 City State Zip Country
+                Organization RealName NickName Lang Gecos HomePhone WorkPhone
+                MobilePhone PagerPhone Address1 Address2 City State Zip Country
                );
 
 if ($Create) {

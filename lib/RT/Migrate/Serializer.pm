@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -198,7 +198,7 @@ sub PushCollections {
             }
             elsif ($collection->isa('RT::ObjectCustomFieldValues')) {
                 # FindAllRows (find_disabled_rows) isn't used by OCFVs
-                $collection->{find_expired_rows} = 1;
+                $collection->{find_disabled_rows} = 1;
             }
 
             if ($self->{Incremental}) {

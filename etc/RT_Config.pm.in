@@ -118,11 +118,10 @@ Set($Timezone, "US/Eastern");
 Once a plugin has been downloaded and installed, use C<Plugin()> to add
 to the enabled C<@Plugins> list:
 
-    Plugin( "RT::Extension::SLA" );
-    Plugin( "RT::Authen::ExternalAuth" );
+    Plugin( "RT::Extension::JSGantt" );
 
-RT will also accept the distribution name (i.e. C<RT-Extension-SLA>)
-instead of the package name (C<RT::Extension::SLA>).
+RT will also accept the distribution name (i.e. C<RT-Extension-JSGantt>)
+instead of the package name (C<RT::Extension::JSGantt>).
 
 =cut
 
@@ -394,7 +393,7 @@ read.
 
 =cut
 
-Set($MaxAttachmentSize, 10_000_000);  # 10M
+Set($MaxAttachmentSize, 10*1024*1024);  # 10MiB
 
 =item C<$TruncateLongAttachments>
 
@@ -471,15 +470,6 @@ Set($ValidateUserEmailAddresses, 1);
 
 C<@MailPlugins> is a list of authentication plugins for
 L<RT::Interface::Email> to use; see L<rt-mailgate>
-
-=cut
-
-=item C<$UnsafeEmailCommands>
-
-C<$UnsafeEmailCommands>, if set to 1, enables 'take' and 'resolve'
-as possible actions via the mail gateway.  As its name implies, this
-is very unsafe, as it allows email with a forged sender to possibly
-resolve arbitrary tickets!
 
 =cut
 
@@ -770,6 +760,33 @@ mailed dashboards.
 
 Set(@EmailDashboardRemove, ());
 
+=item C<@EmailDashboardLanguageOrder>
+
+A list that specifies which language to use for dashboard subscription email.
+There are several special keys:
+
+* _subscription: the language chosen on the dashboard subscription page
+* _recipient: the recipient's language, as chosen on their "About Me" page
+* _subscriber: the subscriber's language, as chosen on their "About Me" page
+
+The first key that produces a value is used for the email. Be aware that users
+may not actually have a language set on their "About Me" page, since RT falls
+back to the language their web browser specifies (and of course in a scheduled
+email dashboard, there is no web browser).
+
+You may also include a specific language as a fallback when there is no
+language specified otherwise. Using a specific language never fails to produce
+a value, so subsequent values in the list will never be considered.
+
+By default, RT examines the subscription, then the recipient, then subscriber,
+then finally falls back to English.
+
+See also L</@LexiconLanguages>.
+
+=cut
+
+Set(@EmailDashboardLanguageOrder, qw(_subscription _recipient _subscriber en));
+
 =back
 
 
@@ -970,19 +987,6 @@ A list of additional JavaScript files to be included in head.
 
 Set(@JSFiles, qw//);
 
-=item C<$JSMinPath>
-
-Path to the jsmin binary; if specified, it will be used to minify
-C<JSFiles>.  The default, and the fallback if the binary cannot be
-found, is to simply concatenate the files.
-
-jsmin can be installed by running 'make jsmin' from the RT install
-directory, or from http://www.crockford.com/javascript/jsmin.html
-
-=cut
-
-# Set($JSMinPath, "/path/to/jsmin");
-
 =item C<@CSSFiles>
 
 A list of additional CSS files to be included in head.
@@ -1027,7 +1031,7 @@ Extensions may provide their own portlets for this page.
 
 =cut
 
-Set(@UserSummaryPortlets, (qw/ExtraInfo CreateTicket ActiveTickets InactiveTickets/));
+Set(@UserSummaryPortlets, (qw/ExtraInfo CreateTicket ActiveTickets InactiveTickets UserAssets /));
 
 =item C<$UserSummaryExtraInfo>
 
@@ -1242,7 +1246,7 @@ user's customized homepage ("RT at a glance").
 Set(
     $HomepageComponents,
     [
-        qw(QuickCreate Quicksearch MyAdminQueues MySupportQueues MyReminders RefreshHomepage Dashboards SavedSearches FindUser) # loc_qw
+        qw(QuickCreate QueueList MyAdminQueues MySupportQueues MyReminders RefreshHomepage Dashboards SavedSearches FindUser MyAssets FindAsset) # loc_qw
     ]
 );
 
@@ -1364,6 +1368,21 @@ Set(%FullTextSearch,
     Enable  => 0,
     Indexed => 0,
 );
+
+=item C<$MaxFulltextAttachmentSize>
+
+On some systems, very large attachments can cause memory and other
+performance issues for the indexer making it unable to complete
+indexing. Adding resources like memory and CPU will solve this
+issue, but in cases where that isn't possible, this option
+sets a maximum size in bytes on attachments to index. Attachments
+larger than this limit are skipped and will not be available to
+full text searches.
+
+=cut
+
+# Default 0 means no limit
+Set($MaxFulltextAttachmentSize, 0);
 
 =item C<$DontSearchFileAttachments>
 
@@ -1518,6 +1537,18 @@ is ignored. Helpful when owners list is huge in the query builder.
 
 Set($AutocompleteOwnersForSearch, 0);
 
+=item C<$AutocompleteQueues>
+
+If set to 1, any queue drop-downs are replaced by text fields that
+autocomplete. This can alleviate the sometimes huge queue list for
+installations with many queues, and can also increase page load
+times in some cases. A user can override this setting as a personal
+preference.
+
+=cut
+
+Set($AutocompleteQueues, 0);
+
 =item C<$UserSearchFields>
 
 Used by the User Autocompleter as well as the User Search.
@@ -1602,6 +1633,17 @@ detailed breakdown by scrip.
 
 Set($SimplifiedRecipients, 0);
 
+=item C<$SquelchedRecipients>
+
+If C<$SquelchedRecipients> is set, the checkbox list of who will receive
+B<any> kind of mail on the ticket reply page are displayed initially as
+B<un>checked - which means nobody in that list would get any mail. It
+does not affect correspondence done via email yet.
+
+=cut
+
+Set($SquelchedRecipients, 0);
+
 =item C<$HideResolveActionsWithDependencies>
 
 If set to 1, this option will skip ticket menu actions which can't be
@@ -1615,8 +1657,26 @@ transitioned to another inactive status.
 
 Set($HideResolveActionsWithDependencies, 0);
 
-=back
+=item C<$HideUnsetFieldsOnDisplay>
 
+This determines if we should hide unset fields on ticket display page.
+Set this to 1 to hide unset fields.
+
+=cut
+
+Set($HideUnsetFieldsOnDisplay, 0);
+
+=item C<$HideTimeFieldsFromUnprivilegedUsers>
+
+This determines if we should hide Time Worked, Time Estimated, and
+Time Left for unprivileged users.
+Set this to 1 to hide those fields.
+
+=cut
+
+Set($HideTimeFieldsFromUnprivilegedUsers, 0);
+
+=back
 
 
 =head2 Articles
@@ -1644,7 +1704,123 @@ Set($HideArticleSearchOnReplyCreate, 0);
 
 =back
 
+=head1 Assets
 
+=over 4
+
+=item C<@AssetQueues>
+
+This should be a list of names of queues whose tickets should always
+display the "Assets" box.  This is useful for queues which deal
+primarily with assets, as it provides a ready box to link an asset to
+the ticket, even when the ticket has no related assets yet.
+
+=cut
+
+# Set(@AssetQueues, ());
+
+=item C<$DefaultCatalog>
+
+This provides the default catalog after a user initially logs in.
+However, the default catalog is "sticky," and so will remember the
+last-selected catalog thereafter.
+
+=cut
+
+# Set($DefaultCatalog, 'General assets');
+
+=item C<$AssetSearchFields>
+
+Specifies which fields of L<RT::Asset> to match against and how to match
+each field when performing a quick search on assets.  Valid match
+methods are LIKE, STARTSWITH, ENDSWITH, =, and !=.  Valid search fields
+are id, Name, Description, or custom fields, which are specified as
+"CF.1234" or "CF.Name"
+
+=cut
+
+Set($AssetSearchFields, {
+    id          => '=',
+    Name        => 'LIKE',
+    Description => 'LIKE',
+}) unless $AssetSearchFields;
+
+=item C<$AssetSearchFormat>
+
+The format that results of the asset search are displayed with.  This is
+either a string, which will be used for all catalogs, or a hash
+reference, keyed by catalog's name/id.  If a hashref and neither name or
+id is found therein, falls back to the key ''.
+
+If you wish to use the multiple catalog format, your configuration would look
+something like:
+
+    Set($AssetSearchFormat, {
+        'General assets' => q[Format String for the General Assets Catalog],
+        8                => q[Format String for Catalog 8],
+        ''               => q[Format String for any catalogs not listed explicitly],
+    });
+
+=cut
+
+# loc('Related tickets')
+Set($AssetSearchFormat, q[
+    '<a href="__WebHomePath__/Asset/Display.html?id=__id__">__Name__</a>/TITLE:Name',
+    Description,
+    '__Status__ (__Catalog__)/TITLE:Status',
+    Owner,
+    HeldBy,
+    Contacts,
+    '__ActiveTickets__ __InactiveTickets__/TITLE:Related tickets',
+]) unless $AssetSearchFormat;
+
+=item C<$AssetSummaryFormat>
+
+The information that is displayed on ticket display pages about assets
+related to the ticket.  This is displayed in a table beneath the asset
+name.
+
+=cut
+
+Set($AssetSummaryFormat, q[
+    '<a href="__WebHomePath__/Asset/Display.html?id=__id__">__Name__</a>/TITLE:Name',
+    Description,
+    '__Status__ (__Catalog__)/TITLE:Status',
+    Owner,
+    HeldBy,
+    Contacts,
+    '__ActiveTickets__ __InactiveTickets__/TITLE:Related tickets',
+]) unless $AssetSummaryFormat;
+
+=item C<$AssetSummaryRelatedTicketsFormat>
+
+The information that is displayed on ticket display pages about tickets
+related to assets related to the ticket.  This is displayed as a list of
+tickets underneath the asset properties.
+
+=cut
+
+Set($AssetSummaryRelatedTicketsFormat, q[
+    '<a href="__WebPath__/Ticket/Display.html?id=__id__">__id__</a>',
+    '(__OwnerName__)',
+    '<a href="__WebPath__/Ticket/Display.html?id=__id__">__Subject__</a>',
+    QueueName,
+    Status,
+]) unless $AssetSummaryRelatedTicketsFormat;
+
+=item C<$AssetBasicCustomFieldsOnCreate>
+
+Specify a list of Asset custom fields to show in "Basics" widget on create.
+
+e.g.
+
+Set( $AssetBasicCustomFieldsOnCreate, [ 'foo', 'bar' ] );
+
+=cut
+
+# Set($AssetBasicCustomFieldsOnCreate, undef );
+
+=back
 
 =head2 Message box properties
 
@@ -1750,6 +1926,13 @@ When set to C<always>, history is loaded before showing the page.  This ensures
 history is always available immediately, but at the expense of longer page load
 times.  This behaviour was the default in RT 4.0.
 
+=item C<scroll>
+
+When set to C<scroll>, history is loaded via javascript after the rest of the
+page has been loaded, as you scroll down the page. Ten transactions are loaded
+initially, and then more are loaded ten at a time. This can dramatically speed
+up initial page load times on very long tickets.
+
 =back
 
 =cut
@@ -1784,6 +1967,18 @@ overrides C<TrustHTMLAttachments>.
 
 Set($AlwaysDownloadAttachments, undef);
 
+=item C<$AttachmentListCount>
+
+The number of attachments to display by default on ticket display and ticket
+reply pages. Attachments beyond this count will be displayed only after the
+user clicks a "Show all attachments" link. The default value, C<undef>, means
+always show all attachments. A value of C<0> means show no attachments by
+default.
+
+=cut
+
+Set($AttachmentListCount, undef);
+
 =item C<$PreferRichText>
 
 By default, RT shows rich text (HTML) messages if possible.  If
@@ -1805,14 +2000,14 @@ Set($PreferRichText, 1);
 
 =item C<$MaxInlineBody>
 
-C<$MaxInlineBody> is the maximum attachment size that we want to see
-inline when viewing a transaction.  RT will inline any text if the
+C<$MaxInlineBody> is the maximum textual attachment size that we want to
+see inline when viewing a transaction.  RT will inline any text if the
 value is undefined or 0.  This option can be overridden by users in
-their preferences.
+their preferences.  The default is 25k.
 
 =cut
 
-Set($MaxInlineBody, 12000);
+Set($MaxInlineBody, 25 * 1024);
 
 =item C<$ShowTransactionImages>
 
@@ -1886,16 +2081,6 @@ It defaults to on.  Set this to 0 to disable it.
 =cut
 
 Set($QuoteFolding, 1);
-
-=item C<$AllowLoginPasswordAutoComplete>
-
-Allow browsers to remember the user's password on login (in case the
-browser can do so, and has the appropriate setting enabled). Default
-is 0.
-
-=cut
-
-Set($AllowLoginPasswordAutoComplete, 0);
 
 =back
 
@@ -2241,6 +2426,104 @@ Set($MinimumPasswordLength, 5);
 
 =back
 
+=head2 External Authentication and Authorization
+
+RT has a built-in module for integrating with a directory service like
+LDAP or Active Directory for authentication (login) and authorization
+(enabling/disabling users and setting user attributes). The core configuration
+settings for the service are listed here. Additional details are available
+in the L<RT::Authen::ExternalAuth> module documentation.
+
+=over 4
+
+=item C<$ExternalSettings>
+
+This option, along with the following options, activate and configure authentication
+via a resource external to RT. All of the configuration for your external authentication
+service, like LDAP or Active Directory, are defined in a data structure in this option.
+You can find full details on the configuration
+options in the L<RT::Authen::ExternalAuth> documentation.
+
+=cut
+
+# No defaults are set for ExternalAuth because this is an optional feature.
+
+=item C<$ExternalAuthPriority>
+
+Sets the priority of authentication resources if you have multiple configured.
+RT will attempt authorization with each resource, in order, until one succeeds or
+no more remain. See L<RT::Authen::ExternalAuth> for details.
+
+=item C<$ExternalInfoPriority>
+
+Sets the order of resources for querying user information if you have multiple
+configured. RT will query each resource, in order, until one succeeds or
+no more remain. See L<RT::Authen::ExternalAuth> for details.
+
+=item C<$UserAutocreateDefaultsOnLogin>
+
+A hashref of options to set for users who are autocreated on login via
+ExternalAuth. For example, you can automatically make "Privileged" users
+who were authenticated and created from LDAP or Active Directory.
+See L<RT::Authen::ExternalAuth> for details.
+
+=item C<$AutoCreateNonExternalUsers>
+
+Users should still be autocreated by RT as internal users if they
+fail to exist in an external service; this is so requestors who
+are not in LDAP can still be created when they email in.
+See L<RT::Authen::ExternalAuth> for details.
+
+=back
+
+=head2 Syncing Users and Groups with LDAP or AD
+
+In addition to the authentication services described above, RT also
+has a utility you can schedule to periodicially sync from your
+directory service additional user attributes, new users,
+disabled users, and group membership. Options for the
+LDAPImport tool are listed here. Additional information is
+available in the L<RT::LDAPImport> documentation.
+
+=over 4
+
+=item C<$LDAPHost>
+
+Your LDAP server hostname.
+
+=item C<$LDAPUser>
+
+The LDAP user to log in with.
+
+=item C<$LDAPPassword>
+
+Password for LDAPUser.
+
+=item C<$LDAPFilter>
+
+The filter to use when querying LDAP for the set of users to sync.
+
+=item C<$LDAPMapping>
+
+Mapping to apply between LDAP attributes retrieved and RT user
+record attributes. See the L<RT::LDAPImport> documentation
+for details.
+
+=item C<$LDAPGroupBase>
+
+The base for the LDAP group search.
+
+=item C<$LDAPGroupFilter>
+
+The filter to use when querying LDAP for groups to sync.
+
+=item C<$LDAPGroupMapping>
+
+Mapping to apply between LDAP group member attributes retrieved and
+RT groups. See the L<RT::LDAPImport> documentation
+for details.
+
+=back
 
 =head1 Internationalization
 
@@ -2343,6 +2626,16 @@ minutes.  Note that this only effects entry, not display.
 
 Set($DefaultTimeUnitsToHours, 0);
 
+=item C<$SignatureAboveQuote>
+
+By default RT places the signature at the bottom of the quoted text in
+the message box for ticket replies.  Set this to 1 to place the signature
+above the quoted text.
+
+=cut
+
+Set($SignatureAboveQuote, 0);
+
 =item C<$TimeInICal>
 
 By default, events in the iCal feed on the ticket search page
@@ -2357,9 +2650,30 @@ This option can also be set as an individual user preference.
 
 Set($TimeInICal, 0);
 
+=item C<$PreferDateTimeFormatNatural>
+
+By default, RT parses an unknown date first with L<Time::ParseDate>, and if
+this fails with L<DateTime::Format::Natural>.
+C<$PreferDateTimeFormatNatural> changes this behavior to first parse with
+L<DateTime::Format::Natural>, and if this fails with L<Time::ParseDate>.
+This gives you the possibility to use the more advanced features of
+L<DateTime::Format::Natural>.
+For example with L<Time::ParseDate> it isn't possible to get the
+'first day of the last month', where L<DateTime::Format::Natural> supports
+this with 'last month'.
+
+Be aware that L<Time::ParseDate> and L<DateTime::Format::Natural> have
+different definitions for the relative date and time syntax.
+L<Time::ParseDate> returns for 'last month' this DayOfMonth from the last month.
+L<DateTime::Format::Natural> returns for 'last month' the first day of the last
+month. So changing this config option maybe changes the results of your saved
+searches.
+
+=cut
+
+Set($PreferDateTimeFormatNatural, 0);
+
 =back
-
-
 
 =head1 Cryptography
 
@@ -2376,17 +2690,12 @@ The following options apply to all cryptography protocols.
 By default, all enabled security protocols will analyze each incoming
 email. You may set C<Incoming> to a subset of this list, if some enabled
 protocols do not apply to incoming mail; however, this is usually
-unnecessary. Note that for any verification or decryption to occur for
-incoming mail, the C<Auth::Crypt> mail plugin must be added to
-L</@MailPlugins> as specified in L<RT::Crypt/Handling incoming messages>.
+unnecessary.
 
 For outgoing emails, the first security protocol from the above list is
 used. Use the C<Outgoing> option to set a security protocol that should
 be used in outgoing emails.  At this moment, only one protocol can be
 used to protect outgoing emails.
-
-Set C<RejectOnUnencrypted> to 1 if all incoming email must be
-properly encrypted.  All unencrypted emails will be rejected by RT.
 
 Set C<RejectOnMissingPrivateKey> to 0 if you don't want to reject
 emails encrypted for key RT doesn't have and can not decrypt.
@@ -2409,7 +2718,6 @@ Set( %Crypt,
     Incoming                  => undef, # ['GnuPG', 'SMIME']
     Outgoing                  => undef, # 'SMIME'
 
-    RejectOnUnencrypted       => 0,
     RejectOnMissingPrivateKey => 1,
     RejectOnBadData           => 1,
 
@@ -2529,7 +2837,86 @@ Set(%GnuPGOptions,
 
 =back
 
+=head1 External storage
 
+By default, RT stores attachments in the database.  ExternalStorage moves
+all attachments that RT does not need efficient access to (which include
+textual content and images) to outside of the database.  This may either
+be on local disk, or to a cloud storage solution.  This decreases the
+size of RT's database, in turn decreasing the burden of backing up RT's
+database, at the cost of adding additional locations which must be
+configured or backed up.  Attachment storage paths are calculated based
+on file contents; this provides de-duplication.
+
+A full description of external storage can be found by running the command
+`perldoc L<RT::ExternalStorage>` (or `perldoc lib/RT/ExternalStorage.pm`
+from your RT install directory).
+
+Note that simply configuring L<RT::ExternalStorage> is insufficient; there
+are additional steps required (including setup of a regularly-scheduled
+upload job) to enable RT to make use of external storage.
+
+=over 4
+
+=item C<%ExternalStorage>
+
+This selects which storage engine is used, as well as options for
+configuring that specific storage engine. RT ships with the following
+storage engines:
+
+L<RT::ExternalStorage::Disk>, which stores files on directly onto disk.
+
+L<RT::ExternalStorage::AmazonS3>, which stores files on Amazon's S3 service.
+
+L<RT::ExternalStorage::Dropbox>, which stores files in Dropbox.
+
+See each storage engine's documentation for the configuration it requires
+and accepts.
+
+    Set(%ExternalStorage,
+        Type => 'Disk',
+        Path => '/opt/rt4/var/attachments',
+    );
+
+=cut
+
+Set(%ExternalStorage, ());
+
+=item C<$ExternalStorageCutoffSize>
+
+Certain object types, like values for Binary (aka file upload) custom
+fields, are always put into external storage. However, for other
+object types, like images and text, there is a line in the sand where
+you want small objects in the database but large objects in external
+storage. By default, objects larger than 10 MiB will be put into external
+storage. C<$ExternalStorageCutoffSize> adjusts that line in the sand.
+
+Note that changing this setting does not affect existing attachments, only
+the new ones that C<sbin/rt-externalize-attachments> hasn't seen yet.
+
+=cut
+
+Set($ExternalStorageCutoffSize, 10*1024*1024);
+
+=item C<$ExternalStorageDirectLink>
+
+Certain ExternalStorage backends can serve files over HTTP.  For such
+backends, RT can link directly to those files in external storage.  This
+cuts down download time and relieves resource pressure because RT's web
+server is no longer involved in retrieving and then immediately serving
+each attachment.
+
+Of the storage engines that RT ships, only
+L<RT::ExternalStorage::AmazonS3> supports this feature, and you must
+manually configure it to allow direct linking.
+
+Set this to 1 to link directly to files in external storage.
+
+=cut
+
+Set($ExternalStorageDirectLink, 0);
+
+=back
 
 =head1 Lifecycles
 
@@ -2618,12 +3005,6 @@ The following defaults are used.
 If you (or your code) doesn't specify a status when creating a ticket,
 RT will use the this status. See also L</Statuses available during
 ticket creation>.
-
-=item on_merge
-
-When tickets are merged, the status of the ticket that was merged
-away is forced to this value.  It should be one of inactive statuses;
-'resolved' or its equivalent is most probably the best candidate.
 
 =item approved
 
@@ -2795,7 +3176,6 @@ Set(%Lifecycles,
 
         defaults => {
             on_create => 'new',
-            on_merge  => 'resolved',
             approved  => 'open',
             denied    => 'rejected',
             reminder_on_open     => 'open',
@@ -2808,10 +3188,10 @@ Set(%Lifecycles,
             # from   => [ to list ],
             new      => [qw(    open stalled resolved rejected deleted)],
             open     => [qw(new      stalled resolved rejected deleted)],
-            stalled  => [qw(new open         rejected resolved deleted)],
+            stalled  => [qw(new open         resolved rejected deleted)],
             resolved => [qw(new open stalled          rejected deleted)],
             rejected => [qw(new open stalled resolved          deleted)],
-            deleted  => [qw(new open stalled rejected resolved        )],
+            deleted  => [qw(new open stalled resolved rejected        )],
         },
         rights => {
             '* -> deleted'  => 'DeleteTicket',
@@ -2831,6 +3211,52 @@ Set(%Lifecycles,
             'deleted -> open'  => { label  => 'Undelete',                    }, # loc{label}
         ],
     },
+    assets => {
+        type     => "asset",
+        initial  => [ 
+            'new' # loc
+        ],
+        active   => [ 
+            'allocated', # loc
+            'in-use' # loc
+        ],
+        inactive => [ 
+            'recycled', # loc
+            'stolen', # loc
+            'deleted' # loc
+        ],
+
+        defaults => {
+            on_create => 'new',
+        },
+
+        transitions => {
+            ''        => [qw(new allocated in-use)],
+            new       => [qw(allocated in-use stolen deleted)],
+            allocated => [qw(in-use recycled stolen deleted)],
+            "in-use"  => [qw(allocated recycled stolen deleted)],
+            recycled  => [qw(allocated)],
+            stolen    => [qw(allocated)],
+            deleted   => [qw(allocated)],
+        },
+        rights => {
+            '* -> *'        => 'ModifyAsset',
+        },
+        actions => {
+            '* -> allocated' => { 
+                label => "Allocate" # loc
+            },
+            '* -> in-use'    => { 
+                label => "Now in-use" # loc
+            },
+            '* -> recycled'  => { 
+                label => "Recycle" # loc
+            },
+            '* -> stolen'    => { 
+                label => "Report stolen" # loc
+            },
+        },
+    },
 # don't change lifecyle of the approvals, they are not capable to deal with
 # custom statuses
     approvals => {
@@ -2840,7 +3266,6 @@ Set(%Lifecycles,
 
         defaults => {
             on_create => 'new',
-            on_merge => 'resolved',
             reminder_on_open     => 'open',
             reminder_on_resolve  => 'resolved',
         },
@@ -2877,9 +3302,338 @@ Set(%Lifecycles,
     },
 );
 
+=head1 SLA
+
+=over 4
+
+=item C<%ServiceAgreements>
+
+    Set( %ServiceAgreements, (
+        Default => '4h',
+        QueueDefault => {
+            'Incident' => '2h',
+        },
+        Levels => {
+            '2h' => { Resolve => { RealMinutes => 60*2 } },
+            '4h' => { Resolve => { RealMinutes => 60*4 } },
+        },
+    ));
+
+In this example I<Incident> is the name of the queue, and I<2h> is the name of
+the SLA which will be applied to this queue by default.
+
+Each service level can be described using several options:
+L<Starts|/"Starts (interval, first business minute)">,
+L<Resolve|/"Resolve and Response (interval, no defaults)">,
+L<Response|/"Resolve and Response (interval, no defaults)">,
+L<KeepInLoop|/"Keep in loop (interval, no defaults)">,
+L<OutOfHours|/"OutOfHours (struct, no default)">
+and L<ServiceBusinessHours|/"Configuring business hours">.
+
+=over 4
+
+=item Starts (interval, first business minute)
+
+By default when a ticket is created Starts date is set to
+first business minute after time of creation. In other
+words if a ticket is created during business hours then
+Starts will be equal to Created time, otherwise Starts will
+be beginning of the next business day.
+
+However, if you provide 24/7 support then you most
+probably would be interested in Starts to be always equal
+to Created time.
+
+Starts option can be used to adjust behaviour. Format
+of the option is the same as format for deadlines which
+described later in details. RealMinutes, BusinessMinutes
+options and OutOfHours modifiers can be used here like
+for any other deadline. For example:
+
+    'standard' => {
+        # give people 15 minutes
+        Starts   => { BusinessMinutes => 15  },
+    },
+
+You can still use old option StartImmediately to set
+Starts date equal to Created date.
+
+Example:
+
+    '24/7' => {
+        StartImmediately => 1,
+        Response => { RealMinutes => 30 },
+    },
+
+But it's the same as:
+
+    '24/7' => {
+        Starts => { RealMinutes => 0 },
+        Response => { RealMinutes => 30 },
+    },
+
+=item Resolve and Response (interval, no defaults)
+
+These two options define deadlines for resolve of a ticket
+and reply to customer(requestors) questions accordingly.
+
+You can define them using real time, business or both. Read more
+about the latter L<below|/"Using both Resolve and Response in the same level">.
+
+The Due date field is used to store calculated deadlines.
+
+=over 4
+
+=item Resolve
+
+Defines deadline when a ticket should be resolved. This option is
+quite simple and straightforward when used without L</Response>.
+
+Example:
+
+    # 8 business hours
+    'simple' => { Resolve => 60*8 },
+    ...
+    # one real week
+    'hard' => { Resolve => { RealMinutes => 60*24*7 } },
+
+=item Response
+
+In many companies providing support service(s) resolve time of a ticket
+is less important than time of response to requestors from staff
+members.
+
+You can use Response option to define such deadlines.  The Due date is
+set when a ticket is created, unset when a worker replies, and re-set
+when the requestor replies again -- until the ticket is closed, when the
+ticket's Due date is unset.
+
+B<NOTE> that this behaviour changes when Resolve and Response options
+are combined; see L</"Using both Resolve and Response in the same
+level">.
+
+Note that by default, only the requestors on the ticket are considered
+"outside actors" and thus require a Response due date; all other email
+addresses are treated as workers of the ticket, and thus count as
+meeting the SLA.  If you'd like to invert this logic, so that the Owner
+and AdminCcs are the only worker email addresses, and all others are
+external, see the L</AssumeOutsideActor> configuration.
+
+The owner is never treated as an outside actor; if they are also the
+requestor of the ticket, it will have no SLA.
+
+If an outside actor replies multiple times, their later replies are
+ignored; the deadline is always calculated from the oldest
+correspondence from the outside actor.
 
 
+=item Using both Resolve and Response in the same level
 
+Resolve and Response can be combined. In such case due date is set
+according to the earliest of two deadlines and never is dropped to
+'not set'.
+
+If a ticket met its Resolve deadline then due date stops "flipping",
+is freezed and the ticket becomes overdue. Before that moment when
+an inside actor replies to a ticket, due date is changed to Resolve
+deadline instead of 'Not Set', as well this happens when a ticket
+is closed. So all the time due date is defined.
+
+Example:
+
+    'standard delivery' => {
+        Response => { RealMinutes => 60*1  }, # one hour
+        Resolve  => { RealMinutes => 60*24 }, # 24 real hours
+    },
+
+A client orders goods and due date of the order is set to the next one
+hour, you have this hour to process the order and write a reply.
+As soon as goods are delivered you resolve tickets and usually meet
+Resolve deadline, but if you don't resolve or user replies then most
+probably there are problems with delivery of the goods. And if after
+a week you keep replying to the client and always meeting one hour
+response deadline that doesn't mean the ticket is not over due.
+Due date was frozen 24 hours after creation of the order.
+
+=item Using business and real time in one option
+
+It's quite rare situation when people need it, but we've decided
+that business is applied first and then real time when deadline
+described using both types of time. For example:
+
+    'delivery' => {
+        Resolve => { BusinessMinutes => 0, RealMinutes => 60*8 },
+    },
+    'fast delivery' {
+        StartImmediately => 1,
+        Resolve => { RealMinutes => 60*8 },
+    },
+
+For delivery requests which come into the system during business
+hours these levels define the same deadlines, otherwise the first
+level set deadline to 8 real hours starting from the next business
+day, when tickets with the second level should be resolved in the
+next 8 hours after creation.
+
+=back
+
+=item Keep in loop (interval, no defaults)
+
+If response deadline is used then Due date is changed to repsonse
+deadline or to "Not Set" when staff replies to a ticket. In some
+cases you want to keep requestors in loop and keed them up to date
+every few hours. KeepInLoop option can be used to achieve this.
+
+    'incident' => {
+        Response   => { RealMinutes => 60*1  }, # one hour
+        KeepInLoop => { RealMinutes => 60*2 }, # two hours
+        Resolve    => { RealMinutes => 60*24 }, # 24 real hours
+    },
+
+In the above example Due is set to one hour after creation, reply
+of a inside actor moves Due date two hours forward, outside actors'
+replies move Due date to one hour and resolve deadine is 24 hours.
+
+=item Modifying Agreements
+
+=over 4
+
+=item OutOfHours (struct, no default)
+
+Out of hours modifier. Adds more real or business minutes to resolve
+and/or reply options if event happens out of business hours, read also
+</"Configuring business hours"> below.
+
+Example:
+
+    'level x' => {
+        OutOfHours => { Resolve => { RealMinutes => +60*24 } },
+        Resolve    => { RealMinutes => 60*24 },
+    },
+
+If a request comes into the system during night then supporters have two
+hours, otherwise only one.
+
+    'level x' => {
+        OutOfHours => { Response => { BusinessMinutes => +60*2 } },
+        Resolve    => { BusinessMinutes => 60 },
+    },
+
+Supporters have two additional hours in the morning to deal with bunch
+of requests that came into the system during the last night.
+
+=item IgnoreOnStatuses (array, no default)
+
+Allows you to ignore a deadline when ticket has certain status. Example:
+
+    'level x' => {
+        KeepInLoop => { BusinessMinutes => 60, IgnoreOnStatuses => ['stalled'] },
+    },
+
+In above example KeepInLoop deadline is ignored if ticket is stalled.
+
+B<NOTE>: When a ticket goes from an ignored status to a normal status, the new
+Due date is calculated from the last action (reply, SLA change, etc) which fits
+the SLA type (Response, Starts, KeepInLoop, etc).  This means if a ticket in
+the above example flips from stalled to open without a reply, the ticket will
+probably be overdue.  In most cases this shouldn't be a problem since moving
+out of stalled-like statuses is often the result of RT's auto-open on reply
+scrip, therefore ensuring there's a new reply to calculate Due from.  The
+overall effect is that ignored statuses don't let the Due date drift
+arbitrarily, which could wreak havoc on your SLA performance.
+C<ExcludeTimeOnIgnoredStatuses> option could get around the "probably be
+overdue" issue by excluding the time spent on ignored statuses, e.g.
+
+    'level x' => {
+        KeepInLoop => {
+            BusinessMinutes => 60,
+            ExcludeTimeOnIgnoredStatuses => 1,
+            IgnoreOnStatuses => ['stalled'],
+        },
+    },
+
+=back
+
+=item Defining service levels per queue
+
+In the config you can set per queue defaults, using:
+
+    Set( %ServiceAgreements, (
+        Default => 'global default level of service',
+        QueueDefault => {
+            'queue name' => 'default value for this queue',
+            ...
+        },
+        ...
+    ));
+
+=item AssumeOutsideActor
+
+When using a L<Response|/"Resolve and Response (interval, no defaults)">
+configuration, the due date is unset when anyone who is not a requestor
+replies.  If it is common for non-requestors to reply to tickets, and
+this should I<not> satisfy the SLA, you may wish to set
+C<AssumeOutsideActor>.  This causes the extension to assume that the
+Response SLA has only been met when the owner or AdminCc reply.
+
+    Set ( %ServiceAgreements = (
+        AssumeOutsideActor => 1,
+        ...
+    ));
+
+=back
+
+=cut
+
+Set( %ServiceAgreements, );
+
+=item C<%ServiceBusinessHours>
+
+In the config you can set one or more work schedules, e.g.
+
+    Set( %ServiceBusinessHours, (
+        'Default' => {
+            ... description ...
+        },
+        'Support' => {
+            ... description ...
+        },
+        'Sales' => {
+            ... description ...
+        },
+    ));
+
+Read more about how to describe a schedule in L<Business::Hours>.
+
+=over 4
+
+=item Configuring business hours
+
+Each level supports BusinessHours option to specify your own business
+hours.
+
+    'level x' => {
+        BusinessHours => 'work just in Monday',
+        Resolve    => { BusinessMinutes => 60 },
+    },
+
+then L<%ServiceBusinessHours> should have the corresponding definition:
+
+    Set( %ServiceBusinessHours, (
+        'work just in Monday' => {
+            1 => { Name => 'Monday', Start => '9:00', End => '18:00' },
+        },
+    ));
+
+Default Business Hours setting is in $ServiceBusinessHours{'Default'}.
+
+=back
+
+=cut
+
+Set( %ServiceBusinessHours, );
+
+=back
 
 =head1 Administrative interface
 
@@ -2915,7 +3669,7 @@ Set(%AdminSearchResultFormat,
     Queues =>
         q{'<a href="__WebPath__/Admin/Queues/Modify.html?id=__id__">__id__</a>/TITLE:#'}
         .q{,'<a href="__WebPath__/Admin/Queues/Modify.html?id=__id__">__Name__</a>/TITLE:Name'}
-        .q{,__Description__,__Address__,__Priority__,__DefaultDueIn__,__Lifecycle__,__SubjectTag__,__Disabled__},
+        .q{,__Description__,__Address__,__Priority__,__DefaultDueIn__,__Lifecycle__,__SubjectTag__,__Disabled__,__SortOrder__},
 
     Groups =>
         q{'<a href="__WebPath__/Admin/Groups/Modify.html?id=__id__">__id__</a>/TITLE:#'}
@@ -2930,7 +3684,12 @@ Set(%AdminSearchResultFormat,
     CustomFields =>
         q{'<a href="__WebPath__/Admin/CustomFields/Modify.html?id=__id__">__id__</a>/TITLE:#'}
         .q{,'<a href="__WebPath__/Admin/CustomFields/Modify.html?id=__id__">__Name__</a>/TITLE:Name'}
-        .q{,__AddedTo__, __FriendlyType__, __FriendlyPattern__,__Disabled__},
+        .q{,__AddedTo__, __EntryHint__, __FriendlyPattern__,__Disabled__},
+
+    CustomRoles =>
+        q{'<a href="__WebPath__/Admin/CustomRoles/Modify.html?id=__id__">__id__</a>/TITLE:#'}
+        .q{,'<a href="__WebPath__/Admin/CustomRoles/Modify.html?id=__id__">__Name__</a>/TITLE:Name'}
+        .q{,__Description__,__MaxValues__,__Disabled__},
 
     Scrips =>
         q{'<a href="__WebPath__/Admin/Scrips/Modify.html?id=__id____From__">__id__</a>/TITLE:#'}
@@ -2945,6 +3704,11 @@ Set(%AdminSearchResultFormat,
         q{ '<a href="__WebPath__/Admin/Articles/Classes/Modify.html?id=__id__">__id__</a>/TITLE:#'}
         .q{,'<a href="__WebPath__/Admin/Articles/Classes/Modify.html?id=__id__">__Name__</a>/TITLE:Name'}
         .q{,__Description__,__Disabled__},
+
+    Catalogs =>
+        q{'<a href="__WebPath__/Admin/Assets/Catalogs/Modify.html?id=__id__">__id__</a>/TITLE:#'}
+        .q{,'<a href="__WebPath__/Admin/Assets/Catalogs/Modify.html?id=__id__">__Name__</a>/TITLE:Name'}
+        .q{,__Description__,__Lifecycle__,__Disabled__},
 );
 
 =item C<%AdminSearchResultRows>
@@ -2959,9 +3723,12 @@ Set(%AdminSearchResultRows,
     Groups       => 50,
     Users        => 50,
     CustomFields => 50,
+    CustomRoles  => 50,
     Scrips       => 50,
     Templates    => 50,
     Classes      => 50,
+    Catalogs     => 50,
+    Assets       => 50,
 );
 
 =back

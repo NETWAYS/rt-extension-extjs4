@@ -80,12 +80,33 @@ function set_rollup_state(e,e2,state) {
 
 /* other utils */
 
+function getClosestInputElements(input) {
+    // Find inputs within the current form or collection list, whichever is closest.
+    var container = jQuery(input).closest("form, table.collection-as-table").get(0);
+    if ( container ) {
+        return container.getElementsByTagName('input');
+    }
+    else {
+        return [];
+    }
+}
+
 function setCheckbox(input, name, val) {
     if (val == null) val = input.checked;
 
-    // Find inputs within the current form or collection list, whichever is closest.
-    var container = jQuery(input).closest("form, table.collection-as-table").get(0);
-    var myfield   = container.getElementsByTagName('input');
+    var is_set_event = false;
+    if ( !name ) {
+        name = input.name || input.attr('name');
+        is_set_event = true;
+    }
+    else if (input.name) {
+        var allfield = jQuery('input[name=' + input.name + ']');
+        allfield.prop('checked', val);
+    }
+
+    var checked_count = 0;
+    var field_count = 0;
+    var myfield = getClosestInputElements(input);
     for ( var i = 0; i < myfield.length; i++ ) {
         if ( myfield[i].type != 'checkbox' ) continue;
         if ( name ) {
@@ -98,7 +119,25 @@ function setCheckbox(input, name, val) {
 
         }
 
-        myfield[i].checked = val;
+        if ( is_set_event ) {
+            field_count++;
+            if ( myfield[i].checked ) {
+                checked_count++;
+            }
+        }
+        else {
+            myfield[i].checked = val;
+        }
+    }
+
+    if ( is_set_event ) {
+        var allfield = jQuery('input[name=' + name + 'All' + ']');
+        if (field_count == checked_count) {
+            allfield.prop('checked', true);
+        }
+        else {
+            allfield.prop('checked', false);
+        }
     }
 }
 
@@ -166,6 +205,7 @@ function checkboxToInput(target,checkbox,val){
         tar.val(tar.val().replace(val,''));
     }
     jQuery('#UpdateIgnoreAddressCheckboxes').val(true);
+    tar.change();
 }
 
 // ahah for back compatibility as plugins may still use it
@@ -186,8 +226,15 @@ jQuery(function() {
         changeMonth: true,
         changeYear: true,
         showOtherMonths: true,
+        showOn: 'none',
         selectOtherMonths: true
     };
+    jQuery(".datepicker").focus(function() {
+        var val = jQuery(this).val();
+        if ( !val.match(/[a-z]/i) ) {
+            jQuery(this).datepicker('show');
+        }
+    });
     jQuery(".datepicker:not(.withtime)").datepicker(opts);
     jQuery(".datepicker.withtime").datetimepicker( jQuery.extend({}, opts, {
         stepHour: 1,
@@ -259,6 +306,151 @@ function ReplaceAllTextareas() {
         }
     }
 };
+
+function AddAttachmentWarning() {
+    var plainMessageBox  = jQuery('.messagebox');
+    var warningMessage   = jQuery('.messagebox-attachment-warning');
+    var ignoreMessage    = warningMessage.find('.ignore');
+    var dropzoneElement  = jQuery('#attach-dropzone');
+    var fallbackElement  = jQuery('.old-attach');
+    var reuseElements    = jQuery('#reuse-attachments');
+
+    // there won't be a ckeditor when using the plain <textarea>
+    var richTextEditor;
+    var messageBoxId = plainMessageBox.attr('id');
+    if (CKEDITOR.instances && CKEDITOR.instances[messageBoxId]) {
+        richTextEditor = CKEDITOR.instances[messageBoxId];
+    }
+
+    var regex = new RegExp(loc_key("attachment_warning_regex"), "i");
+
+    // if the quoted text or signature contains the magic word
+    // then we can't do much here, because the user can make any text
+    // changes they want and there's no real way to track the provenance of
+    // the word "attachment"
+    var ignoreMessageText = ignoreMessage.text();
+    if (ignoreMessageText && ignoreMessageText.match(regex)) {
+        return;
+    }
+
+    // a true value for instant means no CSS animation, for displaying the
+    // warning at page load time
+    var toggleAttachmentWarning = function (instant) {
+        var text;
+        if (richTextEditor) {
+            text = richTextEditor.getData();
+        }
+        else {
+            text = plainMessageBox.val();
+        }
+
+        // look for checked reuse attachment checkboxes
+        var has_reused_attachments = reuseElements
+                                        .find('input[type=checkbox]:checked')
+                                        .length;
+
+        // if the word "attach" appears and there are no attachments in flight
+        var needsWarning = text &&
+                           text.match(regex) &&
+                           !dropzoneElement.hasClass('has-attachments') &&
+                           !has_reused_attachments;
+
+        if (needsWarning) {
+            warningMessage.show(instant ? 1 : 'fast');
+        }
+        else {
+            warningMessage.hide(instant ? 1 : 'fast');
+        }
+    };
+
+    // don't run all the machinery (including regex matching a potentially very
+    // long message) several times per keystroke
+    var timer;
+    var delayedAttachmentWarning = function () {
+        if (timer) {
+            return;
+        }
+
+        timer = setTimeout(function () {
+            timer = 0;
+            toggleAttachmentWarning();
+        }, 200);
+    };
+
+    var listenForAttachmentEvents = function () {
+        if (richTextEditor) {
+            richTextEditor.on('instanceReady', function () {
+                // this set of events is imperfect. what I really want is:
+                //     this.on('change', ...)
+                // but ckeditor doesn't seem to provide that out of the box
+
+                this.on('blur', function () {
+                    toggleAttachmentWarning();
+                });
+
+                // we want to capture ~every keystroke type event; we only do the
+                // full checking periodically to avoid overloading the browser
+                this.document.on("keyup", function () {
+                    delayedAttachmentWarning();
+                });
+                this.document.on("keydown", function () {
+                    delayedAttachmentWarning();
+                });
+                this.document.on("keypress", function () {
+                    delayedAttachmentWarning();
+                });
+
+                // hook into the undo/redo buttons in the ckeditor UI
+                this.getCommand('undo').on('afterUndo', function () {
+                    toggleAttachmentWarning();
+                });
+                this.getCommand('redo').on('afterRedo', function () {
+                    toggleAttachmentWarning();
+                });
+            });
+        }
+        else {
+            // the propertychange event is for IE
+            plainMessageBox.bind('input propertychange', function () {
+                delayedAttachmentWarning();
+            });
+        }
+
+        dropzoneElement.on('attachment-change', function () {
+            toggleAttachmentWarning();
+        });
+
+        reuseElements.on('change', 'input[type=checkbox]',
+            function () {
+                toggleAttachmentWarning();
+            }
+        );
+    };
+
+    // if dropzone has already tried and failed, don't show spurious warnings
+    if (!fallbackElement.hasClass('hidden')) {
+        return;
+    }
+    // if dropzone has already attached...
+    else if (dropzoneElement.hasClass('dropzone-init')) {
+        listenForAttachmentEvents();
+
+        // also need to display the warning on initial page load
+        toggleAttachmentWarning(1);
+    }
+    // otherwise, wait for dropzone to initialize and then add attachment
+    // warnings
+    else {
+        dropzoneElement.on('dropzone-fallback', function () {
+            // do nothing. no dropzone = no attachment warnings
+        });
+
+        dropzoneElement.on('dropzone-init', function () {
+            listenForAttachmentEvents();
+            toggleAttachmentWarning(1);
+        });
+    }
+}
 
 function toggle_addprincipal_validity(input, good, title) {
     if (good) {
@@ -342,4 +534,48 @@ jQuery(function() {
         });
     });
     ReplaceAllTextareas();
+    jQuery('select.chosen.CF-Edit').chosen({ width: '20em', placeholder_text_multiple: ' ', no_results_text: ' ', search_contains: true });
+    AddAttachmentWarning();
+    jQuery('a.delete-attach').click( function() {
+        var parent = jQuery(this).closest('div');
+        var name = jQuery(this).attr('data-name');
+        var token = jQuery(this).closest('form').find('input[name=Token]').val();
+        jQuery.post('/Helpers/Upload/Delete', { Name: name, Token: token }, function(data) {
+            if ( data.status == 'success' ) {
+                parent.remove();
+            }
+        }, 'json');
+        return false;
+    });
 });
+
+// focus jquery object in window, only moving the screen when necessary
+function scrollToJQueryObject(obj) {
+    if (!obj.length) return;
+
+    var viewportHeight = jQuery(window).height(),
+        currentScrollPosition = jQuery(window).scrollTop(),
+        currentItemPosition = obj.offset().top,
+        currentItemSize = obj.height() + obj.next().height();
+
+    if (currentScrollPosition + viewportHeight < currentItemPosition + currentItemSize) {
+        jQuery('html, body').scrollTop(currentItemPosition - viewportHeight + currentItemSize);
+    } else if (currentScrollPosition > currentItemPosition) {
+        jQuery('html, body').scrollTop(currentItemPosition);
+    }
+}
+
+function toggle_hide_unset(e) {
+    var link      = jQuery(e);
+    var container = link.closest(".unset-fields-container");
+    container.toggleClass('unset-fields-hidden');
+
+    if (container.hasClass('unset-fields-hidden')) {
+        link.text(link.data('show-label'));
+    }
+    else {
+        link.text(link.data('hide-label'));
+    }
+
+    return false;
+}

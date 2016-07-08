@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -72,12 +72,10 @@ package RT::ScripCondition;
 use strict;
 use warnings;
 
-
 use base 'RT::Record';
 
 
 sub Table {'ScripConditions'}
-
 
 sub _Accessible  {
     my $self = shift;
@@ -157,21 +155,19 @@ sub LoadCondition  {
                  TicketObj => undef,
                  @_ );
 
-    #TODO: Put this in an eval
-    $self->ExecModule =~ /^(\w+)$/;
-    my $module = $1;
-    my $type = "RT::Condition::". $module;
-
+    my $module = $self->ExecModule;
+    my $type = 'RT::Condition::' . $module;
     $type->require or die "Require of $type condition module failed.\n$@\n";
 
-    $self->{'Condition'}  = $type->new ( 'ScripConditionObj' => $self,
-                                         'TicketObj' => $args{'TicketObj'},
-                                         'ScripObj' => $args{'ScripObj'},
-                                         'TransactionObj' => $args{'TransactionObj'},
-                                         'Argument' => $self->Argument,
-                                         'ApplicableTransTypes' => $self->ApplicableTransTypes,
-                                         CurrentUser => $self->CurrentUser
-                                       );
+    return $self->{'Condition'} = $type->new(
+        ScripConditionObj => $self,
+        TicketObj => $args{'TicketObj'},
+        ScripObj => $args{'ScripObj'},
+        TransactionObj => $args{'TransactionObj'},
+        Argument => $self->Argument,
+        ApplicableTransTypes => $self->ApplicableTransTypes,
+        CurrentUser => $self->CurrentUser
+    );
 }
 
 

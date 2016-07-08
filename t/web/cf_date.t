@@ -21,6 +21,7 @@ diag "Create a CF";
             Name          => $cf_name,
             TypeComposite => 'Date-1',
             LookupType    => 'RT::Queue-RT::Ticket',
+            EntryHint     => 'Select date',
         },
     );
     $m->content_contains('Object created', 'created CF sucessfully' );
@@ -46,7 +47,7 @@ ok $queue && $queue->id, 'loaded or created queue';
     $m->tick( "AddCustomField" => $cfid );
     $m->click('UpdateCFs');
 
-    $m->content_contains('Object created', 'TCF added to the queue' );
+    $m->content_contains("Added custom field $cf_name to General", 'TCF added to the queue' );
 }
 
 diag 'check valid inputs with various timezones in ticket create page';
@@ -186,7 +187,15 @@ diag 'check invalid inputs';
 
     my @warnings = $m->get_warnings;
     chomp @warnings;
-    is_deeply( [@warnings], [(q{Couldn't parse date 'foodate' by Time::ParseDate})x2] );
+    is_deeply(
+        [ @warnings ],
+        [
+            (
+                q{Couldn't parse date 'foodate' by Time::ParseDate},
+                q{Couldn't parse date 'foodate' by DateTime::Format::Natural}
+            ) x 2
+        ]
+    );
 }
 
 diag 'retain values when adding attachments';
@@ -270,4 +279,5 @@ diag 'retain values when adding attachments';
         "2015-12-16", "txn date value still on form" );
 }
 
+undef $m;
 done_testing;

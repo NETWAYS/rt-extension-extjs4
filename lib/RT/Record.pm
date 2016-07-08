@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -143,28 +143,6 @@ sub RecordType {
     my $res = ref($_[0]) || $_[0];
     $res =~ s/.*:://;
     return $res;
-}
-
-=head2 ObjectTypeStr
-
-DEPRECATED. Stays here for backwards. Returns localized L</RecordType>.
-
-=cut
-
-# we deprecate because of:
-# * ObjectType is used in several classes with ObjectId to store
-#   records of different types, for example transactions use those
-#   and it's unclear what this method should return 'Transaction'
-#   or type of referenced record
-# * returning localized thing is not good idea
-
-sub ObjectTypeStr {
-    my $self = shift;
-    RT->Deprecated(
-        Remove => "4.4",
-        Instead => "RecordType",
-    );
-    return $self->loc( $self->RecordType( @_ ) );
 }
 
 =head2 Attributes
@@ -444,30 +422,6 @@ sub CreatedObj {
     return $obj;
 }
 
-
-# B<DEPRECATED> and will be removed in 4.4
-sub AgeAsString {
-    my $self = shift;
-    RT->Deprecated(
-        Remove => "4.4",
-        Instead => "->CreatedObj->AgeAsString",
-    );
-    return ( $self->CreatedObj->AgeAsString() );
-}
-
-# B<DEPRECATED> and will be removed in 4.4
-sub LongSinceUpdateAsString {
-    my $self = shift;
-    RT->Deprecated(
-        Remove => "4.4",
-        Instead => "->LastUpdatedObj->AgeAsString",
-    );
-    if ( $self->LastUpdated ) {
-        return ( $self->LastUpdatedObj->AgeAsString() );
-    } else {
-        return "never";
-    }
-}
 
 sub LastUpdatedAsString {
     my $self = shift;
@@ -860,24 +814,28 @@ sub _EncodeLOB {
 Unpacks data stored in the database, which may be base64 or QP encoded
 because of our need to store binary and badly encoded data in columns
 marked as UTF-8.  Databases such as PostgreSQL and Oracle care that you
-are feeding them invalid UTF-8 and will refuse the content.  This
-function handles unpacking the encoded data.
+are feeding them invalid UTF-8 and will refuse the content.  This function
+handles unpacking the encoded data.
 
-It returns textual data as a UTF-8 string which has been processed by Encode's
-PERLQQ filter which will replace the invalid bytes with \x{HH} so you can see
-the invalid byte but won't run into problems treating the data as UTF-8 later.
+Alternatively, if the data lives in external storage, it will be read
+(or downloaded) and returned.
+
+C<_DecodeLOB> returns textual data as a UTF-8 string which has been
+processed by L<Encode>'s PERLQQ filter which will replace the invalid bytes
+with C<\x{HH}> so you can see the invalid byte but won't run into problems
+treating the data as UTF-8 later.
 
 This is similar to how we filter all data coming in via the web UI in
-RT::Interface::Web::DecodeARGS. This filter should only end up being
+L<RT::Interface::Web/DecodeARGS>. This filter should only end up being
 applied to old data from less UTF-8-safe versions of RT.
 
 If the passed C<ContentType> includes a character set, that will be used
 to decode textual data; the default character set is UTF-8.  This is
 necessary because while we attempt to store textual data as UTF-8, the
 definition of "textual" has migrated over time, and thus we may now need
-to attempt to decode data that was previously not trancoded on insertion.
+to attempt to decode data that was previously not transcoded on insertion.
 
-Important Note - This function expects an octet string and returns a
+Important note: This function expects an octet string and returns a
 character string for non-binary data.
 
 =cut
@@ -896,9 +854,26 @@ sub _DecodeLOB {
     elsif ( $ContentEncoding eq 'quoted-printable' ) {
         $Content = MIME::QuotedPrint::decode($Content);
     }
+    elsif ( $ContentEncoding eq 'external' ) {
+        my $Digest = $Content;
+        my $Storage = RT->System->ExternalStorage;
+        unless ($Storage) {
+            RT->Logger->error( "Failed to load $Content; external storage not configured" );
+            return ("");
+        };
+
+        ($Content, my $msg) = $Storage->Get( $Digest );
+        unless (defined $Content) {
+            RT->Logger->error( "Failed to load $Digest from external storage: $msg" );
+            return ("");
+        }
+
+        return ($Content);
+    }
     elsif ( $ContentEncoding && $ContentEncoding ne 'none' ) {
         return ( $self->loc( "Unknown ContentEncoding [_1]", $ContentEncoding ) );
     }
+
     if ( RT::I18N::IsTextualContentType($ContentType) ) {
         my $entity = MIME::Entity->new();
         $entity->head->add("Content-Type", $ContentType);
@@ -1668,7 +1643,6 @@ sub _NewTransaction {
         Field     => undef,
         MIMEObj   => undef,
         ActivateScrips => 1,
-        CommitScrips => 1,
         SquelchMailTo => undef,
         @_
     );
@@ -1707,8 +1681,8 @@ sub _NewTransaction {
         ReferenceType => $ref_type,
         MIMEObj   => $args{'MIMEObj'},
         ActivateScrips => $args{'ActivateScrips'},
-        CommitScrips => $args{'CommitScrips'},
-        SquelchMailTo => $args{'SquelchMailTo'},
+        DryRun => $self->{DryRun},
+        SquelchMailTo => $args{'SquelchMailTo'} || $self->{TransSquelchMailTo},
     );
 
     # Rationalize the object since we may have done things to it during the caching.
@@ -1722,7 +1696,7 @@ sub _NewTransaction {
         $self->_UpdateTimeTaken( $args{'TimeTaken'}, Transaction => $trans );
     }
     if ( RT->Config->Get('UseTransactionBatch') and $transaction ) {
-            push @{$self->{_TransactionBatch}}, $trans if $args{'CommitScrips'};
+        push @{$self->{_TransactionBatch}}, $trans;
     }
 
     RT->DatabaseHandle->Commit unless $in_txn;
@@ -1963,10 +1937,13 @@ sub _AddCustomFieldValue {
         LargeContent      => undef,
         ContentType       => undef,
         RecordTransaction => 1,
+        ForCreation       => 0,
         @_
     );
 
     my $cf = $self->LoadCustomFieldByIdentifier($args{'Field'});
+    $cf->{include_set_initial} = 1 if $args{'ForCreation'};
+
     unless ( $cf->Id ) {
         return ( 0, $self->loc( "Custom field [_1] not found", $args{'Field'} ) );
     }
@@ -2041,6 +2018,7 @@ sub _AddCustomFieldValue {
             Content      => $args{'Value'},
             LargeContent => $args{'LargeContent'},
             ContentType  => $args{'ContentType'},
+            ForCreation  => $args{'ForCreation'},
         );
 
         unless ( $new_value_id ) {
@@ -2048,6 +2026,7 @@ sub _AddCustomFieldValue {
         }
 
         my $new_value = RT::ObjectCustomFieldValue->new( $self->CurrentUser );
+        $new_value->{include_set_initial} = 1 if $args{'ForCreation'};
         $new_value->Load( $new_value_id );
 
         # now that adding the new value was successful, delete the old one
@@ -2132,7 +2111,76 @@ sub _AddCustomFieldValue {
     }
 }
 
+=head2 AddCustomFieldDefaultValues
 
+Add default values to object's empty custom fields.
+
+=cut
+
+sub AddCustomFieldDefaultValues {
+    my $self = shift;
+    my $cfs  = $self->CustomFields;
+    my @msgs;
+    while ( my $cf = $cfs->Next ) {
+        next if $self->CustomFieldValues($cf->id)->Count || !$cf->SupportDefaultValues;
+        my ( $on ) = grep { $_->isa( $cf->RecordClassFromLookupType ) } $cf->ACLEquivalenceObjects;
+        my $values = $cf->DefaultValues( Object => $on || RT->System );
+        foreach my $value ( UNIVERSAL::isa( $values => 'ARRAY' ) ? @$values : $values ) {
+            next if $self->CustomFieldValueIsEmpty(
+                Field => $cf,
+                Value => $value,
+            );
+
+            my ( $status, $msg ) = $self->_AddCustomFieldValue(
+                Field             => $cf->id,
+                Value             => $value,
+                RecordTransaction => 0,
+            );
+            push @msgs, $msg unless $status;
+        }
+    }
+    return ( 0, @msgs ) if @msgs;
+    return 1;
+}
+
+=head2 CustomFieldValueIsEmpty { Field => FIELD, Value => VALUE }
+
+Check if the custom field value is empty.
+
+Some custom fields could have other special empty values, e.g. "1970-01-01" is empty for Date cf
+
+Return 1 if it is empty, 0 otherwise.
+
+=cut
+
+
+sub CustomFieldValueIsEmpty {
+    my $self = shift;
+    my %args = (
+        Field => undef,
+        Value => undef,
+        @_
+    );
+    my $value = $args{Value};
+    return 1 unless defined $value  && length $value;
+
+    my $cf = ref($args{'Field'})
+           ? $args{'Field'}
+           : $self->LoadCustomFieldByIdentifier( $args{'Field'} );
+
+    if ($cf) {
+        if ( $cf->Type =~ /^Date(?:Time)?$/ ) {
+            my $DateObj = RT::Date->new( $self->CurrentUser );
+            $DateObj->Set(
+                Format => 'unknown',
+                Value  => $value,
+                $cf->Type eq 'Date' ? ( Timezone => 'UTC' ) : (),
+            );
+            return 1 unless $DateObj->IsSet;
+        }
+    }
+    return 0;
+}
 
 =head2 DeleteCustomFieldValue { Field => FIELD, Value => VALUE }
 
@@ -2405,7 +2453,7 @@ sub FindDependencies {
             and $self->can("CustomFieldValues") )
     {
         $objs = $self->CustomFieldValues; # Actually OCFVs
-        $objs->{find_expired_rows} = 1;
+        $objs->{find_disabled_rows} = 1;
         $deps->Add( in => $objs );
     }
 
@@ -2606,7 +2654,7 @@ sub __DependsOn
 
 # Object custom field values
     my $objs = $self->CustomFieldValues;
-    $objs->{'find_expired_rows'} = 1;
+    $objs->{'find_disabled_rows'} = 1;
     push( @$list, $objs );
 
 # Object attributes

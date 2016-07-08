@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -200,7 +200,7 @@ my $cf_field_names =
 
 # Try to find if we're adding a clause
 foreach my $arg ( keys %ARGS ) {
-    next unless $arg =~ m/^ValueOf(\w+|($cf_field_names).\{.*?\})$/
+    next unless $arg =~ m/^ValueOf(\w+|($cf_field_names).\{.*?\}|CustomRole.\{.*?\})$/
                 && ( ref $ARGS{$arg} eq "ARRAY"
                      ? grep $_ ne '', @{ $ARGS{$arg} }
                      : $ARGS{$arg} ne '' );
@@ -230,30 +230,11 @@ foreach my $arg ( keys %ARGS ) {
     for ( my $i = 0; $i < @ops; $i++ ) {
         my ( $op, $value ) = ( $ops[$i], $values[$i] );
         next if !defined $value || $value eq '';
-        my $rawvalue = $value;
-
-        if ( $value =~ /^NULL$/i && $op =~ /=/ ) {
-            if ( $op eq '=' ) {
-                $op = "IS";
-            }
-            elsif ( $op eq '!=' ) {
-                $op = "IS NOT";
-            }
-        }
-        elsif ($value =~ /\D/) {
-            $value =~ s/(['\\])/\\$1/g;
-            $value = "'$value'";
-        }
-
-        if ($keyword =~ s/(['\\])/\\$1/g or $keyword =~ /[^{}\w\.]/) {
-            $keyword = "'$keyword'";
-        }
 
         my $clause = {
             Key   => $keyword,
             Op    => $op,
             Value => $value,
-            RawValue => $rawvalue,
         };
 
         push @new_values, RT::Interface::Web::QueryBuilder::Tree->new($clause);

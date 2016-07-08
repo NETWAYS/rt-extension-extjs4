@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -649,6 +649,13 @@ This is a forward of ticket #{ $Ticket->id }
             my ($ref) = @_;
             $ref->{ObjectType} = 'RT::Article'
                 if $ref->{ObjectType} eq 'RT::FM::Article';
+        },
+    },
+
+    '4.3.1' => {
+        'RT::CustomField' => sub {
+            my ($ref) = @_;
+            $ref->{EntryHint} //= RT::CustomField->FriendlyType( $ref->{Type}, $ref->{MaxValues} );
         },
     },
 

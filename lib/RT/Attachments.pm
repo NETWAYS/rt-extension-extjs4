@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -179,6 +179,35 @@ sub LimitNotEmpty {
             VALUE           => '',
         );
     }
+    return;
+}
+
+=head2 LimitHasFilename
+
+Limit result set to attachments with not empty filename.
+
+=cut
+
+sub LimitHasFilename {
+    my $self = shift;
+
+    $self->Limit(
+        ENTRYAGGREGATOR => 'AND',
+        FIELD           => 'Filename',
+        OPERATOR        => 'IS NOT',
+        VALUE           => 'NULL',
+        QUOTEVALUE      => 0,
+    );
+
+    if ( RT->Config->Get('DatabaseType') ne 'Oracle' ) {
+        $self->Limit(
+            ENTRYAGGREGATOR => 'AND',
+            FIELD           => 'Filename',
+            OPERATOR        => '!=',
+            VALUE           => '',
+        );
+    }
+
     return;
 }
 

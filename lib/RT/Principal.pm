@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -146,7 +146,23 @@ sub Object {
 
 }
 
+=head2 DisplayName
 
+Returns the relevant display name for this principal
+
+=cut
+
+sub DisplayName {
+    my $self = shift;
+
+    return undef unless $self->Object;
+
+    # If this principal is an ACLEquivalence group, return the user name
+    return $self->Object->InstanceObj->Name if ($self->Object->Domain eq 'ACLEquivalence');
+
+    # Otherwise, show the group name
+    return $self->Object->Label;
+}
 
 =head2 GrantRight  { Right => RIGHTNAME, Object => undef }
 
@@ -407,7 +423,7 @@ sub HasRights {
     my $roles;
     {
         my $query
-            = "SELECT DISTINCT Groups.Type "
+            = "SELECT DISTINCT Groups.Name "
             . $self->_HasRoleRightQuery(
                 EquivObjects => $args{'EquivObjects'}
             );
@@ -729,24 +745,6 @@ sub _ReferenceId {
     }
 }
 
-sub ObjectId {
-    my $self = shift;
-    RT->Deprecated( Instead => 'id', Remove => '4.4' );
-    return $self->_Value('ObjectId');
-}
-
-sub LoadByCols {
-    my $self = shift;
-    my %args = @_;
-    if ( exists $args{'ObjectId'} ) {
-        RT->Deprecated( Arguments => 'ObjectId', Instead => 'id', Remove => '4.4' );
-    }
-    return $self->SUPER::LoadByCols( %args );
-}
-
-
-
-
 =head2 id
 
 Returns the current value of id.
@@ -769,24 +767,6 @@ Returns the current value of PrincipalType.
 Set PrincipalType to VALUE.
 Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 (In the database, PrincipalType will be stored as a varchar(16).)
-
-
-=cut
-
-
-=head2 ObjectId
-
-Returns the current value of ObjectId.
-(In the database, ObjectId is stored as int(11).)
-
-
-
-=head2 SetObjectId VALUE
-
-
-Set ObjectId to VALUE.
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, ObjectId will be stored as a int(11).)
 
 
 =cut
@@ -818,8 +798,6 @@ sub _CoreAccessible {
                 {read => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => ''},
         PrincipalType =>
                 {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
-        ObjectId =>
-                {read => 1, write => 1, sql_type => 4, length => 11,  is_blob => 0,  is_numeric => 1,  type => 'int(11)', default => ''},
         Disabled =>
                 {read => 1, write => 1, sql_type => 5, length => 6,  is_blob => 0,  is_numeric => 1,  type => 'smallint(6)', default => '0'},
 

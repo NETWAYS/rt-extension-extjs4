@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -199,6 +199,7 @@ sub Init {
     InitPlugins();
     _BuildTableAttributes();
     RT::I18N->Init;
+    RT::CustomRoles->RegisterRoles unless $args{SkipCustomRoles};
     RT->Config->PostLoadCheck;
     RT::Lifecycle->FillCache;
 }
@@ -459,6 +460,8 @@ sub InitClasses {
     require RT::CustomFieldValues;
     require RT::ObjectCustomFields;
     require RT::ObjectCustomFieldValues;
+    require RT::CustomRoles;
+    require RT::ObjectCustomRoles;
     require RT::Attributes;
     require RT::Dashboard;
     require RT::Approval;
@@ -477,6 +480,10 @@ sub InitClasses {
     require RT::Topics;
     require RT::Link;
     require RT::Links;
+    require RT::Catalog;
+    require RT::Catalogs;
+    require RT::Asset;
+    require RT::Assets;
 
     _BuildTableAttributes();
 
@@ -722,11 +729,25 @@ their lib and L<HTML::Mason> component roots.
 
 =cut
 
+our %CORED_PLUGINS = (
+    'RT::Extension::SLA' => '4.4',
+    'RT::Extension::ExternalStorage' => '4.4',
+    'RT::Extension::Assets' => '4.4',
+    'RT::Authen::ExternalAuth' => '4.4',
+    'RT::Extension::LDAPImport' => '4.4',
+    'RT::Extension::SpawnLinkedTicketInQueue' => '4.4',
+    'RT::Extension::ParentTimeWorked' => '4.4',
+    'RT::Extension::FutureMailgate' => '4.4',
+);
+
 sub InitPlugins {
     my $self    = shift;
     my @plugins;
     require RT::Plugin;
     foreach my $plugin (grep $_, RT->Config->Get('Plugins')) {
+        if ( $CORED_PLUGINS{$plugin} ) {
+            RT->Logger->warning( "$plugin has been cored since RT $CORED_PLUGINS{$plugin}, please check the upgrade document for more details" );
+        }
         $plugin->require;
         die $UNIVERSAL::require::ERROR if ($UNIVERSAL::require::ERROR);
         push @plugins, RT::Plugin->new(name =>$plugin);
@@ -894,6 +915,11 @@ calling it; names the arguments which are deprecated.
 Overrides the auto-built phrasing of C<Calling function ____ is
 deprecated> with a custom message.
 
+=item Detail
+
+Provides more context (e.g. callback paths) after the Message but before the
+Stack
+
 =item Object
 
 An L<RT::Record> object to print the class and numeric id of.  Useful if the
@@ -911,6 +937,7 @@ sub Deprecated {
         Remove => undef,
         Instead => undef,
         Message => undef,
+        Detail => undef,
         Stack   => 1,
         LogLevel => "warn",
         @_,
@@ -947,6 +974,8 @@ sub Deprecated {
 
     $msg .= sprintf "  Object: %s #%d.", blessed($args{Object}), $args{Object}->id
         if $args{Object};
+
+    $msg .= "\n$args{Detail}\n" if $args{Detail};
 
     $msg .= "  Call stack:\n$stack" if $args{Stack};
 
