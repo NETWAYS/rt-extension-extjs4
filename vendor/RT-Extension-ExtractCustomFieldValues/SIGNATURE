@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.73.
+signed via the Module::Signature module, version 0.79.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -14,35 +14,38 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 48e01010e5560902886767311dbf0acb6071ffc8 Changes
-SHA1 b2b8e20e662053ec120f7a09cfe9810e2ef35168 MANIFEST
-SHA1 bbd99d296eb48009fd2b2ca0d87045fe4e6cf038 META.yml
-SHA1 fd875d1dc3f6884b45e3e67e2cd1d355ce5d0e1e Makefile.PL
-SHA1 1df8fbd93793d0c49a3c5bf5b8e87be91c41f63f README
+SHA1 958d8938ab35c72ee9fc89396dde485b0703b6c6 Changes
+SHA1 e0225dc489f1c7d916c23025ac7040d5fb49e9f5 MANIFEST
+SHA1 175bc8860f5115649201ebf14e8e5f58952d65f0 META.yml
+SHA1 26275776f9d7b578e6f772a8c6117f1a93547675 Makefile.PL
+SHA1 f9fc3d7114f6caf52cce63e54860fdc30fb43094 README
 SHA1 b71e9e490e7d57baa7685bc573b8fd2ad27eb2e6 UPGRADING
 SHA1 3e032a39cc99b6266fac77cc2ee73d1f2da6d298 etc/initialdata
 SHA1 3020b3efc6bc071b208d5f26391c44d7b7a42259 etc/upgrade/3.06/content
-SHA1 9b5001bfa9cf8607b3b3935284d9253e0391c9f1 inc/Module/Install.pm
-SHA1 cab0e564f9bdf658535f683aa197157e06d0dcea inc/Module/Install/Base.pm
-SHA1 a1559b5b3b40f68efbbd256f4fef85970891b3ae inc/Module/Install/Can.pm
-SHA1 f15c1ba85f6d52e70c48c64bf0752c90a4ad66f9 inc/Module/Install/Fetch.pm
-SHA1 d44d96acd20793306dd201030c688e2a7d3083ee inc/Module/Install/Include.pm
-SHA1 eb48df8bafd07c6a862126d9b274df42b4395742 inc/Module/Install/Makefile.pm
-SHA1 95c73873c6c3cb7024614c225c53863e1e90c134 inc/Module/Install/Metadata.pm
-SHA1 6e010ba20a9d0ae23d8d0ff516868c1e571c2d44 inc/Module/Install/RTx.pm
+SHA1 bce3c51bb369419603298064b78e14077b93af66 inc/Module/Install.pm
+SHA1 fe220f215f645500ce8f14ff5e19d9a28692af56 inc/Module/Install/Base.pm
+SHA1 b56ed8e42c600e08007d152cf0b1438a7c3b7f6e inc/Module/Install/Can.pm
+SHA1 99c531a17a67ce5250df2ae151cc48c80d914cde inc/Module/Install/Fetch.pm
+SHA1 3e43ac0f1912c7d202dc102f6c31ad96fbf3a044 inc/Module/Install/Include.pm
+SHA1 76efdca3603159e0ae0e18f19fe72a0211a69529 inc/Module/Install/Makefile.pm
+SHA1 2e33e87882d60db3913da6284dd5295e5315e18a inc/Module/Install/Metadata.pm
+SHA1 780e868167858840d454ef6ad6bc2a2206f845e7 inc/Module/Install/RTx.pm
 SHA1 3fdf4c0cffdb1a2e23e5cd26bf95be553f1f9590 inc/Module/Install/RTx/Runtime.pm
 SHA1 79f5b4199f622e8b05aac266b0c39f6a85bb303f inc/Module/Install/ReadmeFromPod.pm
-SHA1 f8b2ae3386f6ba26c33408968a953d450842eade inc/Module/Install/Win32.pm
-SHA1 f302bc703d76299cff243e5b44cecd61aac27b76 inc/Module/Install/WriteAll.pm
-SHA1 4e09b598c2626e08cec2bed5e981492fa9e90967 inc/YAML/Tiny.pm
-SHA1 034d0f3a7401dae4be3eee279258181f51a4ad81 inc/unicore/Name.pm
-SHA1 2d63c199a6f31a7c1ec3ce5d73696cb45483a691 lib/RT/Action/ExtractCustomFieldValues.pm
+SHA1 c830b819e61bda5eca077c6291293bba61b3b9f2 inc/Module/Install/Win32.pm
+SHA1 cb52b9d6f88d512d448a6f35ed0af0d1201a134b inc/Module/Install/WriteAll.pm
+SHA1 101dee5d09fc4f3cee4f866782c08409e85b7ec4 inc/YAML/Tiny.pm
+SHA1 fa4614fe516285a113826ab8843126a145dd63aa lib/RT/Action/ExtractCustomFieldValues.pm
 SHA1 35bfa9e18fd95282b04a519b1b4702984e5f4fe8 lib/RT/Action/ExtractCustomFieldValuesWithCodeInTemplate.pm
-SHA1 465a1297b287e5a5cb58d919f970f1b5ccc02709 lib/RT/Extension/ExtractCustomFieldValues.pm
+SHA1 24d332d284427b3c953f60d457281d88e221c847 lib/RT/Extension/ExtractCustomFieldValues.pm
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iEYEARECAAYFAlSQnEYACgkQMflWJZZAbqCEawCfarsptb0kml/eZshPzS+kMR3i
-GAkAoIFyO4yiqNbFOWUnwHeyVoGyj8Bw
-=aIkD
+iQEcBAEBAgAGBQJW/YhUAAoJEBXncVGnZqUUGhYIALYLMVL3ECo6DVrhfdznoWo1
+/uchqGLnusmYEtYDjRKG5SZ9ztgNpJTepwfvM9DOTntp6nKlnUC9sNMu55FLGqs2
+cc/RR4Ka8af3x0bCqGB8NiMYO5ExExdZWc9KC4iYlRpoJ32+f/rKdTSp01l1hvBA
++1B6cGNPYiSahjBo0GaqK4RK45WMQRm1R2rb1IesP/tDgNk1Hr4fOTQ9J1hx7t0l
+T1va4QM+gQiPNo89jbsfjrXSiBqwsbG2WXb5NnbbApv6II8Ln7wjple2cpKFsng3
+em0C8hUZZLAbyElO6Xv9e6IAnPY4/aDteQT/moP9pBRM5cxB7xn1YZ+zOfLoIGo=
+=VbcB
 -----END PGP SIGNATURE-----
