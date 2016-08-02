@@ -49,3 +49,9 @@ icinga-automail: |"/opt/rt4/bin/rt-mailgate
             --queue 'Automail'
             --action correspond
             --url http://localhost"
+
+icinga-infrastructure: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Infrastructure'
+            --action correspond
+            --url http://localhost"
