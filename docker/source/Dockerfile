@@ -5,7 +5,7 @@ ENV RT_CONFIG_DIR $RT_BUILD_DIR/conf.d
 ENV PATH          $RT_BUILD_DIR/bin:$PATH
 ENV RT_SOURCE     /opt/rt4-build/src
 ENV RT_PREFIX     /opt/rt4
-ENV RT_VERSION    rt-4.4.1rc2
+ENV RT_VERSION    rt-4.4.1
 
 COPY ./vendor ${RT_SOURCE}
 
