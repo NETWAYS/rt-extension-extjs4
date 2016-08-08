@@ -170,6 +170,56 @@ Start des RT für Icinga folgendermaßen:
 
 ## Updates
 
+### RT Version aktualisieren
+
+* Feature-Branch erstellen, RT 4.2 -> RT 4.4 Upgrade
+* Container starten, aber nicht als Daemon mit Produktiv-Datenbank (!)
+
+Auf speziellen Port binden und RT anpassen:
+
+    docker run -ti -p 30000:30000 rt4netways_netways bash
+
+    cd /opt/rt4
+
+    vim etc/RT_SiteConfig.pm
+
+    Set($WebDomain, 'localhost');
+    Set($WebPath, "");
+    Set($WebPort, 30000);
+
+Produktions-Datenbank auskommentieren (RT verwendet dann eine lokale SQLite-Instanz).
+
+    #Set($DatabaseType, "mysql");
+    #Set($DatabaseHost,   "mysql1.adm.netways.de");
+    #Set($DatabaseUser, "rt4_user");
+    #Set($DatabasePassword, q{xxxxxxxxxx});
+    #Set($DatabaseName, "rt4_net_support");
+
+Log-Level auf "debug" setzen.
+
+    Set($LogToSTDERR, "debug");
+
+Cache leeren und RT-Server starten.
+
+    rm -rf /opt/rt4/var/mason_data/*
+    /opt/rt4/sbin/rt-server
+
+#### RT-Plugins hinzufügen
+
+    cd /opt/rt4-build/src/rtx-action-changeowner
+    make initdb
+    (leeres Passwort, Enter)
+
+    /opt/rt4/sbin/rt-server
+
+#### Funktionalität überprüfen
+
+https://localhost:3000 (root/password)
+
+* RT-Plugins
+* Scripts
+
+
 ### Plugins aktualisieren
 
 Die jeweiligen RT-Plugins sind als Git-Subtree in das Hauptrepository eingebunden.
