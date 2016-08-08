@@ -87,13 +87,11 @@ Plugin('RTx::QueueCategories');
 Plugin('RTx::Actitime');
 Plugin('RTx::EmailHeader');
 Plugin('RT::Extension::ExtractCustomFieldValues');
-Plugin('RT::Extension::Assets');
 Plugin('RTx::SearchMarker');
 Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
 Plugin('RTx::Action::ChangeOwner');
-Plugin('RT::Authen::ExternalAuth');
 
 # Full text search
 Set(%FullTextSearch,

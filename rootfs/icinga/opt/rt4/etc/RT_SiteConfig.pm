@@ -73,7 +73,6 @@ Plugin('RTx::AddServiceData');
 Plugin('RTx::EmailHeader');
 Plugin('RTx::NETWAYS');
 Plugin('RTx::TicketActions');
-Plugin('RT::Authen::ExternalAuth');
 
 # Plugin configuration
 
