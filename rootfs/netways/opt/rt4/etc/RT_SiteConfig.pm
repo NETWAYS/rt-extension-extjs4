@@ -212,6 +212,7 @@ Set($RTx_QueueCategories_Map, [
 Set($HomepageComponents, [qw(
        QuickCreate
        Quicksearch
+       Queuelist
        MyAdminQueues
        MySupportQueues
        MyReminders
