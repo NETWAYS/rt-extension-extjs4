@@ -46,6 +46,7 @@ Set($OldestTransactionsFirst, 0);
 
 Set($MaxAttachmentSize, 25_000_000);
 Set($MaxInlineBody, 8000000);
+Set($SuppressInlineTextFiles, 1);
 Set($ParseNewMessageForTicketCcs, 1);
 
 # Set($RTAddressRegexp, '^.+\@rt.netways.de$');
