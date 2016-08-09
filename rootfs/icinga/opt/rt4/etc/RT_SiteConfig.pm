@@ -128,7 +128,7 @@ Set($RTx_TicketActions_FontAwesome, 'https://cdn.netways.de/font-awesome/4.5.0/c
 Set($HomepageComponents, [qw(
     QuickCreate
     Quicksearch
-    Queuelist
+    QueueList
     MyAdminQueues
     MySupportQueues
     MyReminders
