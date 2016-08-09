@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -95,14 +95,7 @@ sub _OverlayAccessible {
           RealName              => { public => 1 },                 # loc_left_pair
           NickName              => { public => 1 },                 # loc_left_pair
           Lang                  => { public => 1 },                 # loc_left_pair
-          EmailEncoding         => { public => 1 },
-          WebEncoding           => { public => 1 },
-          ExternalContactInfoId => { public => 1,  admin => 1 },
-          ContactInfoSystem     => { public => 1,  admin => 1 },
-          ExternalAuthId        => { public => 1,  admin => 1 },
-          AuthSystem            => { public => 1,  admin => 1 },
           Gecos                 => { public => 1,  admin => 1 },    # loc_left_pair
-          PGPKey                => { public => 1,  admin => 1 },    # loc_left_pair
           SMIMECertificate      => { public => 1,  admin => 1 },    # loc_left_pair
           City                  => { public => 1 },                 # loc_left_pair
           Country               => { public => 1 },                 # loc_left_pair
@@ -180,8 +173,7 @@ sub Create {
     # When creating this user, set up a principal Id for it.
     my $principal = RT::Principal->new($self->CurrentUser);
     my $principal_id = $principal->Create(PrincipalType => 'User',
-                                Disabled => $args{'Disabled'},
-                                ObjectId => '0');
+                                Disabled => $args{'Disabled'});
     # If we couldn't create a principal Id, get the fuck out.
     unless ($principal_id) {
         $RT::Handle->Rollback();
@@ -190,7 +182,6 @@ sub Create {
         return ( 0, $self->loc('Could not create user') );
     }
 
-    $principal->__Set(Field => 'ObjectId', Value => $principal_id);
     delete $args{'Disabled'};
 
     $self->SUPER::Create(id => $principal_id , %args);
@@ -422,8 +413,7 @@ sub _BootstrapCreate {
     # Groups deal with principal ids, rather than user ids.
     # When creating this user, set up a principal Id for it.
     my $principal = RT::Principal->new($self->CurrentUser);
-    my $principal_id = $principal->Create(PrincipalType => 'User', ObjectId => '0');
-    $principal->__Set(Field => 'ObjectId', Value => $principal_id);
+    my $principal_id = $principal->Create(PrincipalType => 'User');
 
     # If we couldn't create a principal Id, get the fuck out.
     unless ($principal_id) {
@@ -517,45 +507,45 @@ Returns a tuple of the user's id and a status message.
 
 sub LoadOrCreateByEmail {
     my $self = shift;
-    my $email = shift;
 
-    my ($message, $name);
-    if ( UNIVERSAL::isa( $email => 'Email::Address' ) ) {
-        ($email, $name) = ($email->address, $email->phrase);
+    my %create;
+    if (@_ > 1) {
+        %create = (@_);
+    } elsif ( UNIVERSAL::isa( $_[0] => 'Email::Address' ) ) {
+        @create{'EmailAddress','RealName'} = ($_[0]->address, $_[0]->phrase);
     } else {
-        ($email, $name) = RT::Interface::Email::ParseAddressFromHeader( $email );
+        my ($addr) = RT::EmailParser->ParseEmailAddress( $_[0] );
+        @create{'EmailAddress','RealName'} = $addr ? ($addr->address, $addr->phrase) : (undef, undef);
     }
 
-    $self->LoadByEmail( $email );
-    $self->Load( $email ) unless $self->Id;
-    $message = $self->loc('User loaded');
+    $self->LoadByEmail( $create{EmailAddress} );
+    $self->Load( $create{EmailAddress} ) unless $self->Id;
 
-    unless( $self->Id ) {
-        my $val;
-        ($val, $message) = $self->Create(
-            Name         => $email,
-            EmailAddress => $email,
-            RealName     => $name,
-            Privileged   => 0,
-            Comments     => 'Autocreated when added as a watcher',
-        );
-        unless ( $val ) {
-            # Deal with the race condition of two account creations at once
-            $self->LoadByEmail( $email );
-            unless ( $self->Id ) {
-                sleep 5;
-                $self->LoadByEmail( $email );
-            }
-            if ( $self->Id ) {
-                $RT::Logger->error("Recovered from creation failure due to race condition");
-                $message = $self->loc("User loaded");
-            } else {
-                $RT::Logger->crit("Failed to create user ". $email .": " .$message);
-            }
-        }
+    return wantarray ? ($self->Id, $self->loc("User loaded")) : $self->Id
+        if $self->Id;
+
+    $create{Name}       ||= $create{EmailAddress};
+    $create{Privileged} ||= 0;
+    $create{Comments}   //= 'Autocreated when added as a watcher';
+
+    my ($val, $message) = $self->Create( %create );
+    return wantarray ? ($self->Id, $self->loc("User loaded")) : $self->Id
+        if $self->Id;
+
+    # Deal with the race condition of two account creations at once
+    $self->LoadByEmail( $create{EmailAddress} );
+    unless ( $self->Id ) {
+        sleep 5;
+        $self->LoadByEmail( $create{EmailAddress} );
     }
-    return wantarray ? (0, $message) : 0 unless $self->id;
-    return wantarray ? ($self->Id, $message) : $self->Id;
+
+    if ( $self->Id ) {
+        $RT::Logger->error("Recovered from creation failure due to race condition");
+        return wantarray ? ($self->Id, $self->loc("User loaded")) : $self->Id;
+    } else {
+        $RT::Logger->crit("Failed to create user $create{EmailAddress}: $message");
+        return wantarray ? (0, $message) : 0 unless $self->id;
+    }
 }
 
 =head2 ValidateEmailAddress ADDRESS
@@ -694,7 +684,8 @@ sub CanonicalizeEmailAddress {
 
 CanonicalizeUserInfo can convert all User->Create options.
 it takes a hashref of all the params sent to User->Create and
-returns that same hash, by default nothing is done.
+returns that same hash, by default nothing is done. If external auth is enabled
+CanonicalizeUserInfoFromExternalAuth is called.
 
 This function is intended to allow users to have their info looked up via
 an outside source and modified upon creation.
@@ -704,11 +695,130 @@ an outside source and modified upon creation.
 sub CanonicalizeUserInfo {
     my $self = shift;
     my $args = shift;
-    my $success = 1;
 
-    return ($success);
+    if ( my $config = RT->Config->Get('ExternalInfoPriority') ) {
+        if ( ref $config && @$config ) {
+            return $self->CanonicalizeUserInfoFromExternalAuth( $args );
+        }
+    }
+
+    return 1; # fall back to old RT::User::CanonicalizeUserInfo
 }
 
+=head2 CanonicalizeUserInfoFromExternalAuth
+
+Convert an ldap entry in to fields that can be used by RT as specified by the
+C<attr_map> configuration in the C<$ExternalSettings> variable for
+L<RT::Authen::ExternalAuth>.
+
+=cut
+
+sub CanonicalizeUserInfoFromExternalAuth {
+
+    # Careful, this $args hashref was given to RT::User::CanonicalizeUserInfo and
+    # then transparently passed on to this function. The whole purpose is to update
+    # the original hash as whatever passed it to RT::User is expecting to continue its
+    # code with an update args hash.
+
+    my $UserObj = shift;
+    my $args    = shift;
+
+    my $found   = 0;
+    my %params  = (Name         => undef,
+                  EmailAddress => undef,
+                  RealName     => undef);
+
+    $RT::Logger->debug( (caller(0))[3],
+                        "called by",
+                        caller,
+                        "with:",
+                        join(", ", map {sprintf("%s: %s", $_, ($args->{$_} ? $args->{$_} : ''))}
+                            sort(keys(%$args))));
+
+    # Get the list of defined external services
+    my @info_services = @{ RT->Config->Get('ExternalInfoPriority') };
+    # For each external service...
+    foreach my $service (@info_services) {
+
+        $RT::Logger->debug( "Attempting to get user info using this external service:",
+                            $service);
+
+        # Get the config for the service so that we know what attrs we can canonicalize
+        my $config = RT->Config->Get('ExternalSettings')->{$service};
+
+        # For each attr we've been told to canonicalize in the match list
+        foreach my $rt_attr (@{$config->{'attr_match_list'}}) {
+            # Jump to the next attr in $args if this one isn't in the attr_match_list
+            $RT::Logger->debug( "Attempting to use this canonicalization key:",$rt_attr);
+            unless(defined($args->{$rt_attr})) {
+                $RT::Logger->debug("This attribute (",
+                                    $rt_attr,
+                                    ") is null or incorrectly defined in the attr_map for this service (",
+                                    $service,
+                                    ")");
+                next;
+            }
+
+            # Else, use it as a canonicalization key and lookup the user info
+            my $key = $config->{'attr_map'}->{$rt_attr};
+            my $value = $args->{$rt_attr};
+
+            # Check to see that the key being asked for is defined in the config's attr_map
+            my $valid = 0;
+            my ($attr_key, $attr_value);
+            my $attr_map = $config->{'attr_map'};
+            while (($attr_key, $attr_value) = each %$attr_map) {
+                $valid = 1 if ($key eq $attr_value);
+            }
+            unless ($valid){
+                $RT::Logger->debug( "This key (",
+                                    $key,
+                                    "is not a valid attribute key (",
+                                    $service,
+                                    ")");
+                next;
+            }
+
+            # Use an if/elsif structure to do a lookup with any custom code needed
+            # for any given type of external service, or die if no code exists for
+            # the service requested.
+
+            if($config->{'type'} eq 'ldap'){
+                ($found, %params) = RT::Authen::ExternalAuth::LDAP::CanonicalizeUserInfo($service,$key,$value);
+            } elsif ($config->{'type'} eq 'db') {
+                ($found, %params) = RT::Authen::ExternalAuth::DBI::CanonicalizeUserInfo($service,$key,$value);
+            }
+
+            # Don't Check any more attributes
+            last if $found;
+        }
+        # Don't Check any more services
+        last if $found;
+    }
+
+    # If found, Canonicalize Email Address and
+    # update the args hash that we were given the hashref for
+    if ($found) {
+        # It's important that we always have a canonical email address
+        if ($params{'EmailAddress'}) {
+            $params{'EmailAddress'} = $UserObj->CanonicalizeEmailAddress($params{'EmailAddress'});
+        }
+        %$args = (%$args, %params);
+    }
+
+    $RT::Logger->info(  (caller(0))[3],
+                        "returning",
+                        join(", ", map {sprintf("%s: %s", $_, ($args->{$_} ? $args->{$_} : ''))}
+                            sort(keys(%$args))));
+
+    ### HACK: The config var below is to overcome the (IMO) bug in
+    ### RT::User::Create() which expects this function to always
+    ### return true or rejects the user for creation. This should be
+    ### a different config var (CreateUncanonicalizedUsers) and
+    ### should be honored in RT::User::Create()
+    return($found || RT->Config->Get('AutoCreateNonExternalUsers'));
+
+}
 
 =head2 Password and authentication related functions
 
@@ -1947,12 +2057,6 @@ Create takes a hash of values and creates a row in the database:
   varchar(120) 'RealName'.
   varchar(16) 'NickName'.
   varchar(16) 'Lang'.
-  varchar(16) 'EmailEncoding'.
-  varchar(16) 'WebEncoding'.
-  varchar(100) 'ExternalContactInfoId'.
-  varchar(30) 'ContactInfoSystem'.
-  varchar(100) 'ExternalAuthId'.
-  varchar(30) 'AuthSystem'.
   varchar(16) 'Gecos'.
   varchar(30) 'HomePhone'.
   varchar(30) 'WorkPhone'.
@@ -1965,7 +2069,6 @@ Create takes a hash of values and creates a row in the database:
   varchar(16) 'Zip'.
   varchar(50) 'Country'.
   varchar(50) 'Timezone'.
-  text 'PGPKey'.
 
 =cut
 
@@ -2174,114 +2277,6 @@ Returns the current value of Lang.
 Set Lang to VALUE. 
 Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 (In the database, Lang will be stored as a varchar(16).)
-
-
-=cut
-
-
-=head2 EmailEncoding
-
-Returns the current value of EmailEncoding. 
-(In the database, EmailEncoding is stored as varchar(16).)
-
-
-
-=head2 SetEmailEncoding VALUE
-
-
-Set EmailEncoding to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, EmailEncoding will be stored as a varchar(16).)
-
-
-=cut
-
-
-=head2 WebEncoding
-
-Returns the current value of WebEncoding. 
-(In the database, WebEncoding is stored as varchar(16).)
-
-
-
-=head2 SetWebEncoding VALUE
-
-
-Set WebEncoding to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, WebEncoding will be stored as a varchar(16).)
-
-
-=cut
-
-
-=head2 ExternalContactInfoId
-
-Returns the current value of ExternalContactInfoId. 
-(In the database, ExternalContactInfoId is stored as varchar(100).)
-
-
-
-=head2 SetExternalContactInfoId VALUE
-
-
-Set ExternalContactInfoId to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, ExternalContactInfoId will be stored as a varchar(100).)
-
-
-=cut
-
-
-=head2 ContactInfoSystem
-
-Returns the current value of ContactInfoSystem. 
-(In the database, ContactInfoSystem is stored as varchar(30).)
-
-
-
-=head2 SetContactInfoSystem VALUE
-
-
-Set ContactInfoSystem to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, ContactInfoSystem will be stored as a varchar(30).)
-
-
-=cut
-
-
-=head2 ExternalAuthId
-
-Returns the current value of ExternalAuthId. 
-(In the database, ExternalAuthId is stored as varchar(100).)
-
-
-
-=head2 SetExternalAuthId VALUE
-
-
-Set ExternalAuthId to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, ExternalAuthId will be stored as a varchar(100).)
-
-
-=cut
-
-
-=head2 AuthSystem
-
-Returns the current value of AuthSystem. 
-(In the database, AuthSystem is stored as varchar(30).)
-
-
-
-=head2 SetAuthSystem VALUE
-
-
-Set AuthSystem to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, AuthSystem will be stored as a varchar(30).)
 
 
 =cut
@@ -2503,24 +2498,6 @@ Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 =cut
 
 
-=head2 PGPKey
-
-Returns the current value of PGPKey. 
-(In the database, PGPKey is stored as text.)
-
-
-
-=head2 SetPGPKey VALUE
-
-
-Set PGPKey to VALUE. 
-Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
-(In the database, PGPKey will be stored as a text.)
-
-
-=cut
-
-
 =head2 SMIMECertificate
 
 Returns the current value of SMIMECertificate. 
@@ -2603,18 +2580,6 @@ sub _CoreAccessible {
         {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
         Lang => 
         {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
-        EmailEncoding => 
-        {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
-        WebEncoding => 
-        {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
-        ExternalContactInfoId => 
-        {read => 1, write => 1, sql_type => 12, length => 100,  is_blob => 0,  is_numeric => 0,  type => 'varchar(100)', default => ''},
-        ContactInfoSystem => 
-        {read => 1, write => 1, sql_type => 12, length => 30,  is_blob => 0,  is_numeric => 0,  type => 'varchar(30)', default => ''},
-        ExternalAuthId => 
-        {read => 1, write => 1, sql_type => 12, length => 100,  is_blob => 0,  is_numeric => 0,  type => 'varchar(100)', default => ''},
-        AuthSystem => 
-        {read => 1, write => 1, sql_type => 12, length => 30,  is_blob => 0,  is_numeric => 0,  type => 'varchar(30)', default => ''},
         Gecos => 
         {read => 1, write => 1, sql_type => 12, length => 16,  is_blob => 0,  is_numeric => 0,  type => 'varchar(16)', default => ''},
         HomePhone => 
@@ -2639,8 +2604,6 @@ sub _CoreAccessible {
         {read => 1, write => 1, sql_type => 12, length => 50,  is_blob => 0,  is_numeric => 0,  type => 'varchar(50)', default => ''},
         Timezone => 
         {read => 1, write => 1, sql_type => 12, length => 50,  is_blob => 0,  is_numeric => 0,  type => 'varchar(50)', default => ''},
-        PGPKey => 
-        {read => 1, write => 1, sql_type => -4, length => 0,  is_blob => 1,  is_numeric => 0,  type => 'text', default => ''},
         SMIMECertificate =>
         {read => 1, write => 1, sql_type => -4, length => 0,  is_blob => 1,  is_numeric => 0,  type => 'text', default => ''},
         Creator => 
@@ -2676,17 +2639,11 @@ sub FindDependencies {
     # Memberships in SystemInternal groups
     $objs = RT::GroupMembers->new( $self->CurrentUser );
     $objs->Limit( FIELD => 'MemberId', VALUE => $self->Id );
-    my $principals = $objs->Join(
+    my $groups = $objs->Join(
         ALIAS1 => 'main',
         FIELD1 => 'GroupId',
-        TABLE2 => 'Principals',
-        FIELD2 => 'id',
-    );
-    my $groups = $objs->Join(
-        ALIAS1 => $principals,
-        FIELD1 => 'ObjectId',
         TABLE2 => 'Groups',
-        FIELD2 => 'Id',
+        FIELD2 => 'id',
     );
     $objs->Limit(
         ALIAS => $groups,
@@ -2840,19 +2797,13 @@ sub PreInflate {
     my ($id) = $principal->Create(
         PrincipalType => 'User',
         Disabled => $disabled,
-        ObjectId => 0,
     );
 
     # Now we have a principal id, set the id for the user record
     $data->{id} = $id;
 
     $importer->Resolve( $principal_uid => ref($principal), $id );
-
-    $importer->Postpone(
-        for => $uid,
-        uid => $principal_uid,
-        column => "ObjectId",
-    );
+    $data->{id} = $id;
 
     return $class->SUPER::PreInflate( $importer, $uid, $data );
 }

@@ -5,7 +5,7 @@ ENV RT_CONFIG_DIR $RT_BUILD_DIR/conf.d
 ENV PATH          $RT_BUILD_DIR/bin:$PATH
 ENV RT_SOURCE     /opt/rt4-build/src
 ENV RT_PREFIX     /opt/rt4
-ENV RT_VERSION    rt-4.2.12
+ENV RT_VERSION    rt-4.4.1
 
 COPY ./vendor ${RT_SOURCE}
 
@@ -25,6 +25,7 @@ RUN cd $RT_SOURCE/rt \
       --enable-gd \
       --enable-gpg \
       --enable-smime \
+      --enable-externalauth \
       --with-web-handler=modperl2 \
       --with-db-type=SQLite \
       && make install \

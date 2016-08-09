@@ -19,10 +19,16 @@
 @import "record.css";
 @import "admin.css";
 @import "articles.css";
+@import "assets.css";
 @import "portlets.css";
 @import "tools.css";
 @import "login.css";
 @import "history-folding.css";
 @import "history.css";
 @import "charts.css";
+@import "chosen.css";
+@import "ticket-timer.css";
 @import "print.css";
+@import "dropzone.css";
+@import "dropzone.customized.css";
+@import "keyboard-shortcuts.css";

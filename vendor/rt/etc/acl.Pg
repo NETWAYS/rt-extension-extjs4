@@ -58,6 +58,14 @@ sub acl {
         ObjectTopics
         objectclasses_id_seq
         ObjectClasses
+        catalogs_id_seq
+        Catalogs
+        assets_id_seq
+        Assets
+        customroles_id_seq
+        CustomRoles
+        objectcustomroles_id_seq
+        ObjectCustomRoles
     );
 
     my $db_user = RT->Config->Get('DatabaseUser');

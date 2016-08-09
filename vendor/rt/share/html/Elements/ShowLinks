@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -47,7 +47,7 @@
 %# END BPS TAGGED BLOCK }}}
 <table>
 % for my $type (@display) {
-  <tr>
+  <tr class="<%$type%><% $clone{$type} || $Object->$type->Count ? q{} : q{ unset-field}%>">
     <td class="labeltop">
       <& ShowRelationLabel, Object => $Object, Label => $labels{$type}.':', Relation => $type &>
 %     if ($clone{$type}) {
@@ -59,10 +59,29 @@
     </td>
   </tr>
 % }
+
 % # Allow people to add more rows to the table
 % $m->callback( %ARGS );
   <& /Elements/ShowCustomFields, Object => $Object, Grouping => 'Links', Table => 0 &>
+
 </table>
+
+% if ($Object->isa('RT::Ticket')) {
+  <form action="<% RT->Config->Get('WebPath') ."/Helpers/SpawnLinkedTicket" %>" name="SpawnLinkedTicket">
+    <input type="hidden" name="CloneTicket" value="<% $Object->id %>">
+    <input type="submit" value="<&|/l&>Create</&>" name="SpawnLinkedTicket">
+    <select name="LinkType">
+      <option value="DependsOn-new"><% loc('Depends on') %></option>
+      <option value="new-DependsOn"><% loc('Depended on by') %></option>
+      <option value="MemberOf-new"><% loc('Parents') %></option>
+      <option value="new-MemberOf"><% loc('Children') %></option>
+      <option value="RefersTo-new"><% loc('Refers to') %></option>
+      <option value="new-RefersTo"><% loc('Referred to by') %></option>
+    </select>
+    <&|/l&>Ticket in</&>
+    <& /Elements/SelectQueue, ShowNullOption => 0, Name => 'CloneQueue' &>
+  </form>
+% }
 <%INIT>
 my @display = qw(DependsOn DependedOnBy MemberOf Members RefersTo ReferredToBy);
 $m->callback( %ARGS, CallbackName => 'ChangeDisplay', display => \@display );

@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -220,6 +220,12 @@ sub LanguageHandle {
         elsif ( $self->id && ($self->id == (RT->SystemUser->id||0) || $self->id == (RT->Nobody->id||0)) ) {
             # don't use ENV magic for system users
             push @_, 'en';
+        } elsif ($HTML::Mason::Commands::m) {
+            # Detect from the HTTP header.
+            require I18N::LangTags::Detect;
+            push @_, I18N::LangTags::Detect->http_accept_langs(
+                RT::Interface::Web::RequestENV('HTTP_ACCEPT_LANGUAGE')
+            );
         }
 
         $self->{'LangHandle'} = RT::I18N->get_handle(@_);

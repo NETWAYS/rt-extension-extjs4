@@ -1,19 +1,21 @@
 if (!window.RT)              window.RT = {}
 if (!window.RT.Autocomplete) window.RT.Autocomplete = {}
 
+window.RT.Autocomplete.Classes = {
+    Users: 'user',
+    Groups: 'group',
+    Tickets: 'tickets',
+    Queues: 'queues'
+};
+
 window.RT.Autocomplete.bind = function(from) {
-    var cssClassMap = {
-        Users: 'user',
-        Groups: 'group',
-        Tickets: 'tickets'
-    };
 
     jQuery("input[data-autocomplete]", from).each(function(){
         var input = jQuery(this);
         var what  = input.attr("data-autocomplete");
         var wants = input.attr("data-autocomplete-return");
 
-        if (!what || !what.match(/^(Users|Groups|Tickets)$/)) // Did you update cssClassMap above?
+        if (!what || !window.RT.Autocomplete.Classes[what])
             return;
 
         // Don't re-bind the autocompleter
@@ -29,8 +31,21 @@ window.RT.Autocomplete.bind = function(from) {
             queryargs.push("return=" + wants);
         }
 
+        if (what == 'Queues') {
+            options.minLength = 2;
+            options.delay = 2;
+        }
+
         if (input.is('[data-autocomplete-privileged]')) {
             queryargs.push("privileged=1");
+        }
+
+        if (input.is('[data-autocomplete-include-nobody]')) {
+            queryargs.push("include_nobody=1");
+        }
+
+        if (input.is('[data-autocomplete-include-system]')) {
+            queryargs.push("include_system=1");
         }
 
         if (input.is('[data-autocomplete-multiple]')) {
@@ -56,9 +71,21 @@ window.RT.Autocomplete.bind = function(from) {
                 }
                 terms.push(''); // add trailing delimeter so user can input another value directly
                 this.value = terms.join(what == 'Tickets' ? ' ' : ", ");
+                jQuery(this).change();
+
                 return false;
             }
         }
+
+        if (input.attr("data-autocomplete-autosubmit")) {
+            options.select = function( event, ui ) {
+                jQuery(event.target).val(ui.item.value);
+                jQuery(event.target).closest("form").submit();
+            };
+        }
+
+        var checkRight = input.attr("data-autocomplete-checkright");
+        if (checkRight) queryargs.push("right=" + checkRight);
 
         var exclude = input.attr('data-autocomplete-exclude');
         if (exclude) {
@@ -68,7 +95,7 @@ window.RT.Autocomplete.bind = function(from) {
         if (queryargs.length)
             options.source += "?" + queryargs.join("&");
 
-        input.addClass('autocompletes-' + cssClassMap[what] )
+        input.addClass('autocompletes-' + window.RT.Autocomplete.Classes[what] )
             .autocomplete(options)
             .data("ui-autocomplete")
             ._renderItem = function(ul, item) {

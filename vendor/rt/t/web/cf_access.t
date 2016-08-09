@@ -56,6 +56,7 @@ diag "Create a CF";
             LookupType => 'RT::Queue-RT::Ticket',
             Name => 'img',
             Description => 'img',
+            EntryHint => 'Upload multiple images',
         },
     );
     $m->text_contains('Object created');
@@ -111,7 +112,7 @@ my ( $cf, $cfid, $tid );
     $m->tick( AddCustomField => $_  => 0 ) for @names; # ...and not any other. ;-)
     $m->click('UpdateCFs');
 
-    $m->content_contains('Object created', 'TCF added to the queue' );
+    $m->content_contains("Added custom field img to General", 'TCF added to the queue' );
 }
 
 my $tester = RT::Test->load_or_create_user( Name => 'tester', Password => '123456' );

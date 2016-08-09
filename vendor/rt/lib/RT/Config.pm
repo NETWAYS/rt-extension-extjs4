@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -90,7 +90,11 @@ Second file is F<RT_SiteConfig.pm> - site config file. You can use it
 to customize your RT instance. In this file you can override any option
 listed in core config file.
 
-RT extensions could also provide thier config files. Extensions should
+You may also split settings into separate files under the
+F<etc/RT_SiteConfig.d/> directory.  All files ending in C<.pm> will be parsed,
+in alphabetical order, after F<RT_SiteConfig.pm> is loaded.
+
+RT extensions could also provide their config files. Extensions should
 use F<< <NAME>_Config.pm >> and F<< <NAME>_SiteConfig.pm >> names for
 config files, where <NAME> is extension name.
 
@@ -195,6 +199,16 @@ our %META;
         WidgetArguments => {
             Description => 'Use autocomplete to find owners?', # loc
             Hints       => 'Replaces the owner dropdowns with textboxes' #loc
+        }
+    },
+    AutocompleteQueues => {
+        Section     => 'General',
+        Overridable => 1,
+        SortOrder   => 3.2,
+        Widget      => '/Widgets/Form/Boolean',
+        WidgetArguments => {
+            Description => 'Use autocomplete to find queues?', # loc
+            Hints       => 'Replaces the queue dropdowns with textboxes' #loc
         }
     },
     WebDefaultStylesheet => {
@@ -307,6 +321,15 @@ our %META;
             Hints       => 'Only for entry, not display', #loc
         },
     },
+    SignatureAboveQuote => {
+        Section         => 'Ticket composition', #loc
+        Overridable     => 1,
+        SortOrder       => 10,
+        Widget          => '/Widgets/Form/Boolean',
+        WidgetArguments => {
+            Description => 'Place signature above quote', #loc
+        },
+    },
     SearchResultsRefreshInterval => {
         Section         => 'General',                       #loc
         Overridable     => 1,
@@ -386,11 +409,12 @@ our %META;
         Widget          => '/Widgets/Form/Select',
         WidgetArguments => {
             Description => 'Show history',                #loc
-            Values      => [qw(delay click always)],
+            Values      => [qw(delay click always scroll)],
             ValuesLabel => {
                 delay   => "after the rest of the page loads",  #loc
                 click   => "after clicking a link",             #loc
                 always  => "immediately",                       #loc
+                scroll  => "as you scroll",                     #loc
             },
         },
     },
@@ -403,23 +427,6 @@ our %META;
             Description => 'Notify me of unread messages',    #loc
         },
 
-    },
-    PlainTextPre => {
-        PostSet => sub {
-            my $self  = shift;
-            my $value = shift;
-            $self->SetFromConfig(
-                Option => \'PlainTextMono',
-                Value  => [$value],
-                %{$self->Meta('PlainTextPre')->{'Source'}}
-            );
-        },
-        PostLoadCheck => sub {
-            my $self = shift;
-            # XXX: deprecated, remove in 4.4
-            $RT::Logger->info("You set \$PlainTextPre in your config, which has been removed in favor of \$PlainTextMono.  Please update your config.")
-                if $self->Meta('PlainTextPre')->{'Source'}{'Package'};
-        },
     },
     PlainTextMono => {
         Section         => 'Ticket display',
@@ -456,10 +463,19 @@ our %META;
             Description => "Show simplified recipient list on ticket update",                #loc
         },
     },
+    SquelchedRecipients => {
+        Section         => 'Ticket display',                       #loc
+        Overridable     => 1,
+        SortOrder       => 8,
+        Widget          => '/Widgets/Form/Boolean',
+        WidgetArguments => {
+            Description => "Default to squelching all outgoing email notifications (from web interface) on ticket update", #loc
+        },
+    },
     DisplayTicketAfterQuickCreate => {
         Section         => 'Ticket display',
         Overridable     => 1,
-        SortOrder       => 8,
+        SortOrder       => 9,
         Widget          => '/Widgets/Form/Boolean',
         WidgetArguments => {
             Description => 'Display ticket after "Quick Create"', #loc
@@ -468,10 +484,19 @@ our %META;
     QuoteFolding => {
         Section => 'Ticket display',
         Overridable => 1,
-        SortOrder => 9,
+        SortOrder => 10,
         Widget => '/Widgets/Form/Boolean',
         WidgetArguments => {
             Description => 'Enable quote folding?' # loc
+        }
+    },
+    HideUnsetFieldsOnDisplay => {
+        Section => 'Ticket display',
+        Overridable => 1,
+        SortOrder => 11,
+        Widget => '/Widgets/Form/Boolean',
+        WidgetArguments => {
+            Description => 'Hide unset fields?' # loc
         }
     },
 
@@ -663,27 +688,9 @@ our %META;
             # Make sure Crypt is post-loaded first
             $META{Crypt}{'PostLoadCheck'}->( $self, $self->Get( 'Crypt' ) );
 
-            my @plugins = $self->Get('MailPlugins');
-            if ( grep $_ eq 'Auth::GnuPG' || $_ eq 'Auth::SMIME', @plugins ) {
-                $RT::Logger->warning(
-                    'Auth::GnuPG and Auth::SMIME (from an extension) have been'
-                    .' replaced with Auth::Crypt.  @MailPlugins has been adjusted,'
-                    .' but should be updated to replace both with Auth::Crypt to'
-                    .' silence this warning.'
-                );
-                my %seen;
-                @plugins =
-                    grep !$seen{$_}++,
-                    grep {
-                        $_ eq 'Auth::GnuPG' || $_ eq 'Auth::SMIME'
-                        ? 'Auth::Crypt' : $_
-                    } @plugins;
-                $self->Set( MailPlugins => @plugins );
-            }
-
-            if ( not @{$self->Get('Crypt')->{Incoming}} and grep $_ eq 'Auth::Crypt', @plugins ) {
-                $RT::Logger->warning("Auth::Crypt enabled in MailPlugins, but no available incoming encryption formats");
-            }
+            RT::Interface::Email::Plugins(Add => ["Authz::Default", "Action::Defaults"]);
+            RT::Interface::Email::Plugins(Add => ["Auth::MailFrom"])
+                  unless RT::Interface::Email::Plugins(Code => 1, Method => "GetCurrentUser");
         },
     },
     Crypt        => {
@@ -797,6 +804,7 @@ our %META;
     },
     GnuPGOptions => { Type => 'HASH' },
     ReferrerWhitelist => { Type => 'ARRAY' },
+    EmailDashboardLanguageOrder  => { Type => 'ARRAY' },
     WebPath => {
         PostLoadCheck => sub {
             my $self  = shift;
@@ -934,18 +942,6 @@ our %META;
             }
         },
     },
-    LogToScreen => {
-        Deprecated => {
-            Instead => 'LogToSTDERR',
-            Remove  => '4.4',
-        },
-    },
-    UserAutocompleteFields => {
-        Deprecated => {
-            Instead => 'UserSearchFields',
-            Remove  => '4.4',
-        },
-    },
     CustomFieldGroupings => {
         Type            => 'HASH',
         PostLoadCheck   => sub {
@@ -985,15 +981,22 @@ our %META;
             $config->Set( CustomFieldGroupings => %$groups );
         },
     },
+    ExternalStorage => {
+        Type            => 'HASH',
+        PostLoadCheck   => sub {
+            my $self = shift;
+            my %hash = $self->Get('ExternalStorage');
+            return unless keys %hash;
+
+            require RT::ExternalStorage;
+
+            my $backend = RT::ExternalStorage::Backend->new(%hash);
+            RT->System->ExternalStorage($backend);
+        },
+    },
     ChartColors => {
         Type    => 'ARRAY',
     },
-    WebExternalAuth           => { Deprecated => { Instead => 'WebRemoteUserAuth',             Remove => '4.4' }},
-    WebExternalAuthContinuous => { Deprecated => { Instead => 'WebRemoteUserContinuous',       Remove => '4.4' }},
-    WebFallbackToInternalAuth => { Deprecated => { Instead => 'WebFallbackToRTLogin',          Remove => '4.4' }},
-    WebExternalGecos          => { Deprecated => { Instead => 'WebRemoteUserGecos',            Remove => '4.4' }},
-    WebExternalAuto           => { Deprecated => { Instead => 'WebRemoteUserAutocreate',       Remove => '4.4' }},
-    AutoCreate                => { Deprecated => { Instead => 'UserAutocreateDefaultsOnLogin', Remove => '4.4' }},
     LogoImageHeight => {
         Deprecated => {
             LogLevel => "info",
@@ -1006,11 +1009,130 @@ our %META;
             Message => "The LogoImageWidth configuration option did not affect display, and has been removed; please remove it from your RT_SiteConfig.pm",
         },
     },
-    DatabaseRequireSSL => {
-        Deprecated => {
-            Remove => '4.4',
-            LogLevel => "info",
-            Message => "The DatabaseRequireSSL configuration option did not enable SSL connections to the database, and has been removed; please remove it from your RT_SiteConfig.pm.  Use DatabaseExtraDSN to accomplish the same purpose.",
+
+    ExternalSettings => {
+        Obfuscate => sub {
+            # Ensure passwords are obfuscated on the System Configuration page
+            my ($config, $sources, $user) = @_;
+
+            my $msg = 'Password not printed';
+               $msg = $user->loc($msg) if $user and $user->Id;
+
+            for my $source (values %$sources) {
+                $source->{pass} = $msg;
+            }
+            return $sources;
+        },
+        PostLoadCheck => sub {
+            my $self = shift;
+            my $settings = shift || {};
+
+            $self->EnableExternalAuth() if keys %$settings > 0;
+
+            my $remove = sub {
+                my ($service) = @_;
+                delete $settings->{$service};
+
+                $self->Set( 'ExternalAuthPriority',
+                        [ grep { $_ ne $service } @{ $self->Get('ExternalAuthPriority') || [] } ] );
+
+                $self->Set( 'ExternalInfoPriority',
+                        [ grep { $_ ne $service } @{ $self->Get('ExternalInfoPriority') || [] } ] );
+            };
+
+            for my $service (keys %$settings) {
+                my %conf = %{ $settings->{$service} };
+
+                if ($conf{type} !~ /^(ldap|db|cookie)$/) {
+                    $RT::Logger->error(
+                        "Service '$service' in ExternalInfoPriority is not ldap, db, or cookie; removing."
+                    );
+                    $remove->($service);
+                    next;
+                }
+
+                next unless $conf{type} eq 'db';
+
+                # Ensure people don't misconfigure DBI auth to point to RT's
+                # Users table; only check server/hostname/table, as
+                # user/pass might be different (root, for instance)
+                no warnings 'uninitialized';
+                next unless lc $conf{server} eq lc RT->Config->Get('DatabaseHost') and
+                        lc $conf{database} eq lc RT->Config->Get('DatabaseName') and
+                        lc $conf{table} eq 'users';
+
+                $RT::Logger->error(
+                    "RT::Authen::ExternalAuth should _not_ be configured with a database auth service ".
+                    "that points back to RT's internal Users table.  Removing the service '$service'! ".
+                    "Please remove it from your config file."
+                );
+
+                $remove->($service);
+            }
+            $self->Set( 'ExternalSettings', $settings );
+        },
+    },
+
+    ExternalAuthPriority => {
+        PostLoadCheck => sub {
+            my $self = shift;
+            my @values = @{ shift || [] };
+
+            return unless @values or $self->Get('ExternalSettings');
+
+            if (not @values) {
+                $RT::Logger->debug("ExternalAuthPriority not defined. Attempting to create based on ExternalSettings");
+                $self->Set( 'ExternalAuthPriority', \@values );
+                return;
+            }
+            my %settings;
+            if ( $self->Get('ExternalSettings') ){
+                %settings = %{ $self->Get('ExternalSettings') };
+            }
+            else{
+                $RT::Logger->error("ExternalSettings not defined. ExternalAuth requires the ExternalSettings configuration option to operate properly");
+                return;
+            }
+            for my $key (grep {not $settings{$_}} @values) {
+                $RT::Logger->error("Removing '$key' from ExternalAuthPriority, as it is not defined in ExternalSettings");
+            }
+            @values = grep {$settings{$_}} @values;
+            $self->Set( 'ExternalAuthPriority', \@values );
+        },
+    },
+
+    ExternalInfoPriority => {
+        PostLoadCheck => sub {
+            my $self = shift;
+            my @values = @{ shift || [] };
+
+            return unless @values or $self->Get('ExternalSettings');
+
+            if (not @values) {
+                $RT::Logger->debug("ExternalInfoPriority not defined. User information (including user enabled/disabled) cannot be externally-sourced");
+                $self->Set( 'ExternalInfoPriority', \@values );
+                return;
+            }
+
+            my %settings;
+            if ( $self->Get('ExternalSettings') ){
+                %settings = %{ $self->Get('ExternalSettings') };
+            }
+            else{
+                $RT::Logger->error("ExternalSettings not defined. ExternalAuth requires the ExternalSettings configuration option to operate properly");
+                return;
+            }
+            for my $key (grep {not $settings{$_}} @values) {
+                $RT::Logger->error("Removing '$key' from ExternalInfoPriority, as it is not defined in ExternalSettings");
+            }
+            @values = grep {$settings{$_}} @values;
+
+            for my $key (grep {$settings{$_}{type} eq "cookie"} @values) {
+                $RT::Logger->error("Removing '$key' from ExternalInfoPriority, as cookie authentication cannot be used as an information source");
+            }
+            @values = grep {$settings{$_}{type} ne "cookie"} @values;
+
+            $self->Set( 'ExternalInfoPriority', \@values );
         },
     },
 );
@@ -1074,13 +1196,19 @@ sub LoadConfig {
     my $self = shift;
     my %args = ( File => '', @_ );
     $args{'File'} =~ s/(?<!Site)(?=Config\.pm$)/Site/;
-    if ( $args{'File'} eq 'RT_SiteConfig.pm'
-        and my $site_config = $ENV{RT_SITE_CONFIG} )
-    {
-        $self->_LoadConfig( %args, File => $site_config );
+    if ( $args{'File'} eq 'RT_SiteConfig.pm' ) {
+        my $load = $ENV{RT_SITE_CONFIG} || $args{'File'};
+        $self->_LoadConfig( %args, File => $load );
         # to allow load siteconfig again and again in case it's updated
-        delete $INC{ $site_config };
-    } else {
+        delete $INC{$load};
+
+        my $dir = $ENV{RT_SITE_CONFIG_DIR} || "$RT::EtcPath/RT_SiteConfig.d";
+        for my $file ( sort <$dir/*.pm> ) {
+            $self->_LoadConfig( %args, File => $file, Site => 1, Extension => '' );
+            delete $INC{$file};
+        }
+    }
+    else {
         $self->_LoadConfig(%args);
         delete $INC{$args{'File'}};
     }
@@ -1095,7 +1223,11 @@ sub _LoadConfig {
     my %args = ( File => '', @_ );
 
     my ($is_ext, $is_site);
-    if ( $args{'File'} eq ($ENV{RT_SITE_CONFIG}||'') ) {
+    if ( defined $args{Site} && defined $args{Extension} ) {
+        $is_ext = $args{Extension};
+        $is_site = $args{Site};
+    }
+    elsif ( $args{'File'} eq ($ENV{RT_SITE_CONFIG}||'') ) {
         ($is_ext, $is_site) = ('', 1);
     } else {
         $is_ext = $args{'File'} =~ /^(?!RT_)(?:(.*)_)(?:Site)?Config/ ? $1 : '';
@@ -1135,7 +1267,10 @@ sub _LoadConfig {
         push @etc_dirs, RT->PluginDirs('etc') if $is_ext;
         push @etc_dirs, $RT::EtcPath, @INC;
         local @INC = @etc_dirs;
-        require $args{'File'};
+        eval { require $args{'File'} };
+        if ( $@ && $@ !~ /did not return a true value/ ) {
+            die $@;
+        }
     };
     if ($@) {
         return 1 if $is_site && $@ =~ /^Can't locate \Q$args{File}/;
@@ -1591,6 +1726,26 @@ sub UpdateOption {
         $META{$name}{$type} = $args{$type};
     }
     return 1;
+}
+
+sub ObjectHasCustomFieldGrouping {
+    my $self        = shift;
+    my %args        = ( Object => undef, Grouping => undef, @_ );
+    my $object_type = RT::CustomField->_GroupingClass($args{Object});
+    my $groupings   = RT->Config->Get( 'CustomFieldGroupings' );
+    return 0 unless $groupings;
+    return 1 if $groupings->{$object_type} && grep { $_ eq $args{Grouping} } @{ $groupings->{$object_type} };
+    return 0;
+}
+
+# Internal method to activate ExtneralAuth if any ExternalAuth config
+# options are set.
+sub EnableExternalAuth {
+    my $self = shift;
+
+    $self->Set('ExternalAuth', 1);
+    require RT::Authen::ExternalAuth;
+    return;
 }
 
 RT::Base->_ImportOverlays();

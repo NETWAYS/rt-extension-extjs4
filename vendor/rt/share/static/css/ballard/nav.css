@@ -78,7 +78,6 @@
     position: absolute;
     top: 6em;
     right: 0em;
-    z-index: 9995;
     font-size: 0.9em;
     background-color: #eee;
     border: 1px solid #ccc;
@@ -126,11 +125,15 @@
     vertical-align: top;
 }
 
-#topactions button, #topactions select, #topactions input{
+#topactions button, #topactions select, #topactions input {
  padding-top: 0em;
  padding-bottom: 0em;
  width: 8em;
+}
 
+#topactions .asset-search input,
+#topactions .article-search input {
+ width: 16em;
 }
 
 #topactions #simple-search .field{
@@ -141,4 +144,14 @@
 #topactions #simple-search .field:focus {
  color: #000;
  }
+
+#topactions input.field {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+#topactions input.select-queue {
+    border: none;
+}
 

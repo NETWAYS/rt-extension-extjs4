@@ -76,6 +76,18 @@ textarea.messagebox, #cke_Content, #cke_UpdateContent {
   box-sizing: border-box;
 }
 
+div.cke {
+    border: 1px solid #b6b6b6;
+}
+
+.cke_top {
+    border-bottom: none !important;
+}
+
+.cke_bottom {
+    border-top: none !important;
+}
+
 .selection-box {
     min-width: 300px;
 }
@@ -84,3 +96,33 @@ textarea.messagebox, #cke_Content, #cke_UpdateContent {
     width: 17em;
 }
 
+.toggle-bookmark a img {
+    height: 1em;
+    width: 1em;
+    border-style: none;
+}
+
+.dashboard-subscription tr.frequency .value input {
+    margin-bottom: 0.75em;
+}
+
+/* infinite history error message */
+
+.error-load-history {
+    background-color: #b32;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+}
+
+.error-load-history a {
+    text-decoration: underline !important;
+    color: white !important;
+}
+
+/* dashboard subscription */
+
+td.current-recipients {
+    vertical-align: top;
+    padding-left: 50px;
+}

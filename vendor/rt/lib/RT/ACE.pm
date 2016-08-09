@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -268,8 +268,8 @@ sub Create {
                        ObjectId      => $args{'ObjectId'},
                    );
     if ( $self->Id ) {
-        return ( 0, $self->loc('[_1] already has that right',
-                    $princ_obj->Object->Name) );
+        return ( 0, $self->loc('[_1] already has the right [_2] on [_3] [_4]',
+                    $princ_obj->DisplayName, $args{'RightName'}, $args{'ObjectType'},  $args{'ObjectId'}) );
     }
 
     my $id = $self->SUPER::Create( PrincipalId   => $princ_obj->id,
@@ -285,7 +285,7 @@ sub Create {
             RightName   => $self->RightName,
             ACE         => $self,
         );
-        return ( $id, $self->loc('Right Granted') );
+        return ( $id, $self->loc("Granted right '[_1]' to [_2].", $self->RightName, $princ_obj->DisplayName));
     }
     else {
         return ( 0, $self->loc('System error. Right not granted.') );
@@ -336,7 +336,7 @@ sub _Delete {
     if ($val) {
         RT::ACE->InvalidateCaches( Action => "Revoke", RightName => $right );
         $RT::Handle->Commit() unless $InsideTransaction;
-        return ( $val, $self->loc('Right revoked') );
+        return ( $val, $self->loc("Revoked right '[_1]' from [_2].", $right, $self->PrincipalObj->DisplayName));
     }
 
     $RT::Handle->Rollback() unless $InsideTransaction;

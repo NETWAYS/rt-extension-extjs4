@@ -169,3 +169,12 @@ requires 'JSON::XS';
 # RT::Authen::ExternalAuth
 requires 'Net::SSLeay';
 requires 'Net::LDAP';
+
+# RT 4.4
+requires 'Net::IP';
+requires 'Business::Hours';
+requires 'JavaScript::Minifier::XS';
+requires 'CSS::Minifier::XS';
+requires 'HTML::FormatText::WithLinks::AndTables', '0.06';
+requires 'Data::Page::Pageset';
+requires 'Scope::Upper';

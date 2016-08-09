@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -221,18 +221,25 @@ my $re_ip_serialized = qr/$re_ip_sunit(?:\.$re_ip_sunit){3}/;
 sub Content {
     my $self = shift;
 
-    return undef unless $self->CustomFieldObj->CurrentUserHasRight('SeeCustomField');
+    my $cf = $self->CustomFieldObj;
+    $cf->{include_set_initial} = $self->{include_set_initial};
+
+    return undef unless $cf->CurrentUserCanSee;
 
     my $content = $self->_Value('Content');
-    if (   $self->CustomFieldObj->Type eq 'IPAddress'
-        || $self->CustomFieldObj->Type eq 'IPAddressRange' )
+    if (   $cf->Type eq 'IPAddress'
+        || $cf->Type eq 'IPAddressRange' )
     {
 
+        require Net::IP;
         if ( $content =~ /^\s*($re_ip_serialized)\s*$/o ) {
             $content = sprintf "%d.%d.%d.%d", split /\./, $1;
         }
+        if ( $content =~ /^\s*($IPv6_re)\s*$/o ) {
+            $content = Net::IP::ip_compress_address($1, 6);
+        }
 
-        return $content if $self->CustomFieldObj->Type eq 'IPAddress';
+        return $content if $cf->Type eq 'IPAddress';
 
         my $large_content = $self->__Value('LargeContent');
         if ( $large_content =~ /^\s*($re_ip_serialized)\s*$/o ) {
@@ -245,7 +252,7 @@ sub Content {
             }
         }
         elsif ( $large_content =~ /^\s*($IPv6_re)\s*$/o ) {
-            my $eIP = $1;
+            my $eIP = Net::IP::ip_compress_address($1, 6);
             if ( $content eq $eIP ) {
                 return $content;
             }
@@ -731,6 +738,31 @@ sub FindDependencies {
 
     $deps->Add( out => $self->CustomFieldObj );
     $deps->Add( out => $self->Object );
+}
+
+sub ShouldStoreExternally {
+    my $self = shift;
+    my $type = $self->CustomFieldObj->Type;
+    my $length = length($self->LargeContent || '');
+
+    return (0, "zero length") if $length == 0;
+
+    return 1 if $type eq "Binary";
+
+    if ($type eq "Image") {
+        # We only store externally if it's _large_
+        return 1 if $length > RT->Config->Get('ExternalStorageCutoffSize');
+        return (0, "image size ($length) does not exceed ExternalStorageCutoffSize (" . RT->Config->Get('ExternalStorageCutoffSize') . ")");
+    }
+
+    return (0, "Only custom fields of type Binary or Image go into external storage (not $type)");
+}
+
+sub ExternalStoreDigest {
+    my $self = shift;
+
+    return undef if $self->ContentEncoding ne 'external';
+    return $self->_Value( 'LargeContent' );
 }
 
 RT::Base->_ImportOverlays();

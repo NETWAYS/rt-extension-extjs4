@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -870,10 +870,6 @@ my %check_case_sensitivity = (
 );
 
 my %deprecated = (
-    groups => {
-        type => 'Name',
-    },
-    principals => { objectid => 'id' },
 );
 
 sub Limit {
@@ -917,7 +913,7 @@ sub Limit {
     if ( $table and $ARGS{FIELD} and my $instead = $deprecated{ lc $table }{ lc $ARGS{'FIELD'} } ) {
         RT->Deprecated(
             Message => "$table.$ARGS{'FIELD'} column is deprecated",
-            Instead => $instead, Remove => '4.4'
+            Instead => $instead, Remove => '4.6'
         );
     }
 

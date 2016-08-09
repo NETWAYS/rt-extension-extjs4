@@ -69,7 +69,6 @@
     right: 0;
     left: 0;
     padding-right: 3em;
-    z-index: 9995;
     font-size: 0.9em;
     border-bottom: 1px solid #ccc;
     background-color: #eee;
@@ -117,12 +116,10 @@
 #topactions {
     position: absolute;
     background: transparent;
-    top: 2.5em;
+    top: 3.25em;
     right: 0em;
     padding-right: 0.7em;
     width: auto;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
     min-width: 42em;
     font-size: 0.9em;
     z-index: 99;
@@ -136,12 +133,35 @@
 #topactions select,
 #topactions button {
     font-size: 1em;
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
+    padding-top: 0;
+    padding-bottom: 0;
     padding-left: 0.5em;
     padding-right: 0.5em;
-    width: 8em;
     vertical-align: middle;
+
+    width: 8em;
+    -webkit-transition: width 0.25s ease-in-out;
+    -moz-transition: width 0.25s ease-in-out;
+    -ms-transition: width 0.25s ease-in-out;
+    transition: width 0.25s ease-in-out;
+}
+
+#topactions .asset-search input[type="search"],
+#topactions .article-search input[type="search"]
+ {
+    width: 16em;
+}
+
+#topactions input[type="search"]:focus {
+    width: 16em;
+    -webkit-transition: width 0.25s ease-in-out;
+    -moz-transition: width 0.25s ease-in-out;
+    -ms-transition: width 0.25s ease-in-out;
+    transition: width 0.25s ease-in-out;
+}
+
+#topactions select {
+    -webkit-appearance: menulist-button;
 }
 
 #topactions .select-queue {
@@ -169,17 +189,6 @@
     -moz-box-shadow: 2px 2px 8px -2px #999;
     -webkit-box-shadow: 2px 2px 8px -2px #999;
     box-shadow: 2px 2px 8px -2px #999;
-}
-
-/* The bookmark star is too tall without adjusting the padding and height */
-
-.sf-menu .toggle-bookmark a {
-    padding: 0 1em;
-    height: 2.5em;
-}
-
-.sf-menu .toggle-bookmark a img {
-    padding-top: 0.6em
 }
 
 /* Pin page menu to top left corner once you scroll past it */
@@ -221,3 +230,14 @@
     -moz-border-radius: 0 0 0 5px;
     -webkit-border-radius: 0 0 0 5px;
 }
+
+#topactions input.field {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+#topactions input.select-queue {
+    border: none;
+}
+

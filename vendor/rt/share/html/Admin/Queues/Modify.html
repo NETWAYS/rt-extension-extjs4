@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -84,6 +84,10 @@
 <td colspan="3"><input name="SubjectTag" value="<% $ARGS{'SubjectTag'} || ($Create ? "" : $QueueObj->SubjectTag || '' ) %>" size="60" /></td>
 </tr>
 
+<tr><td align="right"><&|/l&>Sort Order</&>:</td>
+<td colspan="3"><input name="SortOrder" value="<% $Create ? 0 : $QueueObj->SortOrder || $SortOrder || 0 %>" size="60" /></td>
+</tr>
+
 <tr><td align="right"><&|/l&>Reply Address</&>:</td>
 <td><input name="CorrespondAddress" value="<% $Create ? "" : $QueueObj->CorrespondAddress || $CorrespondAddress || '' %>" />
 <br /><span><em><&|/l , RT->Config->Get('CorrespondAddress')&>(If left blank, will default to [_1])</&></em></span></td>
@@ -92,21 +96,14 @@
 <br /><span><em><&|/l , RT->Config->Get('CommentAddress')&>(If left blank, will default to [_1])</&></em></span></td>
 </tr>
 
-<tr><td align="right"><&|/l&>Priority starts at</&>:</td>
-<td><& /Elements/SelectPriority,
-    Name => "InitialPriority",
-    Default => $Create? 0: $QueueObj->InitialPriority || $InitialPriority,
-&></td>
-<td align="right"><&|/l&>Over time, priority moves toward</&>:</td>
-<td><& /Elements/SelectPriority,
-    Name => "FinalPriority",
-    Default => $Create? 0: $QueueObj->FinalPriority || $FinalPriority,
-&><br /><span><em><&|/l&>requires running rt-crontool</&></em></span></td>
-</tr>
-
-<tr><td align="right"><&|/l&>Requests should be due in</&>:</td>
-<td colspan="3"><input name="DefaultDueIn" value="<% ($Create) ? "" : $QueueObj->DefaultDueIn || $DefaultDueIn || "" %>" /> <&|/l&>days</&>.</td>
-</tr>
+<tr><td align="right"><input type="checkbox" class="checkbox" id="SLAEnabled" name="SLAEnabled" value="1" 
+% if ( $QueueObj->id && !$QueueObj->SLADisabled ) {
+checked="checked"
+% }
+ /></td>
+<td colspan="3"><label for="SLAEnabled"><&|/l&>SLA Enabled (Unchecking this box disables SLA for this queue)</&></label><br />
+<input type="hidden" class="hidden" name="SetSLAEnabled" value="1" />
+</td></tr>
 
 % my $CFs = $QueueObj->CustomFields;
 % while (my $CF = $CFs->Next) {
@@ -191,12 +188,15 @@ unless ($Create) {
 
 if ( $QueueObj->Id ) {
     $title = loc('Configuration for queue [_1]', $QueueObj->Name );
-    my @attribs= qw(Description CorrespondAddress CommentAddress Name
-        InitialPriority FinalPriority DefaultDueIn Sign SignAuto Encrypt Lifecycle SubjectTag Disabled);
+    my @attribs= qw(Description CorrespondAddress CommentAddress Name SortOrder
+        Sign SignAuto Encrypt Lifecycle SubjectTag SLADisabled Disabled);
 
     # we're asking about enabled on the web page but really care about disabled
     if ( $SetEnabled ) {
         $Disabled = $ARGS{'Disabled'} = $Enabled? 0: 1;
+    }
+    if ( $SetSLAEnabled ) {
+        $ARGS{'SLADisabled'} = $SLAEnabled? 0: 1;
     }
     if ( $SetCrypt ) {
         $ARGS{$_} = 0 foreach grep !defined $ARGS{$_} || !length $ARGS{$_},
@@ -236,6 +236,9 @@ if ( $QueueObj->Id ) {
             push @no_redirect_results, loc("RTAddressRegexp option in the config doesn't match [_1]", $address );
         }
     }
+    if ( !$QueueObj->SLADisabled && !( RT->Config->Get('ServiceAgreements') && keys %{RT->Config->Get('ServiceAgreements')}) ) {
+        push @no_redirect_results, loc("You enabled [_1] but [_2] hasn't been configured in RT_SiteConfig.pm, please check '[_3]' for more help", 'SLA', '%ServiceAgreements', 'docs/customizing/sla.pod');
+    }
 } else {
     $title = loc("Create a queue");
 }
@@ -260,10 +263,10 @@ $Create => undef
 $Description => undef
 $CorrespondAddress => undef
 $CommentAddress => undef
-$InitialPriority => undef
-$FinalPriority => undef
-$DefaultDueIn => undef
+$SetSLAEnabled => undef
 $SetEnabled => undef
 $SetCrypt => undef
+$SLAEnabled => undef
 $Enabled => undef
+$SortOrder => undef
 </%ARGS>

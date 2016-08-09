@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -56,10 +56,19 @@ foreach my $message ( @{ $Attachments->{ $Parent || 0 } || [] } ) {
             );
 
     my $name = defined $message->Filename && length $message->Filename ?  $message->Filename : '';
-    if ( $message->ContentLength or $name ) {
+    my $should_render_download = $message->ContentLength || $name;
+
+    $m->callback(CallbackName => 'BeforeAttachment', ARGSRef => \%ARGS, Object => $Object, Transaction => $Transaction, Attachment => $message, Name => $name, ShouldRenderDownload => \$should_render_download);
+
+    if ($should_render_download) {
 </%PERL>
 <div class="downloadattachment">
-<a href="<% $AttachmentPath %>/<% $Transaction->Id %>/<% $message->Id %>/<% $name | u%>"><&|/l&>Download</&> <% length $name ? $name : loc('(untitled)') %></a>\
+% if (my $url = RT->System->ExternalStorageURLFor($message)) {
+<a href="<% $url %>">
+% } else {
+<a href="<% $AttachmentPath %>/<% $Transaction->Id %>/<% $message->Id %>/<% $name | un %>">
+% }
+<&|/l&>Download</&> <% length $name ? $name : loc('(untitled)') %></a>\
 % if ( $DownloadableHeaders && ! length $name && $message->ContentType =~ /text/  ) {
  / <a href="<% $AttachmentPath %>/WithHeaders/<% $message->Id %>"><% loc('with headers') %></a>
 % }
@@ -113,7 +122,7 @@ if ( $Transaction->Type =~ /EmailRecord$/ ) {
 
 # If the transaction has anything attached to it at all
 elsif (!$ShowHeaders)  {
-    @DisplayHeaders = qw(To From RT-Send-Cc Cc Bcc Date Subject);
+    @DisplayHeaders = qw(To From RT-Send-Cc Cc Bcc RT-Attach Date Subject);
     push @DisplayHeaders, 'RT-Send-Bcc' if RT->Config->Get('ShowBccHeader');
 }
 
@@ -275,11 +284,13 @@ my $render_attachment = sub {
 
         my $filename = length $name ? $name : loc('(untitled)');
         my $efilename = $m->interp->apply_escapes( $filename, 'h' );
+
+        my $url = RT->System->ExternalStorageURLFor($message)
+               || $AttachmentPath .'/'. $Transaction->Id .'/'. $message->Id .'/'
+                . $m->interp->apply_escapes( $filename, 'u', 'h' );
+
         $m->out(
-            qq{<img alt="$efilename" title="$efilename"}
-            . ' src="'. $AttachmentPath .'/'. $Transaction->Id .'/'. $message->Id .'/'
-                . $m->interp->apply_escapes( $filename, 'u', 'h' )
-            . '" />'
+            qq{<img alt="$efilename" title="$efilename" src="$url" />}
         );
     }
     elsif ( $message->ContentLength && $message->ContentLength > 0 ) {

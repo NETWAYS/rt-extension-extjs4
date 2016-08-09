@@ -29,13 +29,12 @@ CREATE TABLE Queues (
         CommentAddress          VARCHAR2(120),
         Lifecycle               VARCHAR2(32),
         SubjectTag              VARCHAR2(120),
-        InitialPriority         NUMBER(11,0) DEFAULT 0 NOT NULL,
-        FinalPriority           NUMBER(11,0) DEFAULT 0 NOT NULL,
-        DefaultDueIn            NUMBER(11,0) DEFAULT 0 NOT NULL,
+        SortOrder               NUMBER(11,0) DEFAULT 0 NOT NULL,
         Creator                 NUMBER(11,0) DEFAULT 0 NOT NULL,
         Created                 DATE,
         LastUpdatedBy           NUMBER(11,0) DEFAULT 0 NOT NULL,
         LastUpdated             DATE,
+        SLADisabled             NUMBER(11,0) DEFAULT 1 NOT NULL,
         Disabled                NUMBER(11,0) DEFAULT 0 NOT NULL
 );
 CREATE UNIQUE INDEX Queues1 ON Queues (LOWER(Name));
@@ -67,11 +66,8 @@ CREATE TABLE Principals (
         id              NUMBER(11,0) 
                 CONSTRAINT Principals_Key PRIMARY KEY,
         PrincipalType   VARCHAR2(16),
-        ObjectId        NUMBER(11,0),
         Disabled        NUMBER(11,0) DEFAULT 0 NOT NULL
 );
-CREATE UNIQUE  INDEX Principals2 ON Principals (ObjectId);
-
 
 CREATE SEQUENCE GROUPS_seq;
 CREATE TABLE Groups (
@@ -80,7 +76,6 @@ CREATE TABLE Groups (
         Name            VARCHAR2(200),
         Description     VARCHAR2(255),
         Domain          VARCHAR2(64),
-        Type            VARCHAR2(64),
         Instance        NUMBER(11,0) DEFAULT 0, -- NOT NULL
         Creator         NUMBER(11,0) DEFAULT 0 NOT NULL,
         Created         DATE,
@@ -88,9 +83,8 @@ CREATE TABLE Groups (
         LastUpdated     DATE
 --      Instance        VARCHAR2(64)
 );
-CREATE INDEX Groups1 ON Groups (LOWER(Domain), LOWER(Type), Instance);
-CREATE INDEX Groups2 ON Groups (LOWER(Domain), LOWER(Name), Instance);
-CREATE INDEX Groups3 ON Groups (Instance);
+CREATE INDEX Groups1 ON Groups (LOWER(Domain), LOWER(Name), Instance);
+CREATE INDEX Groups2 ON Groups (Instance);
 
 
 CREATE SEQUENCE SCRIPCONDITIONS_seq;
@@ -225,12 +219,6 @@ CREATE TABLE Users (
         RealName                VARCHAR2(120),
         NickName                VARCHAR2(16),
         Lang                    VARCHAR2(16),
-        EmailEncoding           VARCHAR2(16),
-        WebEncoding             VARCHAR2(16),
-        ExternalContactInfoId   VARCHAR2(100),
-        ContactInfoSystem       VARCHAR2(30),
-        ExternalAuthId          VARCHAR2(100),
-        AuthSystem              VARCHAR2(30),
         Gecos                   VARCHAR2(16),
         HomePhone               VARCHAR2(30),
         WorkPhone               VARCHAR2(30),
@@ -243,7 +231,6 @@ CREATE TABLE Users (
         Zip                     VARCHAR2(16),
         Country                 VARCHAR2(50),
         Timezone                VARCHAR2(50),
-        PGPKey                  CLOB,
         SMIMECertificate        CLOB,
         Creator                 NUMBER(11,0) DEFAULT 0 NOT NULL,
         Created                 DATE,
@@ -263,8 +250,6 @@ CREATE TABLE Tickets (
         IsMerged                NUMBER(11,0) DEFAULT NULL NULL,
         Queue                   NUMBER(11,0) DEFAULT 0 NOT NULL,
         Type                    VARCHAR2(16),           
-        IssueStatement          NUMBER(11,0) DEFAULT 0 NOT NULL,
-        Resolution              NUMBER(11,0) DEFAULT 0 NOT NULL,
         Owner                   NUMBER(11,0) DEFAULT 0 NOT NULL,
         Subject                 VARCHAR2(200) DEFAULT '[no subject]', 
         InitialPriority         NUMBER(11,0) DEFAULT 0 NOT NULL,
@@ -273,6 +258,7 @@ CREATE TABLE Tickets (
         TimeEstimated           NUMBER(11,0) DEFAULT 0 NOT NULL,
         TimeWorked              NUMBER(11,0) DEFAULT 0 NOT NULL,
         Status                  VARCHAR2(64),           
+        SLA                     VARCHAR2(64),
         TimeLeft                NUMBER(11,0) DEFAULT 0 NOT NULL,
         Told                    DATE,
         Starts                  DATE,
@@ -282,8 +268,7 @@ CREATE TABLE Tickets (
         LastUpdatedBy           NUMBER(11,0) DEFAULT 0 NOT NULL,
         LastUpdated             DATE,
         Creator                 NUMBER(11,0) DEFAULT 0 NOT NULL,
-        Created                 DATE,
-        Disabled                NUMBER(11,0) DEFAULT 0 NOT NULL
+        Created                 DATE
 );
 CREATE INDEX Tickets1 ON Tickets (Queue, Status);
 CREATE INDEX Tickets2 ON Tickets (Owner);
@@ -371,6 +356,7 @@ CREATE TABLE CustomFields (
         Description     VARCHAR2(255),
         SortOrder       NUMBER(11,0) DEFAULT 0 NOT NULL,
         LookupType      VARCHAR2(255),
+        EntryHint       VARCHAR2(255) NULL,
         Creator         NUMBER(11,0) DEFAULT 0 NOT NULL,
         Created         DATE,
         LastUpdatedBy   NUMBER(11,0) DEFAULT 0 NOT NULL,
@@ -447,6 +433,7 @@ SortOrder NUMBER(11,0) DEFAULT 0 NOT NULL,
 Class NUMBER(11,0) DEFAULT 0 NOT NULL,
 Parent NUMBER(11,0) DEFAULT 0 NOT NULL,
 URI varchar2(255),
+Disabled NUMBER(11,0) DEFAULT 0 NOT NULL,
 Creator NUMBER(11,0) DEFAULT 0 NOT NULL,
 Created DATE,
 LastUpdatedBy NUMBER(11,0) DEFAULT 0 NOT NULL,
@@ -487,3 +474,65 @@ Created DATE,
 LastUpdatedBy NUMBER(11,0) DEFAULT 0 NOT NULL,
 LastUpdated DATE
 );
+
+CREATE SEQUENCE Assets_seq;
+CREATE TABLE Assets (
+    id              NUMBER(11,0)    CONSTRAINT Assets_key PRIMARY KEY,
+    Name            varchar2(255)   DEFAULT '',
+    Catalog         NUMBER(11,0)    DEFAULT 0 NOT NULL,
+    Status          varchar2(64)    DEFAULT '',
+    Description     varchar2(255)   DEFAULT '',
+    Creator         NUMBER(11,0)    DEFAULT 0 NOT NULL,
+    Created         DATE,
+    LastUpdatedBy   NUMBER(11,0)    DEFAULT 0 NOT NULL,
+    LastUpdated     DATE
+);
+
+CREATE INDEX AssetsName ON Assets (LOWER(Name));
+CREATE INDEX AssetsStatus ON Assets (Status);
+CREATE INDEX AssetsCatalog ON Assets (Catalog);
+
+CREATE SEQUENCE Catalogs_seq;
+CREATE TABLE Catalogs (
+    id              NUMBER(11,0)    CONSTRAINT Catalogs_key PRIMARY KEY,
+    Name            varchar2(255)   DEFAULT '',
+    Lifecycle       varchar2(32)    DEFAULT 'assets',
+    Description     varchar2(255)   DEFAULT '',
+    Disabled        NUMBER(11,0)    DEFAULT 0 NOT NULL,
+    Creator         NUMBER(11,0)    DEFAULT 0 NOT NULL,
+    Created         DATE,
+    LastUpdatedBy   NUMBER(11,0)    DEFAULT 0 NOT NULL,
+    LastUpdated     DATE
+);
+
+CREATE INDEX CatalogsName ON Catalogs (LOWER(Name));
+CREATE INDEX CatalogsDisabled ON Catalogs (Disabled);
+
+CREATE SEQUENCE CUSTOMROLES_seq;
+CREATE TABLE CustomRoles (
+        id              NUMBER(11,0)
+                CONSTRAINT CustomRoles_Key PRIMARY KEY,
+        Name            VARCHAR2(200),
+        Description     VARCHAR2(255),
+        MaxValues       NUMBER(11,0) DEFAULT 0 NOT NULL,
+        EntryHint       VARCHAR2(255),
+        Creator         NUMBER(11,0) DEFAULT 0 NOT NULL,
+        Created         DATE,
+        LastUpdatedBy   NUMBER(11,0) DEFAULT 0 NOT NULL,
+        LastUpdated     DATE,
+        Disabled        NUMBER(11,0) DEFAULT 0 NOT NULL
+);
+
+CREATE SEQUENCE OBJECTCUSTOMROLES_seq;
+CREATE TABLE ObjectCustomRoles (
+        id              NUMBER(11,0)
+                 CONSTRAINT ObjectCustomRoles_Key PRIMARY KEY,
+        CustomRole       NUMBER(11,0)  NOT NULL,
+        ObjectId              NUMBER(11,0)  NOT NULL,
+        SortOrder       NUMBER(11,0) DEFAULT 0 NOT NULL,
+        Creator         NUMBER(11,0) DEFAULT 0 NOT NULL,
+        Created         DATE,
+        LastUpdatedBy   NUMBER(11,0) DEFAULT 0 NOT NULL,
+        LastUpdated     DATE
+);
+CREATE UNIQUE INDEX ObjectCustomRoles1 ON ObjectCustomRoles (ObjectId, CustomRole);

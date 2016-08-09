@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -88,6 +88,8 @@ my @fields = qw(
     Due         DueRelative
     Resolved    ResolvedRelative
 
+    SLA
+
     RefersTo    ReferredToBy
     DependsOn   DependedOnBy
     MemberOf    Members
@@ -98,10 +100,6 @@ my @fields = qw(
     NEWLINE
     NBSP
 ); # loc_qw
-
-# This callback will only run once and will be removed in 4.4
-# If you want to add a new item to @fields, use the Default callback below.
-$m->callback( CallbackOnce => 1, CallbackName => 'SetFieldsOnce', Fields => \@fields );
 
 my $CustomFields = RT::CustomFields->new( $session{'CurrentUser'});
 foreach my $id (keys %queues) {
@@ -116,6 +114,18 @@ $CustomFields->LimitToGlobal;
 
 while ( my $CustomField = $CustomFields->Next ) {
     push @fields, "CustomField.{" . $CustomField->Name . "}";
+}
+
+my $CustomRoles = RT::CustomRoles->new( $session{'CurrentUser'});
+foreach my $id (keys %queues) {
+    # Gotta load up the $queue object, since queues get stored by name now.
+    my $queue = RT::Queue->new($session{'CurrentUser'});
+    $queue->Load($id);
+    next unless $queue->Id;
+    $CustomRoles->LimitToObjectId($queue->Id);
+}
+while ( my $Role = $CustomRoles->Next ) {
+    push @fields, "CustomRole.{" . $Role->Name . "}";
 }
 
 $m->callback( Fields => \@fields, ARGSRef => \%ARGS );

@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -100,6 +100,7 @@ sub Create {
         CustomFields => {},
         Links        => {},
         Topics       => [],
+        Disabled    => 0,
         @_
     );
 
@@ -121,6 +122,7 @@ sub Create {
         Name    => $args{'Name'},
         Class   => $class->Id,
         Summary => $args{'Summary'},
+        Disabled => $args{'Disabled'},
     );
     unless ($id) {
         $RT::Handle->Rollback();
@@ -134,6 +136,10 @@ sub Create {
         my $cf   = $1;
         my @vals = ref( $args{$key} ) eq 'ARRAY' ? @{ $args{$key} } : ( $args{$key} );
         foreach my $value (@vals) {
+            next if $self->CustomFieldValueIsEmpty(
+                Field => $cf,
+                Value => $value,
+            );
 
             my ( $cfid, $cfmsg ) = $self->_AddCustomFieldValue(
                 (UNIVERSAL::isa( $value => 'HASH' )
@@ -141,7 +147,8 @@ sub Create {
                     : (Value => $value)
                 ),
                 Field             => $cf,
-                RecordTransaction => 0
+                RecordTransaction => 0,
+                ForCreation       => 1,
             );
 
             unless ($cfid) {
@@ -254,75 +261,13 @@ sub ValidateName {
 
 =head2 Delete
 
-Delete all its transactions
-Delete all its custom field values
-Delete all its relationships
-Delete this article.
+This does not remove from the database; it merely sets the Disabled bit.
 
 =cut
 
 sub Delete {
     my $self = shift;
-    unless ( $self->CurrentUserHasRight('DeleteArticle') ) {
-        return ( 0, $self->loc("Permission Denied") );
-    }
-
-    $RT::Handle->BeginTransaction();
-    my $linksto   = $self->_Links(  'Target' );
-    my $linksfrom = $self->_Links(  'Base' );
-    my $cfvalues = $self->CustomFieldValues;
-    my $txns     = $self->Transactions;
-    my $topics   = $self->Topics;
-
-    while ( my $item = $linksto->Next ) {
-        my ( $val, $msg ) = $item->Delete();
-        unless ($val) {
-            $RT::Logger->crit( ref($item) . ": $msg" );
-            $RT::Handle->Rollback();
-            return ( 0, $self->loc('Internal Error') );
-        }
-    }
-
-    while ( my $item = $linksfrom->Next ) {
-        my ( $val, $msg ) = $item->Delete();
-        unless ($val) {
-            $RT::Logger->crit( ref($item) . ": $msg" );
-            $RT::Handle->Rollback();
-            return ( 0, $self->loc('Internal Error') );
-        }
-    }
-
-    while ( my $item = $txns->Next ) {
-        my ( $val, $msg ) = $item->Delete();
-        unless ($val) {
-            $RT::Logger->crit( ref($item) . ": $msg" );
-            $RT::Handle->Rollback();
-            return ( 0, $self->loc('Internal Error') );
-        }
-    }
-
-    while ( my $item = $cfvalues->Next ) {
-        my ( $val, $msg ) = $item->Delete();
-        unless ($val) {
-            $RT::Logger->crit( ref($item) . ": $msg" );
-            $RT::Handle->Rollback();
-            return ( 0, $self->loc('Internal Error') );
-        }
-    }
-
-    while ( my $item = $topics->Next ) {
-        my ( $val, $msg ) = $item->Delete();
-        unless ($val) {
-            $RT::Logger->crit( ref($item) . ": $msg" );
-            $RT::Handle->Rollback();
-            return ( 0, $self->loc('Internal Error') );
-        }
-    }
-
-    $self->SUPER::Delete();
-    $RT::Handle->Commit();
-    return ( 1, $self->loc('Article Deleted') );
-
+    return $self->SetDisabled(1);
 }
 
 # }}}
@@ -528,8 +473,15 @@ sub _Set {
         @_
     );
 
-    unless ( $self->CurrentUserHasRight('ModifyArticle') ) {
-        return ( 0, $self->loc("Permission Denied") );
+    if ( $args{Field} eq 'Disabled' ) {
+        unless ( $self->CurrentUserHasRight( 'DisableArticle' ) ) {
+            return ( 0, $self->loc( "Permission Denied" ) );
+        }
+    }
+    else {
+        unless ( $self->CurrentUserHasRight( 'ModifyArticle' ) ) {
+            return ( 0, $self->loc( "Permission Denied" ) );
+        }
     }
 
     $self->_NewTransaction(
@@ -760,6 +712,21 @@ Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
 
 =cut
 
+=head2 Disabled
+
+Returns the current value of Disabled.
+(In the database, Disabled is stored as int(2).)
+
+
+
+=head2 SetDisabled VALUE
+
+
+Set Disabled to VALUE.
+Returns (1, 'Status message') on success and (0, 'Error Message') on failure.
+(In the database, Disabled will be stored as a int(2).)
+
+
 
 =head2 Creator
 
@@ -815,6 +782,8 @@ sub _CoreAccessible {
                 {read => 1, write => 1, type => 'int(11)', default => '0'},
         URI => 
                 {read => 1, write => 1, type => 'varchar(255)', default => ''},
+        Disabled => 
+                {read => 1, write => 1, type => 'int(2)', default => '0'},
         Creator => 
                 {read => 1, auto => 1, type => 'int(11)', default => '0'},
         Created => 

@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -213,35 +213,19 @@ sub Set {
         }
     }
     elsif ( $format eq 'unknown' ) {
-        require Time::ParseDate;
-        # the module supports only legacy timezones like PDT or EST...
-        # so we parse date as GMT and later apply offset, this only
-        # should be applied to absolute times, so compensate shift in NOW
-        my $now = time;
-        $now += ($self->Localtime( $args{Timezone}, $now ))[9];
-        my ($date, $error) = Time::ParseDate::parsedate(
-            $args{'Value'},
-            GMT           => 1,
-            NOW           => $now,
-            UK            => RT->Config->Get('DateDayBeforeMonth'),
-            PREFER_PAST   => RT->Config->Get('AmbiguousDayInPast'),
-            PREFER_FUTURE => RT->Config->Get('AmbiguousDayInFuture'),
-        );
-        unless ( defined $date ) {
-            $RT::Logger->warning(
-                "Couldn't parse date '$args{'Value'}' by Time::ParseDate"
+        if ( RT->Config->Get('PreferDateTimeFormatNatural') ) {
+            return $self->Unix(
+                   $self->ParseByDateTimeFormatNatural(%args)
+                || $self->ParseByTimeParseDate(%args)
+                || 0
             );
-            return $self->Unix(0);
+        } else {
+            return $self->Unix(
+                   $self->ParseByTimeParseDate(%args)
+                || $self->ParseByDateTimeFormatNatural(%args)
+                || 0
+            );
         }
-
-        # apply timezone offset
-        $date -= ($self->Localtime( $args{Timezone}, $date ))[9];
-
-        $RT::Logger->debug(
-            "RT::Date used Time::ParseDate to make '$args{'Value'}' $date\n"
-        );
-
-        return $self->Unix($date || 0);
     }
     else {
         $RT::Logger->error(
@@ -251,6 +235,78 @@ sub Set {
     }
 
     return $self->Unix;
+}
+
+=head2 ParseByTimeParseDate
+
+Parse date using Time::ParseDate.
+return undef if it fails to parse, otherwise return epoch time.
+
+=cut
+
+sub ParseByTimeParseDate {
+    my $self = shift;
+    my %args = @_;
+    require Time::ParseDate;
+    # the module supports only legacy timezones like PDT or EST...
+    # so we parse date as GMT and later apply offset, this only
+    # should be applied to absolute times, so compensate shift in NOW
+    my $now = time;
+    $now += ($self->Localtime( $args{Timezone}, $now ))[9];
+    my ($date, $error) = Time::ParseDate::parsedate(
+        $args{'Value'},
+        GMT           => 1,
+        NOW           => $now,
+        UK            => RT->Config->Get('DateDayBeforeMonth'),
+        PREFER_PAST   => RT->Config->Get('AmbiguousDayInPast'),
+        PREFER_FUTURE => RT->Config->Get('AmbiguousDayInFuture'),
+    );
+    unless ( defined $date ) {
+        $RT::Logger->warning(
+            "Couldn't parse date '$args{'Value'}' by Time::ParseDate"
+        );
+        return undef;
+    }
+
+    # apply timezone offset
+    $date -= ($self->Localtime( $args{Timezone}, $date ))[9];
+
+    $RT::Logger->debug(
+        "RT::Date used Time::ParseDate to make '$args{'Value'}' $date\n"
+    );
+    return $date;
+}
+
+=head2 ParseByDateTimeFormatNatural
+
+Parse date using DateTime::Format::Natural.
+return undef if it fails to parse, otherwise return epoch time.
+
+=cut
+
+sub ParseByDateTimeFormatNatural {
+    my $self = shift;
+    my %args = @_;
+    require DateTime::Format::Natural;
+
+    my $parser = DateTime::Format::Natural->new(
+        prefer_future => RT->Config->Get('AmbiguousDayInPast') ? 0 : RT->Config->Get('AmbiguousDayInFuture'),
+        time_zone     => $self->Timezone($args{Timezone}),
+    );
+    my ($dt) = eval { $parser->parse_datetime($args{Value}) };
+    if ( !$@ && $parser->success && $dt ) {
+        my $date = $dt->epoch;
+        $RT::Logger->debug(
+            "RT::Date used DateTime::Format::Natural to make '$args{'Value'}' $date\n"
+        );
+        return $date;
+    }
+    else {
+        $RT::Logger->warning(
+            "Couldn't parse date '$args{'Value'}' by DateTime::Format::Natural"
+        );
+        return undef;
+    }
 }
 
 =head2 SetToNow
@@ -762,6 +818,8 @@ sub LocalizedDateTime
                  @_,
                );
 
+    my $dt = $self->DateTimeObj;
+
     # Require valid names for the format methods
     my $date_format = $args{DateFormat} =~ /^\w+$/
                     ? $args{DateFormat} : 'date_format_full';
@@ -774,24 +832,6 @@ sub LocalizedDateTime
     $time_format = $formatter->$time_format;
     $date_format =~ s/EEEE/EEE/g if ( $args{'AbbrDay'} );
     $date_format =~ s/MMMM/MMM/g if ( $args{'AbbrMonth'} );
-
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$ydaym,$isdst,$offset) =
-                            $self->Localtime($args{'Timezone'});
-    $mon++;
-    my $tz = $self->Timezone($args{'Timezone'});
-
-    # FIXME : another way to call this module without conflict with local
-    # DateTime method?
-    my $dt = DateTime::->new( locale => $formatter,
-                            time_zone => $tz,
-                            year => $year,
-                            month => $mon,
-                            day => $mday,
-                            hour => $hour,
-                            minute => $min,
-                            second => $sec,
-                            nanosecond => 0,
-                          );
 
     if ( $args{'Date'} && !$args{'Time'} ) {
         return $dt->format_cldr($date_format);
@@ -1163,6 +1203,58 @@ sub IsSet {
 
 }
 
+=head3 DateTimeObj [Timezone => 'utc']
+
+Returns an L<DateTime> object representing the same time as this RT::Date. The
+DateTime object's locale is set up to match the user's language.
+
+Modifying this DateTime object will not change the corresponding RT::Date, and
+vice versa.
+
+=cut
+
+sub DateTimeObj {
+    my $self = shift;
+    my %args = (
+        Timezone => '',
+        @_,
+    );
+
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$ydaym,$isdst,$offset) =
+                            $self->Localtime($args{'Timezone'});
+    $mon++;
+
+    return DateTime::->new(
+        locale     => $self->LocaleObj,
+        time_zone  => $self->Timezone($args{'Timezone'}),
+        year       => $year,
+        month      => $mon,
+        day        => $mday,
+        hour       => $hour,
+        minute     => $min,
+        second     => $sec,
+        nanosecond => 0,
+    );
+}
+
+=head3 Strftime FORMAT, [Timezone => 'user']
+
+Stringify the RT::Date according to the specified format. See
+L<DateTime/strftime Patterns>.
+
+=cut
+
+sub Strftime {
+    my $self = shift;
+    my $format = shift;
+    my %args = (
+        Timezone => 'user',
+        @_,
+    );
+
+    my $dt = $self->DateTimeObj(%args);
+    return $dt->strftime($format);
+}
 
 RT::Base->_ImportOverlays();
 

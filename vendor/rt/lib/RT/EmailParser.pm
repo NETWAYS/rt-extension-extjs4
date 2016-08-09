@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -278,41 +278,6 @@ sub _PostProcessNewEntity {
     RT::I18N::SetMIMEEntityToEncoding($self->{'entity'}, 'utf-8');
 }
 
-=head2 ParseCcAddressesFromHead HASHREF
-
-Takes a hashref object containing QueueObj, Head and CurrentUser objects.
-Returns a list of all email addresses in the To and Cc 
-headers b<except> the current Queue's email addresses, the CurrentUser's 
-email address and anything that the RT->Config->Get('RTAddressRegexp') matches.
-
-=cut
-
-sub ParseCcAddressesFromHead {
-    my $self = shift;
-    my %args = (
-        QueueObj    => undef,
-        CurrentUser => undef,
-        @_
-    );
-
-    my (@Addresses);
-
-    my @ToObjs = Email::Address->parse( Encode::decode( "UTF-8", $self->Head->get('To') ) );
-    my @CcObjs = Email::Address->parse( Encode::decode( "UTF-8", $self->Head->get('Cc') ) );
-
-    foreach my $AddrObj ( @ToObjs, @CcObjs ) {
-        my $Address = $AddrObj->address;
-        my $user = RT::User->new(RT->SystemUser);
-        $Address = $user->CanonicalizeEmailAddress($Address);
-        next if lc $args{'CurrentUser'}->EmailAddress eq lc $Address;
-        next if $self->IsRTAddress($Address);
-
-        push ( @Addresses, $Address );
-    }
-    return (@Addresses);
-}
-
-
 =head2 IsRTaddress ADDRESS
 
 Takes a single parameter, an email address. 
@@ -473,10 +438,10 @@ sub _SetupMIMEParser {
     # of File::Spec->tmpdir (e.g., /tmp) beacuse it isn't always
     # writable.
     my $tmpdir;
-    if ( -w $RT::VarPath ) {
-        $tmpdir = File::Temp::tempdir( DIR => $RT::VarPath, CLEANUP => 1 );
-    } elsif (-w File::Spec->tmpdir) {
+    if (-w File::Spec->tmpdir) {
         $tmpdir = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
+    } elsif ( -w $RT::VarPath ) {
+        $tmpdir = File::Temp::tempdir( DIR => $RT::VarPath, CLEANUP => 1 );
     } else {
         $RT::Logger->crit("Neither the RT var directory ($RT::VarPath) nor the system tmpdir (@{[File::Spec->tmpdir]}) are writable; falling back to in-memory parsing!");
     }
@@ -531,6 +496,9 @@ use Email::Address::List;
 sub ParseEmailAddress {
     my $self = shift;
     my $address_string = shift;
+
+    # Some broken mailers send:  ""Vincent, Jesse"" <jesse@fsck.com>. Hate
+    $address_string =~ s/\"\"(.*?)\"\"/\"$1\"/g;
 
     my @list = Email::Address::List->parse(
         $address_string,

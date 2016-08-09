@@ -46,7 +46,9 @@ Set($OldestTransactionsFirst, 0);
 
 Set($MaxAttachmentSize, 25_000_000);
 Set($MaxInlineBody, 8000000);
+Set($SuppressInlineTextFiles, 1);
 Set($ParseNewMessageForTicketCcs, 1);
+Set($ShowHistory, 'scroll');
 
 # Set($RTAddressRegexp, '^.+\@rt.netways.de$');
 Set($RTAddressRegexp, '^(nobody\@web\.|.+\@rt\.|(service|info|office|abuse|billing|changes|einkauf|events|fax|hardware|hostmaster|reports|.*support|sales|shop|sun|tradoria|tickets?|grafik|telekom|hq|jobs?)\@)netways\.de$');
@@ -87,13 +89,11 @@ Plugin('RTx::QueueCategories');
 Plugin('RTx::Actitime');
 Plugin('RTx::EmailHeader');
 Plugin('RT::Extension::ExtractCustomFieldValues');
-Plugin('RT::Extension::Assets');
 Plugin('RTx::SearchMarker');
 Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
 Plugin('RTx::Action::ChangeOwner');
-Plugin('RT::Authen::ExternalAuth');
 
 # Full text search
 Set(%FullTextSearch,
@@ -212,6 +212,7 @@ Set($RTx_QueueCategories_Map, [
 Set($HomepageComponents, [qw(
        QuickCreate
        Quicksearch
+       QueueList
        MyAdminQueues
        MySupportQueues
        MyReminders

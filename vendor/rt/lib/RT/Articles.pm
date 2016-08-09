@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -57,6 +57,7 @@ sub Table {'Articles'}
 
 sub _Init {
     my $self = shift;
+    $self->{'with_disabled_column'} = 1;
     $self->OrderByCols(
         { FIELD => 'SortOrder', ORDER => 'ASC' },
         { FIELD => 'Name',      ORDER => 'ASC' },

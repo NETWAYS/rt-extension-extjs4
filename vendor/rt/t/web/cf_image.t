@@ -12,6 +12,7 @@ $m->submit_form_ok({
         Name          => 'Images',
         TypeComposite => 'Image-1',
         LookupType    => 'RT::Queue-RT::Ticket',
+        EntryHint     => 'Upload one image',
     },
 });
 $m->content_contains("Object created");
@@ -19,10 +20,10 @@ my $cfid = $m->form_name('ModifyCustomField')->value('id');
 ok $cfid, "Created CF correctly";
 
 $m->follow_link_ok( {id => "page-applies-to"} );
-$m->form_with_fields( "AddCustomField-1" );
-$m->tick( "AddCustomField-1", 0 );
+$m->form_with_fields( "AddCustomField-2" );
+$m->tick( "AddCustomField-2", 0 );
 $m->click_ok( "UpdateObjs" );
-$m->content_contains("Object created");
+$m->content_contains("Globally added custom field Images");
 
 
 $m->submit_form_ok({
@@ -45,7 +46,7 @@ $m->content_contains("Upload one image");
 $m->submit_form_ok({
     form_name => "TicketModify",
     fields    => {
-        "Object-RT::Ticket-1-CustomField-1-Upload" =>
+        "Object-RT::Ticket-1-CustomField-2-Upload" =>
             RT::Test::get_relocatable_file('bpslogo.png', '..', 'data'),
     },
 });
@@ -53,7 +54,7 @@ $m->content_contains("bpslogo.png added");
 $m->content_contains("/Download/CustomFieldValue/1/bpslogo.png");
 
 $m->form_name("TicketModify");
-$m->tick("Object-RT::Ticket-1-CustomField-1-DeleteValueIds", 1);
+$m->tick("Object-RT::Ticket-1-CustomField-2-DeleteValueIds", 1);
 $m->click_ok("SubmitTicket");
 $m->content_lacks("/Download/CustomFieldValue/1/bpslogo.png");
 

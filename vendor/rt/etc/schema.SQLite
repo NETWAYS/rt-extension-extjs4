@@ -30,13 +30,12 @@ CREATE TABLE Queues (
   CommentAddress varchar(120) collate NOCASE NULL  ,
   Lifecycle varchar(32) collate NOCASE NULL  ,
   SubjectTag varchar(120) collate NOCASE NULL  ,
-  InitialPriority integer NULL DEFAULT 0 ,
-  FinalPriority integer NULL DEFAULT 0 ,
-  DefaultDueIn integer NULL DEFAULT 0 ,
+  SortOrder integer NOT NULL DEFAULT 0 ,
   Creator integer NULL DEFAULT 0 ,
   Created DATETIME NULL  ,
   LastUpdatedBy integer NULL DEFAULT 0 ,
   LastUpdated DATETIME NULL  ,
+  SLADisabled int2 NOT NULL DEFAULT 1,
   Disabled int2 NOT NULL DEFAULT 0 
  
 ) ;
@@ -69,7 +68,6 @@ CREATE INDEX Links4 ON Links(Type,LocalBase);
 CREATE TABLE Principals (
         id INTEGER PRIMARY KEY,
         PrincipalType VARCHAR(16) collate NOCASE not null,
-        ObjectId integer,
         Disabled int2 NOT NULL DEFAULT 0 
         
 ) ;
@@ -83,7 +81,6 @@ CREATE TABLE Groups (
   Name varchar(200) collate NOCASE NULL  ,
   Description varchar(255) collate NOCASE NULL  ,
   Domain varchar(64) collate NOCASE,
-  Type varchar(64) collate NOCASE,
   Instance integer,
   Creator integer NOT NULL DEFAULT 0  ,
   Created DATETIME NULL  ,
@@ -92,9 +89,8 @@ CREATE TABLE Groups (
   
 ) ;
 
-CREATE INDEX Groups1 ON Groups (Domain,Type,Instance);
-CREATE INDEX Groups2 ON Groups (Domain,Name,Instance);
-CREATE INDEX Groups3 ON Groups (Instance);
+CREATE INDEX Groups1 ON Groups (Domain,Name,Instance);
+CREATE INDEX Groups2 ON Groups (Instance);
 
 --- }}}
 
@@ -250,12 +246,6 @@ CREATE TABLE Users (
   RealName varchar(120) collate NOCASE NULL  ,
   NickName varchar(16) collate NOCASE NULL  ,
   Lang varchar(16) collate NOCASE NULL  ,
-  EmailEncoding varchar(16) collate NOCASE NULL  ,
-  WebEncoding varchar(16) collate NOCASE NULL  ,
-  ExternalContactInfoId varchar(100) collate NOCASE NULL  ,
-  ContactInfoSystem varchar(30) collate NOCASE NULL  ,
-  ExternalAuthId varchar(100) collate NOCASE NULL  ,
-  AuthSystem varchar(30) collate NOCASE NULL  ,
   Gecos varchar(16) collate NOCASE NULL  ,
   HomePhone varchar(30) collate NOCASE NULL  ,
   WorkPhone varchar(30) collate NOCASE NULL  ,
@@ -268,7 +258,6 @@ CREATE TABLE Users (
   Zip varchar(16) collate NOCASE NULL  ,
   Country varchar(50) collate NOCASE NULL  ,
   Timezone char(50) NULL  ,
-  PGPKey text collate NOCASE NULL,
   SMIMECertificate text collate NOCASE NULL,
 
   Creator integer NULL DEFAULT 0 ,
@@ -293,8 +282,6 @@ CREATE TABLE Tickets (
   IsMerged int2 NULL DEFAULT NULL,
   Queue integer NULL DEFAULT 0 ,
   Type varchar(16) collate NOCASE NULL  ,
-  IssueStatement integer NULL DEFAULT 0 ,
-  Resolution integer NULL DEFAULT 0 ,
   Owner integer NULL DEFAULT 0 ,
   Subject varchar(200) collate NOCASE NULL DEFAULT '[no subject]' ,
   InitialPriority integer NULL DEFAULT 0 ,
@@ -303,6 +290,7 @@ CREATE TABLE Tickets (
   TimeEstimated integer NULL DEFAULT 0 ,
   TimeWorked integer NULL DEFAULT 0 ,
   Status varchar(64) collate NOCASE NULL  ,
+  SLA varchar(64) collate NOCASE NULL  ,
   TimeLeft integer NULL DEFAULT 0 ,
   Told DATETIME NULL  ,
   Starts DATETIME NULL  ,
@@ -314,9 +302,7 @@ CREATE TABLE Tickets (
   LastUpdatedBy integer NULL DEFAULT 0 ,
   LastUpdated DATETIME NULL  ,
   Creator integer NULL DEFAULT 0 ,
-  Created DATETIME NULL  ,
-  Disabled int2 NOT NULL DEFAULT 0
-  
+  Created DATETIME NULL
 ) ;
 
 CREATE INDEX Tickets1 ON Tickets (Queue, Status) ;
@@ -400,6 +386,7 @@ CREATE TABLE CustomFields (
   Description varchar(255) collate NOCASE NULL  ,
   SortOrder integer NOT NULL DEFAULT 0  ,
   LookupType varchar(255) collate NOCASE NOT NULL,
+  EntryHint varchar(255) NULL,
 
   Creator integer NOT NULL DEFAULT 0  ,
   Created DATETIME NULL  ,
@@ -485,6 +472,7 @@ SortOrder integer NOT NULL DEFAULT 0,
 Class integer NOT NULL DEFAULT 0,
 Parent integer NOT NULL DEFAULT 0,
 URI varchar(255) collate NOCASE,
+Disabled smallint NOT NULL DEFAULT 0,
 Creator integer NOT NULL DEFAULT 0,
 Created TIMESTAMP NULL,
 LastUpdatedBy integer NOT NULL DEFAULT 0,
@@ -519,3 +507,63 @@ Created TIMESTAMP NULL,
 LastUpdatedBy integer NOT NULL DEFAULT 0,
 LastUpdated TIMESTAMP NULL
 );
+
+CREATE TABLE Assets (
+    id                INTEGER PRIMARY KEY,
+    Name              varchar(255)    NOT NULL DEFAULT '',
+    Catalog           int(11)         NOT NULL DEFAULT 0,
+    Status            varchar(64)     NOT NULL DEFAULT '',
+    Description       varchar(255)    NOT NULL DEFAULT '',
+    Creator           int(11)         NOT NULL DEFAULT 0,
+    Created           timestamp                DEFAULT NULL,
+    LastUpdatedBy     int(11)         NOT NULL DEFAULT 0,
+    LastUpdated       timestamp                DEFAULT NULL
+);
+
+CREATE INDEX AssetsName on Assets (Name);
+CREATE INDEX AssetsStatus ON Assets (Status);
+CREATE INDEX AssetsCatalog ON Assets (Catalog);
+
+CREATE TABLE Catalogs (
+    id                INTEGER PRIMARY KEY,
+    Name              varchar(255)    NOT NULL DEFAULT '',
+    Lifecycle         varchar(32)     NOT NULL DEFAULT 'assets',
+    Description       varchar(255)    NOT NULL DEFAULT '',
+    Disabled          int2            NOT NULL DEFAULT 0,
+    Creator           int(11)         NOT NULL DEFAULT 0,
+    Created           timestamp                DEFAULT NULL,
+    LastUpdatedBy     int(11)         NOT NULL DEFAULT 0,
+    LastUpdated       timestamp                DEFAULT NULL
+);
+
+CREATE INDEX CatalogsName on Catalogs (Name);
+CREATE INDEX CatalogsDisabled ON Catalogs (Disabled);
+
+CREATE TABLE CustomRoles (
+  id INTEGER NOT NULL  ,
+  Name varchar(200) collate NOCASE NULL  ,
+  Description varchar(255) collate NOCASE NULL  ,
+  MaxValues integer,
+  EntryHint varchar(255) collate NOCASE NULL  ,
+
+  Creator integer NOT NULL DEFAULT 0  ,
+  Created DATETIME NULL  ,
+  LastUpdatedBy integer NOT NULL DEFAULT 0  ,
+  LastUpdated DATETIME NULL  ,
+  Disabled int2 NOT NULL DEFAULT 0 ,
+  PRIMARY KEY (id)
+) ;
+
+CREATE TABLE ObjectCustomRoles (
+  id INTEGER NOT NULL  ,
+  CustomRole int NOT NULL  ,
+  ObjectId integer NOT NULL,
+  SortOrder integer NOT NULL DEFAULT 0  ,
+
+  Creator integer NOT NULL DEFAULT 0  ,
+  Created DATETIME NULL  ,
+  LastUpdatedBy integer NOT NULL DEFAULT 0  ,
+  LastUpdated DATETIME NULL  ,
+  PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX ObjectCustomRoles1 ON ObjectCustomRoles (ObjectId, CustomRole);

@@ -3,7 +3,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -215,7 +215,7 @@ foreach my $table ( qw(Users Groups) ) {
                 }
                 elsif ( $a eq 'c' ) {
                     my $principal_id = create_record( 'Principals',
-                        id => $id, PrincipalType => $type, ObjectId => $id, Disabled => 0
+                        id => $id, PrincipalType => $type, Disabled => 0
                     );
                 }
                 else {
@@ -249,7 +249,7 @@ push @CHECKS, 'User <-> ACL equivalence group' => sub {
     # from user to group
     $res *= check_integrity(
         'Users', 'id' => 'Groups', 'Instance',
-        join_condition   => 't.Domain = ? AND t.Type = ?',
+        join_condition   => 't.Domain = ? AND t.Name = ?',
         bind_values => [ 'ACLEquivalence',  'UserEquiv' ],
         action => sub {
             my $id = shift;
@@ -258,14 +258,14 @@ push @CHECKS, 'User <-> ACL equivalence group' => sub {
             );
 
             my $gid = create_record( 'Groups',
-                Domain => 'ACLEquivalence', Type => 'UserEquiv', Instance => $id,
+                Domain => 'ACLEquivalence', Name => 'UserEquiv', Instance => $id,
             );
         },
     );
     # from group to user
     $res *= check_integrity(
         'Groups', 'Instance' => 'Users', 'id',
-        condition   => 's.Domain = ? AND s.Type = ?',
+        condition   => 's.Domain = ? AND s.Name = ?',
         bind_values => [ 'ACLEquivalence',  'UserEquiv' ],
         action => sub {
             my $id = shift;
@@ -280,7 +280,7 @@ push @CHECKS, 'User <-> ACL equivalence group' => sub {
     $res *= check_uniqueness(
         'Groups',
         columns     => ['Instance'],
-        condition   => '.Domain = ? AND .Type = ?',
+        condition   => '.Domain = ? AND .Name = ?',
         bind_values => [ 'ACLEquivalence',  'UserEquiv' ],
     );
     return $res;
@@ -341,11 +341,11 @@ push @CHECKS, 'Tickets <-> Role Groups' => sub {
 };
 
 # additional CHECKS on groups
-push @CHECKS, 'Role Groups (Instance, Type) uniqueness' => sub {
-    # Check that Domain, Instance and Type are unique
+push @CHECKS, 'Role Groups (Instance, Name) uniqueness' => sub {
+    # Check that Domain, Instance and Name are unique
     return check_uniqueness(
         'Groups',
-        columns     => ['Domain', 'Instance', 'Type'],
+        columns     => ['Domain', 'Instance', 'Name'],
         condition   => '.Domain LIKE ?',
         bind_values => [ '%-Role' ],
     );
@@ -354,7 +354,7 @@ push @CHECKS, 'Role Groups (Instance, Type) uniqueness' => sub {
 push @CHECKS, 'System internal group uniqueness' => sub {
     return check_uniqueness(
         'Groups',
-        columns     => ['Instance', 'Type'],
+        columns     => ['Instance', 'Name'],
         condition   => '.Domain = ?',
         bind_values => [ 'SystemInternal' ],
     );
@@ -368,7 +368,7 @@ push @CHECKS, 'User Defined Group Name uniqueness' => sub {
         condition       => '.Domain = ?',
         bind_values     => [ 'UserDefined' ],
         extra_tables    => ['Principals sp', 'Principals tp'],
-        extra_condition => join(" and ", map { "$_.id = ${_}p.ObjectId and ${_}p.PrincipalType = ? and ${_}p.Disabled != 1" } qw(s t)),
+        extra_condition => join(" and ", map { "$_.id = ${_}p.id and ${_}p.PrincipalType = ? and ${_}p.Disabled != 1" } qw(s t)),
         extra_values    => ['Group', 'Group'],
         action          => sub {
             return unless prompt(
@@ -378,6 +378,22 @@ push @CHECKS, 'User Defined Group Name uniqueness' => sub {
             my $id = shift;
             my %cols = @_;
             update_records('Groups', { id => $id }, { Name => join('-', $cols{'Name'}, $id) });
+        },
+    );
+};
+
+push @CHECKS, 'Custom Role Name uniqueness' => sub {
+    return check_uniqueness(
+        'CustomRoles',
+        columns         => ['Name'],
+        action          => sub {
+            return unless prompt(
+                'Rename', "Found a custom role with a non-unique Name."
+            );
+
+            my $id = shift;
+            my %cols = @_;
+            update_records('CustomRoles', { id => $id }, { Name => join('-', $cols{'Name'}, $id) });
         },
     );
 };
@@ -856,7 +872,7 @@ FROM
     Groups g JOIN $table m ON g.id = m.$column
 WHERE
     g.Domain = ?
-    AND g.Type = ?
+    AND g.Name = ?
 END
             my $action = sub {
                 my ($gid, $uid) = @_;

@@ -24,8 +24,7 @@ RUN rt4-install-extensions.sh \
   rtx-updatehistory \
   rtx-usersearch \
   rtx-action-changeowner \
-  RT-Extension-ExtractCustomFieldValues \
-  RT-Authen-ExternalAuth
+  RT-Extension-ExtractCustomFieldValues
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
 

@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -51,22 +51,28 @@
     <td class="value"><% $Ticket->CreatedObj->AsString %></td>
   </tr>
 % $m->callback( %ARGS, CallbackName => 'AfterCreated', TicketObj => $Ticket );
-  <tr class="date starts">
+  <tr class="date starts<% $Ticket->StartsObj->Unix ? q{} : q{ unset-field}%>">
     <td class="label"><&|/l&>Starts</&>:</td>\
     <td class="value"><% $Ticket->StartsObj->AsString %></td>
   </tr>
 % $m->callback( %ARGS, CallbackName => 'AfterStarts', TicketObj => $Ticket );
-  <tr class="date started">
+  <tr class="date started<% $Ticket->StartedObj->Unix ? q{} : q{ unset-field}%>">
     <td class="label"><&|/l&>Started</&>:</td>\
     <td class="value"><% $Ticket->StartedObj->AsString %></td>
   </tr>
 % $m->callback( %ARGS, CallbackName => 'AfterStarted', TicketObj => $Ticket );
-  <tr class="date told">
-    <td class="label"><a href="<% RT->Config->Get('WebPath') %>/Ticket/Display.html?id=<% $Ticket->id %>&Action=SetTold"><&|/l&>Last Contact</&></a>:</td>\
-    <td class="value"><% $Ticket->ToldObj->AsString %></td>
+  <tr class="date told<% $Ticket->ToldObj->Unix || $Ticket->CurrentUserHasRight('ModifyTicket') ? q{} : q{ unset-field}%>">
+    <td class="label">
+% if ( $Ticket->CurrentUserHasRight('ModifyTicket' ) ) {
+<a href="<% RT->Config->Get('WebPath') %>/Ticket/Display.html?id=<% $Ticket->id %>&Action=SetTold"><&|/l&>Last Contact</&></a>:
+% } else {
+<&|/l&>Last Contact</&>:
+% }
+</td><td class="value"><% $Ticket->ToldObj->AsString %></td>
   </tr>
 % $m->callback( %ARGS, CallbackName => 'AfterTold', TicketObj => $Ticket );
-  <tr class="date due">
+
+  <tr class="date due<% $Ticket->DueObj->Unix ? q{} : q{ unset-field}%>">
     <td class="label"><&|/l&>Due</&>:</td>\
 % my $due = $Ticket->DueObj;
 % if ( $due && $due->IsSet && $due->Diff < 0 && $Ticket->QueueObj->IsActiveStatus($Ticket->Status) ) {
@@ -76,11 +82,13 @@
 % }
   </tr>
 % $m->callback( %ARGS, CallbackName => 'AfterDue', TicketObj => $Ticket );
-  <tr class="date resolved">
+
+  <tr class="date resolved<% $Ticket->ResolvedObj->Unix ? q{} : q{ unset-field}%>">
     <td class="label"><&|/l&>Closed</&>:</td>\
     <td class="value"><% $Ticket->ResolvedObj->AsString  %></td>
   </tr>
 % $m->callback( %ARGS, CallbackName => 'AfterResolved', TicketObj => $Ticket );
+
   <tr class="date updated">
     <td class="label"><&|/l&>Updated</&>:</td>\
 % my $UpdatedString = $Ticket->LastUpdated ? loc("[_1] by [_2]", $Ticket->LastUpdatedAsString, $m->scomp('/Elements/ShowUser', User => $Ticket->LastUpdatedByObj)) : loc("Never");
