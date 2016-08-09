@@ -25,6 +25,7 @@ RUN cd $RT_SOURCE/rt \
       --enable-gd \
       --enable-gpg \
       --enable-smime \
+      --enable-externalauth \
       --with-web-handler=modperl2 \
       --with-db-type=SQLite \
       && make install \
