@@ -28,7 +28,9 @@ Set($OldestTransactionsFirst, 0);
 
 Set($MaxAttachmentSize, 25_000_000);
 Set($MaxInlineBody, 8000000);
+Set($SuppressInlineTextFiles, 1);
 Set($ParseNewMessageForTicketCcs, 1);
+Set($ShowHistory, 'scroll');
 
 Set($RTAddressRegexp, '^(info|xrt|rt|events|shop|partner|support|sales|automail|infrastructure)\@(rt\.)?icinga\.org$');
 Set($CorrespondAddress , 'rt@icinga.org');
