@@ -1,14 +1,17 @@
-FROM rt4netways_source
+FROM rt4/source
 
-ENV POSTFIX_MAILNAME "rt.localhost"
-ENV POSTFIX_MAILER_TYPE "Internet Site"
+ARG POSTFIX_MAILNAME
+ARG "POSTFIX_MAILER_TYPE
+
+ENV POSTFIX_MAILNAME ${POSTFIX_MAILNAME:-rt.localhost}
+ENV POSTFIX_MAILER_TYPE ${POSTFIX_MAILER_TYPE:-"Internet Site"}
 
 RUN touch /etc/mailname && echo "$POSTFIX_MAILNAME" > /etc/mailname
-
 RUN echo "postfix postfix/mailname                string  ${POSTFIX_MAILNAME}" | debconf-set-selections
 RUN echo "postfix postfix/main_mailer_type        select  ${POSTFIX_MAILER_TYPE}" | debconf-set-selections
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
     supervisor \
     postfix \
     cron \
@@ -19,9 +22,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     logrotate \
     nfs-common \
     vim \
-    && rm -rf /var/lib/apt/lists/*
-
-EXPOSE 25 80 443
+  && rm -rf /var/lib/apt/lists/*
 
 COPY ./rootfs/generic/etc/supervisor/conf.d/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 COPY ./rootfs/generic/etc/apache2/sites-available/rt.conf /etc/apache2/sites-available/rt.conf
@@ -43,5 +44,7 @@ RUN /usr/sbin/a2enmod mpm_prefork ssl ldap authnz_ldap rewrite expires headers \
 	&& /usr/sbin/a2ensite rt \
 	&& /usr/sbin/a2enconf netways-ldap \
 	&& /usr/sbin/a2dissite 000-default
+
+EXPOSE 25 80 443
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]

@@ -1,10 +1,15 @@
-FROM rt4netways_runtime
+FROM rt4/runtime
 
-ENV RTHOME /opt/rt4
+ARG RT_SOURCE
+
+ENV RTHOME ${RTHOME:-/opt/rt4}
+ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
 
 COPY ./rootfs/netways/ /
 
-RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm && chown root.rt /opt/rt4/etc/RT_SiteConfig.pm
+RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
+  && chown root.rt /opt/rt4/etc/RT_SiteConfig.pm
+
 RUN rt4-install-extensions.sh \
   rtx-action-setowner \
   rtx-actitime \

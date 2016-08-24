@@ -1,6 +1,9 @@
-FROM rt4netways_runtime
+FROM rt4/runtime
 
-ENV RTHOME /opt/rt4
+ARG RT_SOURCE
+
+ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
+ENV RTHOME ${RTHOME:-/opt/rt4}
 
 COPY ./rootfs/icinga/ /
 

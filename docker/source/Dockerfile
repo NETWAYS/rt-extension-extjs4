@@ -1,16 +1,22 @@
-FROM rt4netways_library
+FROM rt4/library
 
-ENV RT_BUILD_DIR  /opt/rt4-build
-ENV RT_CONFIG_DIR $RT_BUILD_DIR/conf.d
-ENV PATH          $RT_BUILD_DIR/bin:$PATH
-ENV RT_SOURCE     /opt/rt4-build/src
-ENV RT_PREFIX     /opt/rt4
-ENV RT_VERSION    rt-4.4.1
+ARG RT_BUILD_DIR
+ARG RT_CONFIG_DIR
+ARG RT_SOURCE
+ARG RT_PREFIX
+ARG RT_VERSION
 
-COPY ./vendor ${RT_SOURCE}
+ENV RT_PREFIX ${RT_PREFIX:-/opt/rt4}
+ENV RT_BUILD_DIR ${RT_BUILD_DIR:-/opt/rt4-build}
+ENV RT_CONFIG_DIR $RT_CONFIG_DIR:-/opt/rt4-build/conf.d}
+ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
+ENV RT_VERSION ${RT_VERSION:-rt-4.4.1}
 
-COPY ./rootfs/generic/opt/rt4-build/bin/* $RT_BUILD_DIR/bin/
+COPY ./vendor $RT_SOURCE
+COPY ./rootfs/generic/usr/local/sbin/rt4-install-extensions.sh \
+  /usr/local/sbin/rt4-install-extensions.sh
 
+RUN chmod 755 /usr/local/sbin/rt4-install-extensions.sh
 RUN addgroup --system rt && adduser root rt
 
 RUN echo $RT_VERSION > /opt/rt4-build/VERSION \
@@ -26,7 +32,7 @@ RUN cd $RT_SOURCE/rt \
       --enable-gpg \
       --enable-smime \
       --enable-externalauth \
-      --with-web-handler=modperl2 \
+      --with-web-handler=modperl2,standalone \
       --with-db-type=SQLite \
       && make install \
       && /usr/bin/perl \
@@ -37,9 +43,9 @@ RUN cd $RT_SOURCE/rt \
           --force --dba="" \
           --dba-password=""
 
-RUN mkdir -p /opt/rt4/var/data/gpg \
-  && chown 33.33 /opt/rt4/var/data/gpg \
-  && mkdir -p /opt/rt4/var/data/smime \
-  && chown 33.33 /opt/rt4/var/data/smime \
-  && mkdir -p /opt/rt4/var/data/RT-Shredder \
-  && chown 33.33 /opt/rt4/var/data/RT-Shredder
+RUN mkdir -p $RT_PREFIX/var/data/gpg \
+  && chown 33.33 $RT_PREFIX/var/data/gpg \
+  && mkdir -p $RT_PREFIX/var/data/smime \
+  && chown 33.33 $RT_PREFIX/var/data/smime \
+  && mkdir -p $RT_PREFIX/var/data/RT-Shredder \
+  && chown 33.33 $RT_PREFIX/var/data/RT-Shredder
