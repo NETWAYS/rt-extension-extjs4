@@ -1,8 +1,15 @@
-# rt4netways Docker Environment
+# NETWAYS Docker Environment
+
+Specs:
+
+    Begin:               2015-11-19    
+    Version:             1.1.0 (2016-08)
+    RT Version:          4.2.1 (2016-08-09)
+
 
 ## Allgemein
 
-Die rt4netways Docker Umgebung beinhaltet einen Satz von Images und
+Die Dockerumgebung (rt4netways) beinhaltet einen Satz von Images und
 Konfigurationen welche produktive Laufzeitumgebungen für den RequestTracker
 beinhalten.
 
@@ -10,9 +17,14 @@ beinhalten.
 
 Zum Betrieb sind folgende Werkzeuge erforderlich:
 
-* Make
-* docker
-* docker-compose
+* make ```(deprecared)```
+* docker ```1.10.0+```
+* docker-compose ```1.6.0+```
+
+> **Achtung:** Seit August 2016 wurde der Kit auf Version 2 des Konfigformates
+> umgestellt. Die Imagenamen, Dockerfiles und Compose-Services sind
+> untereinander nicht mehr kompatibel. Container, Images und andere Abhängigkeiten
+> müssen neu erstellt werden.
 
 ## Kurzanleitung
 
@@ -25,37 +37,31 @@ Zum Betrieb sind folgende Werkzeuge erforderlich:
 
 ## Schichtung der Docker-Images
 
-Die Docker-Images gliedern sich in folgende Einzelschichten
+Die Docker-Images gliedern sich in einzelne Schichten. Dadurch muss nicht immer
+das vollständige Image gebaut werden sondern z.B. die Perl Library einzeln
+gebaut werden.
 
-### base
+Folgende Images werden von Compose erstellt:
 
-Grundsystem, Installation von Tools, setzen der Zeitzone und LANG Konstanten.
+### Build Helper
 
-### library
-
-Vorbereiten des Systems auf ein RT Build Environment und Installation der
-Abhängigkeiten.
-
-### source
-
-Kopieren der Sourcen und Modulen auf das System, Source vorbereiten und
-Installation eines Standalone RT Systems mit SQLite und PLACK Standalone
-Webserver.
-
-### runtime
-
-Aufblasen des Images auf ein Produktivsystem durch die Installation von Cron,
-RSyslog, Apache und Postfix.
+| Image      | Beschreibung |
+|------------|--------------|
+| ```rt4/base``` | Grundsystem, Installation von Tools und bereitstellen von System Upgraeds. |
+| ```rt4/library``` | Perl Bibliotheken werden mit Hilfe von Debian Repos und CPAN installiert. |
+| ```rt4/source``` | RT Source Code wird konfguriert, installiert. Ab diesem Image ist der RT läuffähig. |
+| ```rt4/runtime``` | Apache2, Postfix, Cron werden konfiguriert und dem Supervisor im Vordergrund gestartet. |
 
 ### Produktiv-Images
 
-#### icinga
+Diese Images können direkt gestartet werden und beherbergen Ihre eigene
+Konfiguration
 
-Produktive Instanz für Icinga mit entfernten MySQL Server.
-
-#### netways
-
-Produktive Instanz für NETWAYS mit entfernten MySQL Server.
+| Image      | Beschreibung |
+|------------|--------------|
+| ```rt4/rt4icinga``` | RT für Icinga: https://rt.icinga.org |
+| ```rt4/netways``` | RT für Icinga: https://rt.icinga.org |
+| ```rt4/devkit``` | Entwicklungsumgebung, Perl embedded Webserver und SQLite. |
 
 ## Init System
 
@@ -76,8 +82,21 @@ möglich, etwa `apache2` neuzustarten um RT-Perl-Module zu laden.
 Das Docker Workdir ist auf `./` angelegt. Die einzelnen Images liegen
 allerdings in Einzeldateien im Verzeichnis `./docker`.
 
-Mit `docker-compose` werden die Images mit einem Prefix versehen. Das Image
-für Icinga erhält also den Namen: `rt4netways_icinga`.
+Mit der Syntax Version 2 von  `docker-compose` können nun die typischen
+Namespaces verwendet werden. Baut man alle verfügbaren Images erhält man
+folgende Liste:
+
+```
+# docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
+rt4/rt4devkit       latest              d2e03d386dbc        About a minute ago   888.9 MB
+rt4/rt4icinga       latest              0676b893a07f        2 minutes ago        1.186 GB
+rt4/rt4netways      latest              775cc1d40779        3 minutes ago        1.186 GB
+rt4/runtime         latest              111722496211        5 minutes ago        969.1 MB
+rt4/source          latest              82b04d541834        7 minutes ago        888.9 MB
+rt4/library         latest              5c255e404b59        8 minutes ago        606 MB
+rt4/base            latest              6a6daef8e054        17 minutes ago       327.4 MB
+````
 
 ## RootFS
 
@@ -151,7 +170,7 @@ Start des RT folgendermaßen:
       -p 25:25 \
       -p 80:80 \
       -p 443:443 \
-      rt4netways_netways
+      rt4/rt4netways
 
 ### Start der Icinga Instanz
 
@@ -166,7 +185,7 @@ Start des RT für Icinga folgendermaßen:
       -p 25:25 \
       -p 80:80 \
       -p 443:443 \
-      rt4netways_icinga
+      rt4netways/rt4icinga
 
 ## Updates
 
@@ -270,3 +289,9 @@ Den neuen Docker-Container mittels Start-Script in `/home/rt` starten.
 Zum Beispiel zur Anbindung der Mailsysteme sind im Verzeichnis `./doc`
 untergebracht.
 
+# Appendix
+
+## Links
+
+* [Issue Tracker auf project.netways.de](https://project.netways.de/projects/netrt)
+* [Gitlab Projekt auf gitlab.netways.org](https://gitlab.netways.org/groups/RequestTracker)
