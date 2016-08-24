@@ -1,4 +1,13 @@
+.dockerignore.*
+!.git*
+!.gitattributes
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+Session.vim
+.netrwhist
+*~
+tags
 .sconsign*
-.DS_Store
 *.sublime-workspace
 rt4netways.tgz
+

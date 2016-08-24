@@ -1,13 +1,11 @@
-SHELL								= /bin/bash
-DOCKER_COMPOSE			= $(shell command -v docker-compose)
-DOCKER							= $(shell command -v docker)
-GIT									= $(shell command -v git)
-GIT_EXPORT_FILE			= rt4netways.tgz
-DOCKER_COMPOSE_YML	= docker-compose.yml
-DOCKER_BASE_IMAGES	= base library source runtime
-DOCKER_PROD_IMAGES	= netways icinga
-DOCKER_IMAGE_PREFIX	= rt4netways
-IMAGES_DANGLING			= $(shell ${DOCKER} images -q -f dangling=true)
+SHELL=/bin/bash
+DOCKER_COMPOSE=$(shell command -v docker-compose)
+DOCKER=$(shell command -v docker)
+GIT=$(shell command -v git)
+GIT_EXPORT_FILE=rt4netways.tgz
+DOCKER_BASE_IMAGES=base library source runtime
+DOCKER_PROD_IMAGES=netways icinga devkit
+IMAGES_DANGLING=$(shell ${DOCKER} images -q -f dangling=true)
 
 all: help
 
@@ -16,12 +14,14 @@ help:
 	@echo ""
 	@echo "  make base-images"
 	@echo ""
+	@echo "  make <name>"
+	@echo ""
+	@echo "Base images: ${DOCKER_BASE_IMAGES}"
+	@echo "Prod images: ${DOCKER_PROD_IMAGES}"
+	@echo ""
 
 $(DOCKER_BASE_IMAGES) $(DOCKER_PROD_IMAGES):
-	${DOCKER_COMPOSE} \
-			--project-name=${DOCKER_IMAGE_PREFIX} \
-			--file=${DOCKER_COMPOSE_YML} \
-			build $@
+	${DOCKER_COMPOSE} build $@
 
 base-images: $(DOCKER_BASE_IMAGES)
 
