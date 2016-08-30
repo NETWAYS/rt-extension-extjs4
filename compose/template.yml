@@ -1,0 +1,53 @@
+version: '2'
+services:
+  default-image:
+    network_mode: 'bridge'
+    restart: on-failure:5
+
+  build-image:
+    extends:
+      service: "default-image"
+    build:
+      context: ../
+    environment:
+      - TZ=Europe/Berlin
+      - LANG=C.UTF-8
+      - RT_SOURCE=/opt/rt4-build/src
+      - RT_BUILD_DIR=/opt/rt4-build
+      - RT_PREFIX=/opt/rt4
+      - RT_CONFIG_DIR=/opt/rt4-build/conf.d
+      - RT_VERSION=rt-4.4.1
+      - RT_DB_TYPE=SQLite
+      - RT_ENABLE_DEVELOPER=no
+      - RTHOME=/opt/rt4
+
+  runtime-image:
+    extends:
+      service: "build-image"
+    privileged: true
+    build:
+      args:
+        - RT_SOURCE=/usr/local/src/rt-4.2
+    dns:
+      - 10.0.1.20
+      - 10.0.1.21
+      - 8.8.8.8
+    dns_search:
+      - adm.netways.de
+      - icinga.netways.de
+      - int.netways.de
+      - netways.de
+
+  production-image:
+    extends:
+      service: "runtime-image"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "25:25"
+
+  development-image:
+    extends:
+      service: "runtime-image"
+    ports:
+      - "8080:8080"

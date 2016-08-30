@@ -1,36 +1,76 @@
-base:
-  build: .
-  dockerfile: docker/base/Dockerfile
-library:
-  build: .
-  dockerfile: docker/library/Dockerfile
-source:
-  build: .
-  dockerfile: docker/source/Dockerfile
-runtime:
-  build: .
-  dockerfile: docker/runtime/Dockerfile
-netways:
-  build: .
-  dockerfile: docker/netways/Dockerfile
-  container_name: rt4netways
-  ports:
-    - 80
-    - 443
-    - 25
-  privileged: true
-  restart: always
-  extends:
-    service: runtime
-icinga:
-  build: .
-  dockerfile: docker/icinga/Dockerfile
-  container_name: rt4icinga
-  ports:
-    - 80
-    - 443
-    - 25
-  privileged: true
-  restart: always
-  extends:
-    service: runtime
+version: '2'
+
+services:
+  base:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: build-image
+    build:
+      dockerfile: docker/base/Dockerfile
+      args:
+        - DEBIAN_FRONTEND=noninteractive
+        - TZ=Europe/Berlin
+        - LANG=C.UTF-8
+    image: "$RT_BUILD_NS/base"
+
+  library:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: build-image
+    build:
+      dockerfile: ./docker/library/Dockerfile
+      args:
+        - RT_BUILD_DIR=/opt/rt4-build
+    image: "$RT_BUILD_NS/library"
+
+  source:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: build-image
+    build:
+      dockerfile: ./docker/source/Dockerfile
+      args:
+        - RT_BUILD_DIR=/opt/rt4-build
+        - RT_CONFIG_DIR=/opt/rt4-build/conf.d
+        - RT_SOURCE=/opt/rt4-build/src
+        - RT_PREFIX=/opt/rt4
+        - RT_VERSION=rt-4.4.1
+    image: "$RT_BUILD_NS/source"
+
+  runtime:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: build-image
+    build:
+      dockerfile: ./docker/runtime/Dockerfile
+      args:
+        - POSTFIX_MAILNAME=rt.localhost
+        - POSTFIX_MAILER_TYPE=Internet Site
+    image: "$RT_BUILD_NS/runtime"
+
+  netways:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: production-image
+    build:
+      dockerfile: ./docker/netways/Dockerfile
+    image: "$RT_BUILD_NS/rt4netways"
+    container_name: rt4netways
+
+  icinga:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: production-image
+    build:
+      dockerfile: ./docker/icinga/Dockerfile
+    image: "$RT_BUILD_NS/rt4icinga"
+    container_name: rt4icinga
+
+  devkit:
+    extends:
+      file: "$RT_COMPOSE_DIR/template.yml"
+      service: development-image
+    build:
+      dockerfile: ./docker/devkit/Dockerfile
+    image: "$RT_BUILD_NS/rt4devkit"
+    container_name: rt4devkit

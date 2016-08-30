@@ -8,4 +8,4 @@ docker run \
   -p 25:25 \
   -p 80:80 \
   -p 443:443 \
-  rt4netways_netways
+  rt4/rt4netways
