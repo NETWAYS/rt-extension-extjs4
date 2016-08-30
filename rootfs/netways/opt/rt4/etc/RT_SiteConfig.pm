@@ -94,6 +94,7 @@ Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
 Plugin('RTx::Action::ChangeOwner');
+Plugin('RT::CustomFieldValues::Assets');
 
 # Full text search
 Set(%FullTextSearch,
@@ -115,6 +116,8 @@ Set(@MasonParameters, (
 Set($WebSessionClass, "Apache::Session::File");
 
 ### Plugin Konfiguration ###
+# Customfield provider
+Set(@CustomFieldValuesSources, "RT::CustomFieldValues::Assets");
 
 # Authentication
 Set($WebRemoteUserAuth, 1);

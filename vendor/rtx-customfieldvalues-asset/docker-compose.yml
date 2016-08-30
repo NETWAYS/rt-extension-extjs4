@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+  assets:
+    image: 'rt4/rt4devkit'
+    ports:
+      - '8080:8080'
+    volumes:
+      - './:/opt/rt4/local/plugins/RT-CustomFieldValues-Assets:ro'
+      - './etc/assets.pm:/opt/rt4/etc/RT_SiteConfig.d/assets.pm:ro'
+      - './:/usr/local/src/rtx-customfieldvalues-assets'
+    environment:
+      - TZ=Europe/Berlin
+      - LANG=C.UTF-8
+      - RT_SOURCE=/opt/rt4-build/src
+      - RT_BUILD_DIR=/opt/rt4-build
+      - RT_PREFIX=/opt/rt4
+      - RT_CONFIG_DIR=/opt/rt4-build/conf.d
+      - RT_VERSION=rt-4.4.1
+      - RT_DB_TYPE=SQLite
+      - RT_ENABLE_DEVELOPER=yes
+      - RTHOME=/opt/rt4

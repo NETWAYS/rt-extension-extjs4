@@ -28,7 +28,8 @@ RUN rt4-install-extensions.sh \
   rtx-usersearch \
   RT-Extension-ExtractCustomFieldValues \
   rtx-action-subjectandevent \
-  rtx-action-changeowner
+  rtx-action-changeowner \
+  rtx-customfieldvalues-asset
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
 
