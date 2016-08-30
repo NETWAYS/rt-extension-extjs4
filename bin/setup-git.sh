@@ -25,7 +25,7 @@ REMOTE=(
 "git://git.netways.org/rt4/rtx-actitime.git"
 "git://git.netways.org/rt4/rtx-action-subjectandevent.git"
 "git://git.netways.org/rt4/rtx-action-changeowner.git"
-"https://gitlab.netways.org/mhein/rtx-customfieldvalues-asset.git")
+"https://gitlab.netways.org/RequestTracker/rtx-customfieldvalues-asset.git")
 
 if [ ! -x $GIT ]; then
     echo "GIT not found"
