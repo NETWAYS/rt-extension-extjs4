@@ -48,7 +48,7 @@ Set($MaxAttachmentSize, 25_000_000);
 Set($MaxInlineBody, 8000000);
 Set($SuppressInlineTextFiles, 1);
 Set($ParseNewMessageForTicketCcs, 1);
-Set($ShowHistory, 'scroll');
+Set($ShowHistory, 'delay');
 
 # Set($RTAddressRegexp, '^.+\@rt.netways.de$');
 Set($RTAddressRegexp, '^(nobody\@web\.|.+\@rt\.|(service|info|office|abuse|billing|changes|einkauf|events|fax|hardware|hostmaster|reports|.*support|sales|shop|sun|tradoria|tickets?|grafik|telekom|hq|jobs?)\@)netways\.de$');
