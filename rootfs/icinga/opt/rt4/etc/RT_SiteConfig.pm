@@ -70,7 +70,6 @@ Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::ChangeOwner');
 Plugin('RTx::DBCustomField');
 Plugin('RTx::HistoryComponent');
-Plugin('RTx::SearchMarker');
 Plugin('RTx::UserSearch');
 Plugin('RTx::AddServiceData');
 Plugin('RTx::EmailHeader');

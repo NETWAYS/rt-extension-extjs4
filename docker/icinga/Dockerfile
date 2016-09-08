@@ -22,7 +22,6 @@ RUN rt4-install-extensions.sh \
   rtx-historycomponent \
   rtx-netways \
   rtx-queuecategories \
-  rtx-searchmarker \
   rtx-ticketactions \
   rtx-updatehistory \
   rtx-usersearch \

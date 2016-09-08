@@ -89,7 +89,6 @@ Plugin('RTx::QueueCategories');
 Plugin('RTx::Actitime');
 Plugin('RTx::EmailHeader');
 Plugin('RT::Extension::ExtractCustomFieldValues');
-Plugin('RTx::SearchMarker');
 Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
