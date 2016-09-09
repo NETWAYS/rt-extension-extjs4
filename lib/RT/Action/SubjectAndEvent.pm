@@ -32,7 +32,7 @@ sub Prepare {
     $RT::Logger->error('START Email and Name parser');
 
     while (my $attachment = $attachments->Next()) {
-    if ($attachment->ContentType eq 'text/plain' && $attachment->Content  =~ m/email:\s*(.*?)$/m) {
+    if ($attachment->ContentType eq 'text/plain' && $attachment->Content  =~ m/(email|attendees):\s*(.*?)$/m) {
         $c = $attachment->Content;
         last;
     }
