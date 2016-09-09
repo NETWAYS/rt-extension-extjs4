@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use base qw(RT::Action);
 use subs qw(
+    MyTrim
     Prepare
     Commit
 );
