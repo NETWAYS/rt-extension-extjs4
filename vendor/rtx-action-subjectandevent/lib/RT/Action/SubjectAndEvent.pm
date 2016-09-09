@@ -27,6 +27,7 @@ sub Prepare {
     my $t = $self->TransactionObj;
     my $attachments = $t->Attachments;
     my $c = '';
+    my $attendees = '';
 
     $RT::Logger->error('START Email and Name parser');
 
@@ -59,6 +60,18 @@ sub Prepare {
 
     if ($c =~ m/EVENT:\s*(.*?)$/mi || $c =~ m/training:\s*(.*?)$/mi) {
     $event = MyTrim($1);
+    }
+
+    if ($c =~ m/attendees:\s*(.*?)$/m) {
+        $attendees = MyTrim($1);
+        if ($attendees) {
+            my @parts = split(';', $attendees);
+            if (scalar(@parts) >= 4) {
+                $firstname = $parts[1];
+                $surname = $parts[2];
+                $email = $parts[3];
+            }
+        }
     }
 
     if ($firstname && $surname) {
