@@ -13,7 +13,6 @@ REMOTE=(
 "git://git.netways.org/rt4/rtx-emailheader.git"
 "git://git.netways.org/rt4/rtx-usersearch.git"
 "git://git.netways.org/rt4/rtx-historycomponent.git"
-"git://git.netways.org/rt4/rtx-searchmarker.git"
 "git://git.netways.org/rt4/rtx-action-setowner.git"
 "git://git.netways.org/rt4/rtx-create-external.git"
 "git://git.netways.org/rt4/rtx-netways.git"
