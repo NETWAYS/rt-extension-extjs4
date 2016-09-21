@@ -106,12 +106,12 @@ Set($UserAutocreateDefaultsOnLogin, {
 Set($ExternalSettings, {
   'icinga-ldap' => {
     'type' => 'ldap',
-    'server' => 'icinga-tool.icinga.netways.de',
-    'user' => 'cn=auth-http,ou=users,dc=icinga,dc=org',
-    'pass' => '6UYHE32X',
-    'base' => 'ou=people,dc=icinga,dc=org',
+    'server' => 'icinga-ldap2.icinga.netways.de',
+    'user' => 'cn=rt,ou=tools,dc=icinga,dc=com',
+    'pass' => '45JRpo6bri',
+    'base' => 'ou=user,dc=icinga,dc=com',
     'filter' => '(&(objectClass=inetOrgPerson))',
-    'group' => 'cn=icinga-rt,ou=groups,dc=icinga,dc=org',
+    'group' => 'cn=rt,ou=groups,dc=icinga,dc=com',
     'group_attr' => 'member',
     'group_scope' => 'sub',
     'attr_match_list' => [
