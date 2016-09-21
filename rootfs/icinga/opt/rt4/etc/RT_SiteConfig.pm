@@ -110,10 +110,7 @@ Set($ExternalSettings, {
     'user' => 'cn=rt,ou=tools,dc=icinga,dc=com',
     'pass' => '45JRpo6bri',
     'base' => 'ou=user,dc=icinga,dc=com',
-    'filter' => '(&(objectClass=inetOrgPerson))',
-    'group' => 'cn=rt,ou=groups,dc=icinga,dc=com',
-    'group_attr' => 'member',
-    'group_scope' => 'sub',
+    'filter' => '(|(memberof=cn=rt,ou=groups,dc=icinga,dc=com)(memberof=cn=all-access,ou=groups,dc=icinga,dc=com))',
     'attr_match_list' => [
       'Name',
       'EmailAddress',
