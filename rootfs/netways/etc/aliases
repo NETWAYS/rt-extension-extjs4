@@ -165,7 +165,7 @@ net-service: 		|"/opt/rt4/bin/rt-mailgate
 
 # support, helpdesk, premiumsupport @rt.netways.de
 net-supp: 		|"/opt/rt4/bin/rt-mailgate 
-			--queue 'MS Support Contracts' 
+			--queue 'PS Support' 
 			--action correspond 
 			--url http://localhost/"
 

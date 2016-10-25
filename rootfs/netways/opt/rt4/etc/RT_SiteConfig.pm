@@ -207,10 +207,10 @@ Set($RTx_QueueCategories_Map, [
 		items => ['MA Aufgaben', 'MA Jobs']
 	}, {
 		name => '04. Managed Services',
-		items => ['MS Infrastruktur', 'MS Support Hosting', 'MS Support Contracts']
+		items => ['MS Infrastruktur', 'MS Support Hosting']
 	}, {
 		name => '05. Professional Services',
-		items => ['PS Aufgaben intern', 'PS Aufgaben extern', 'PS Aufgaben stalled']
+		items => ['PS Aufgaben intern', 'PS Aufgaben extern', 'PS Aufgaben stalled', 'PS Support']
 	}, {
 		name => '06. Development',
 		items => ['DEV Aufgaben intern', 'DEV Aufgaben extern']
