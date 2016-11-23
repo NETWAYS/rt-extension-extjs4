@@ -59,8 +59,8 @@ Konfiguration
 
 | Image      | Beschreibung |
 |------------|--------------|
-| ```rt4/rt4icinga``` | RT für Icinga: https://rt.icinga.org |
-| ```rt4/netways``` | RT für Icinga: https://rt.icinga.org |
+| ```rt4/rt4icinga``` | RT für Icinga: https://rt.icinga.com |
+| ```rt4/netways``` | RT für Icinga: https://rt.icinga.com |
 | ```rt4/devkit``` | Entwicklungsumgebung, Perl embedded Webserver und SQLite. |
 
 ## Init System
@@ -179,7 +179,7 @@ Start des RT für Icinga folgendermaßen:
 
     docker run \
       --name=rt4icinga \
-      --hostname=rt.icinga.org \
+      --hostname=rt.icinga.com \
       --privileged=true \
       -d \
       -p 25:25 \

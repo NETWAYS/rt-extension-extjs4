@@ -3,22 +3,22 @@
 ## Allgemein
 
 Dieses Dokument beschreibt die Verbindung des Mail Systems zwischen des Icinga
-Mail Servers (icinga-web.adm.icinga.org, nachfolgend web genannt) und der RT
-Instanz (net-icinga-rt.adm.netways.de, nachfolgend rt genannt).
+Mail Servers (icinga-mail.icinga.netways.de, nachfolgend icinga-mail genannt) und der RT
+Instanz (icinga-rt.icinga.netways.de, nachfolgend rt genannt).
 
 ## Grundlegender Workflow
 
-Der in Erscheinung tretende MTA ist auf web eingerichtet. Alle eingehenden
+Der in Erscheinung tretende MTA ist auf icinga-mail eingerichtet. Alle eingehenden
 Mails werden durch diesen Postfix angenommen. Augehend sendend tritt allerdings
 der rt in Kraft. Alle Mails aus dem RT werden auch vom rt versendet.
 
-## Transport Mapping auf web
+## Transport Mapping auf icinga-mail
 
     # cat /etc/postfix/transport
-    info@icinga.org local:
+    info@icinga.com local:
     
-    rt.icinga.org   smtp:rt.icinga.org:25
-    .rt.icinga.org  smtp:rt.icinga.org:25
+    rt.icinga.com   smtp:rt.icinga.com:25
+    .rt.icinga.com  smtp:rt.icinga.com:25
     # postmap /etc/postfix/transport && postfix reload
     postfix/postfix-script: refreshing the Postfix mail system
 
@@ -28,14 +28,14 @@ weitergeleitet.
 
 ## Virtual Mapping auf web
 
-    # grep '\s*@rt\.icinga\.org' /etc/postfix/virtual
-    rt@icinga.org                       rt@rt.icinga.org
+    # grep '\s*@rt\.icinga\.com' /etc/postfix/virtual
+    rt@icinga.com                       rt@rt.icinga.com
  
 ## Virtual Mapping auf rt
 
     # cat rootfs/icinga/etc/postfix/virtual
-    rt@rt.icinga.org        icinga-rt
-    rtx@rt.icinga.org       icinga-rtx
+    rt@rt.icinga.com        icinga-rt
+    rtx@rt.icinga.com       icinga-rtx
 
 ## Alias file auf rt
 

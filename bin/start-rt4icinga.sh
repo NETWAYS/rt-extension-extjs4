@@ -1,7 +1,7 @@
 #!/bin/bash
 docker run \
   --name=rt4icinga \
-  --hostname=rt.icinga.org \
+  --hostname=rt.icinga.com \
   --privileged=true \
   --restart=always \
   -d \

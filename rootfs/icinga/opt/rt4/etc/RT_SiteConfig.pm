@@ -1,7 +1,7 @@
 Set($rtname, 'icinga');
-Set($Organization, "icinga.org");
+Set($Organization, "icinga.com");
 
-Set($WebDomain, 'rt.icinga.org');
+Set($WebDomain, 'rt.icinga.com');
 Set($WebPath, "");
 Set($WebPort, 443);
 Set($Timezone, "Europe/Berlin");
@@ -33,8 +33,8 @@ Set($ParseNewMessageForTicketCcs, 1);
 Set($ShowHistory, 'delay');
 
 Set($RTAddressRegexp, '^(info|xrt|rt|events|shop|partner|support|sales|automail|infrastructure)\@(rt\.)?icinga\.org$');
-Set($CorrespondAddress , 'rt@icinga.org');
-Set($CommentAddress , 'xrt@icinga.org');
+Set($CorrespondAddress , 'rt@icinga.com');
+Set($CommentAddress , 'xrt@icinga.com');
 Set($SetOutgoingMailFrom, 1);
 
 # Default setting
@@ -124,10 +124,10 @@ Set($ExternalSettings, {
 });
 
 Set($RTx_EmailHeader_AdditionalHeaders, {
-    'Return-Path' => 'rt+__Ticket(id)__@rt.icinga.org'
+    'Return-Path' => 'rt+__Ticket(id)__@rt.icinga.com'
 });
 
-Set($RTx_EmailHeader_OverwriteSendmailArgs, '-f rt+__Ticket(id)__@rt.icinga.org');
+Set($RTx_EmailHeader_OverwriteSendmailArgs, '-f rt+__Ticket(id)__@rt.icinga.com');
 
 Set($RTx_NETWAYS_EnableQuickAssign, 1);
 Set($RTx_NETWAYS_QuickAssignGroup, 'icinga-edit');
