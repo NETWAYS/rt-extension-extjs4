@@ -7,24 +7,24 @@ GIT=${GIT:-$(command -v git)}
 cd $BASE_DIR
 
 REMOTE=(
-"git://github.com/bestpractical/rt.git"
-"git://git.netways.org/rt4/rtx-dbcustomfield.git"
-"git://git.netways.org/rt4/rtx-updatehistory.git"
-"git://git.netways.org/rt4/rtx-emailheader.git"
-"git://git.netways.org/rt4/rtx-usersearch.git"
-"git://git.netways.org/rt4/rtx-historycomponent.git"
-"git://git.netways.org/rt4/rtx-action-setowner.git"
-"git://git.netways.org/rt4/rtx-create-external.git"
-"git://git.netways.org/rt4/rtx-netways.git"
-"git://git.netways.org/rt4/rtx-queuecategories.git"
-"git://git.netways.org/rt4/rtx-extjs4.git"
-"git://git.netways.org/rt4/rtx-ticketactions.git"
-"git://git.netways.org/rt4/rtx-addservicedata.git"
-"git://git.netways.org/rt4/rtx-createlinkedtickets.git"
-"git://git.netways.org/rt4/rtx-actitime.git"
-"git://git.netways.org/rt4/rtx-action-subjectandevent.git"
-"git://git.netways.org/rt4/rtx-action-changeowner.git"
-"https://gitlab.netways.org/RequestTracker/rtx-customfieldvalues-asset.git")
+"https://github.com/bestpractical/rt.git"
+"https://git.netways.org/rt4/rtx-dbcustomfield.git"
+"https://git.netways.org/rt4/rtx-updatehistory.git"
+"https://git.netways.org/rt4/rtx-emailheader.git"
+"https://git.netways.org/rt4/rtx-usersearch.git"
+"https://git.netways.org/rt4/rtx-historycomponent.git"
+"https://git.netways.org/rt4/rtx-action-setowner.git"
+"https://git.netways.org/rt4/rtx-create-external.git"
+"https://git.netways.org/rt4/rtx-netways.git"
+"https://git.netways.org/rt4/rtx-queuecategories.git"
+"https://git.netways.org/rt4/rtx-extjs4.git"
+"https://git.netways.org/rt4/rtx-ticketactions.git"
+"https://git.netways.org/rt4/rtx-addservicedata.git"
+"https://git.netways.org/rt4/rtx-createlinkedtickets.git"
+"https://git.netways.org/rt4/rtx-actitime.git"
+"https://git.netways.org/rt4/rtx-action-subjectandevent.git"
+"https://git.netways.org/rt4/rtx-action-changeowner.git"
+"https://git.netways.org/rt4/rtx-customfieldvalues-asset.git")
 
 if [ ! -x $GIT ]; then
     echo "GIT not found"
