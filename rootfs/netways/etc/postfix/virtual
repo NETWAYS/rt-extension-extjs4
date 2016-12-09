@@ -108,10 +108,13 @@ dost.teilnehmer@rt.netways.de     	net-dost-teilnehmer
 devopsdays.attendee@rt.netways.de       net-devopsdays-teilnehmer
 
 # Rakuten
-tradoria@rt.netways.de                  net-rakuten
+tradoria@rt.netways.de                  net-service
 
 # Telekom
-telekom@rt.netways.de                   net-telekom
+telekom@rt.netways.de                   net-supp
+
+# Blanco
+blanco@rt.netways.de                    net-service
 
 # Nach Ticketnummer
 reply@rt.netways.de                     net-rt
@@ -119,9 +122,6 @@ rt@rt.netways.de                        net-rt
 
 comment@rt.netways.de                   net-xrt
 xrt@rt.netways.de                       net-xrt
-
-# Blanco
-blanco@rt.netways.de      		net-blanco
 
 # Buchhaltung
 nws-invoice@rt.netways.de               net-buha-aufgaben

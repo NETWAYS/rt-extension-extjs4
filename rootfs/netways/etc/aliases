@@ -29,144 +29,144 @@ security: root
 # Inbox Automails ###################################
 
 # tickets, external-tickets @rt.netways.de
-net-tickets:		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--queue 'Inbox Automails' 
+net-tickets:		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--queue 'Inbox Automails'
 			--action correspond"
 
 # root, rootmail @rt.netways.de
-net-root:		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--queue 'Inbox Automails' 
+net-root:		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--queue 'Inbox Automails'
 			--action correspond"
 
 # hostmaster@rt.netways.de
-net-hostmaster:		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--queue 'Inbox Automails' 
+net-hostmaster:		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--queue 'Inbox Automails'
 			--action correspond"
 
 # abuse@rt.netways.de
-net-abuse:		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--queue 'Inbox Allgemein' 
+net-abuse:		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--queue 'Inbox Allgemein'
 			--action correspond"
 
 # changes@rt.netways.de
-net-changes:		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--queue 'MS Changes' 
-			--action correspond" 
+net-changes:		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--queue 'MS Changes'
+			--action correspond"
 
 
 # Admin Aufgaben ####################################
-net-admin:		|"/opt/rt4/bin/rt-mailgate 
+net-admin:		|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
-			--queue 'Admin Aufgaben' 
+			--queue 'Admin Aufgaben'
 			--action correspond"
 
 # Inbox Allgemein ####################################
 
-# nagioskonferenz, inbox, posteingang, fax, info, events @rt.netways.de 
+# nagioskonferenz, inbox, posteingang, fax, info, events @rt.netways.de
 # billing, nagexchah, nagfo, technik @rt.netways.de
 # nagiosexchange, nagiosgrapher @rt.netways.de
 # nagiosgrapher@bugs.netways.de
-net-inbox:		|"/opt/rt4/bin/rt-mailgate 
+net-inbox:		|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
-			--queue 'Inbox Allgemein' 
+			--queue 'Inbox Allgemein'
 			--action correspond"
 
 
 # billing@rt.netways.de
-net-billing:		|"/opt/rt4/bin/rt-mailgate 
+net-billing:		|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
-			--queue 'Admin Aufgaben' 
+			--queue 'Admin Aufgaben'
 			--action correspond"
 
 # sun@rt.netways.de
-net-inbox-sun:		|"/opt/rt4/bin/rt-mailgate 
+net-inbox-sun:		|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
-			--queue 'Inbox Allgemein' 
+			--queue 'Inbox Allgemein'
 			--action correspond"
 
 # rechnungseingang@rt.netways.de
-net-inbox-rechnung: 	|"/opt/rt4/bin/rt-mailgate 
+net-inbox-rechnung: 	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
-			--queue 'Inbox Allgemein' 
+			--queue 'Inbox Allgemein'
 			--action correspond"
 
 # Inbox Einkauf -> Sales Aufgaben intern ######################################
 
 # einkauf@rt.netways.de
-net-einkauf: 		|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern'  
-			--action correspond 
+net-einkauf: 		|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # khein.einkauf@rt.netways.de
-net-einkauf-khein: 	|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern' 
-			--action correspond 
+net-einkauf-khein: 	|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # mschuster.einkauf@rt.netways.de
-net-einkauf-mschuster: 	|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern'  
-			--action correspond 
+net-einkauf-mschuster: 	|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # jhein.einkauf@rt.netways.de
-net-einkauf-jhein: 	|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern'  
-			--action correspond 
+net-einkauf-jhein: 	|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # berk.einkauf@rt.netways.de
-net-einkauf-berk: 	|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern' 
-			--action correspond 
+net-einkauf-berk: 	|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # mkrodel.einkauf@rt.netways.de
-net-einkauf-mkrodel: 	|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern'  
-			--action correspond 
+net-einkauf-mkrodel: 	|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # sgundel.einkauf@rt.netways.de
-net-einkauf-sgundel: 	|"/opt/rt4/bin/rt-mailgate 
-			--queue 'Sales Aufgaben intern' 
-			--action correspond 
+net-einkauf-sgundel: 	|"/opt/rt4/bin/rt-mailgate
+			--queue 'Sales Aufgaben intern'
+			--action correspond
 			--url http://localhost/"
 
 # Inbox Sales -> Sales Aufgaben extern ######################################################
 
 # sales@rt.netways.de
-net-sales:  		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--action correspond 
+net-sales:  		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--action correspond
 			--queue 'Sales Aufgaben Extern'"
 
 # shop@rt.netways.de
-net-shop:  		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--action correspond 
+net-shop:  		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--action correspond
 			--queue 'Shop Bestellungen'"
 
 # Kundensupport Contracts ####################################################
 
 # service@rt.netways.de
-net-service: 		|"/opt/rt4/bin/rt-mailgate 
-			--queue 'MS Support Hosting' 
-			--action correspond 
+net-service: 		|"/opt/rt4/bin/rt-mailgate
+			--queue 'MS Support Hosting'
+			--action correspond
 			--url http://localhost/"
 
 # Kundensupport Hosting ####################################################
 
 # support, helpdesk, premiumsupport @rt.netways.de
-net-supp: 		|"/opt/rt4/bin/rt-mailgate 
-			--queue 'PS Support' 
-			--action correspond 
+net-supp: 		|"/opt/rt4/bin/rt-mailgate
+			--queue 'PS Support'
+			--action correspond
 			--url http://localhost/"
 
 ####################### OTHER QUEUES ##'#############################
@@ -193,44 +193,44 @@ net-grafik:		|"/opt/rt4/bin/rt-mailgate
 # Shop Bestellungen  ################################################
 
 # hardware@rt.netways.de
-net-hardware: 		|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
-			--action correspond 
+net-hardware: 		|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--action correspond
 			--queue 'Shop Bestellungen'"
 
 # Events Services ##################################################
 
-net-event-allgemein:	|"/opt/rt4/bin/rt-mailgate  
+net-event-allgemein:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
-			--queue 'Event Aufgaben'" 
+			--queue 'Event Aufgaben'"
 
 # referent@rt.netways.de
-net-nagkon-referent:	|"/opt/rt4/bin/rt-mailgate  
+net-nagkon-referent:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'VT OSMC'"
 
 # presse@rt.netways.de
-net-nagkon-presse:	|"/opt/rt4/bin/rt-mailgate  
+net-nagkon-presse:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'Event Aufgaben'"
 
 # sponsor@rt.netways.de
-net-nagkon-sponsor:	|"/opt/rt4/bin/rt-mailgate  
+net-nagkon-sponsor:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'Event Aufgaben'"
 
 # teilnehmer@rt.netways.de
-net-nagkon-teilnehmer:  |"/opt/rt4/bin/rt-mailgate  
+net-nagkon-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
                       	--url http://localhost/ --action correspond
                      	--queue 'TM OSMC'"
 
 # training.allgemein@rt.netways.de
-net-nagtrain-allgemein:	|"/opt/rt4/bin/rt-mailgate  
+net-nagtrain-allgemein:	|"/opt/rt4/bin/rt-mailgate
                       	--url http://localhost/ --action correspond
                      	--queue 'Event Aufgaben'"
 
 # nagiostraining.teilnehmer@rt.netways.de
-net-nagtrain-teilnehmer:  |"/opt/rt4/bin/rt-mailgate  
+net-nagtrain-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
                       	--url http://localhost/ --action correspond
                        --queue 'TM Training'"
 
@@ -240,43 +240,43 @@ net-puptrain-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
                        --queue 'TM Training'"
 
 # osdc.teilnehmer@rt.netways.de
-net-osdc-teilnehmer:	|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
+net-osdc-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
 			--action correspond
                      	--queue 'TM OSDC'"
 
-net-osdc-referent:	|"/opt/rt4/bin/rt-mailgate  
+net-osdc-referent:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'VT OSDC'"
 
 # osbc.teilnehmer@rt.netways.de
-net-osbc-teilnehmer:	|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
+net-osbc-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
 			--action correspond
                      	--queue 'TM OSBC'"
 
-net-osbc-referent:	|"/opt/rt4/bin/rt-mailgate  
+net-osbc-referent:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'VT OSBC'"
 
-net-training:	|"/opt/rt4/bin/rt-mailgate 
-			--url http://localhost/ 
+net-training:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
 			--action correspond
 		        --queue 'TM Training'"
 
 # Deutsche OpenStack Tage
 
-net-dost-teilnehmer:	|"/opt/rt4/bin/rt-mailgate  
+net-dost-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'TM DOST'"
 
-net-dost-referent:	|"/opt/rt4/bin/rt-mailgate  
+net-dost-referent:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'VT DOST'"
 
 # DevOpsDays Berlin
 
-net-devopsdays-teilnehmer:	|"/opt/rt4/bin/rt-mailgate  
+net-devopsdays-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'TM DevOpsDays'"
 
@@ -285,34 +285,20 @@ net-event-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
            --url http://localhost/ --action correspond
            --queue 'TM Events'"
 
-net-rakuten:		|"/opt/rt4/bin/rt-mailgate  
-			--url http://localhost/ --action correspond
-			--queue 'MS Support Hosting'"
-
-net-telekom:		|"/opt/rt4/bin/rt-mailgate  
-			--url http://localhost/ --action correspond
-			--queue 'Telekom'"
-
-net-blanco:		|"/opt/rt4/bin/rt-mailgate  
-			--url http://localhost/ --action correspond
-			--queue 'Blanco'"
-
 # Buchhaltung
-
-net-buha-aufgaben: |"/opt/rt4/bin/rt-mailgate  
+net-buha-aufgaben: |"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'Buha Aufgaben'"
 
 # TICKET ID
-net-rt: 		|"/opt/rt4/bin/rt-mailgate 
-			--extension ticket 
-			--queue 'Inbox Allgemein' 
-			--action correspond 
+net-rt: 		|"/opt/rt4/bin/rt-mailgate
+			--extension ticket
+			--queue 'Inbox Allgemein'
+			--action correspond
 			--url http://localhost/"
 
-net-xrt: 		|"/opt/rt4/bin/rt-mailgate 
-			--extension ticket 
-			--queue 'Inbox Allgemein' 
-			--action comment 
+net-xrt: 		|"/opt/rt4/bin/rt-mailgate
+			--extension ticket
+			--queue 'Inbox Allgemein'
+			--action comment
 			--url http://localhost/"
-
