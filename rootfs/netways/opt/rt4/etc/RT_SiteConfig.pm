@@ -223,9 +223,6 @@ Set($RTx_QueueCategories_Map, [
 	}, {
 		name => '09. Teilnehmerqueues',
 		items => ['TM Training', 'TM OSMC', 'TM OSDC', 'TM OSBC', 'TM DOST', 'TM DevOpsDays', 'VT OSMC', 'VT OSDC', 'VT OSBC', 'VT DOST', 'TM Events']
-	}, {
-		name => '10. Kunden',
-		items => ['Blanco', 'DB Systel', 'Icinga', 'Telekom', 'Telekom T-Systems Leipzig']
 	}
 ]);
 
