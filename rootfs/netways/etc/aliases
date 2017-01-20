@@ -169,6 +169,15 @@ net-supp: 		|"/opt/rt4/bin/rt-mailgate
 			--action correspond
 			--url http://localhost/"
 
+# MS Infrastruktur ####################################################
+
+# infra-rt@rt.netways.de
+net-infra:      |"/opt/rt4/bin/rt-mailgate
+			--queue 'MS Infrastruktur'
+			--action correspond
+			--url http://localhost/"
+
+
 ####################### OTHER QUEUES ##'#############################
 
 # Jobs              ################################################
