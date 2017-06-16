@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2016 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -46,50 +46,77 @@
 #
 # END BPS TAGGED BLOCK }}}
 
+package RT::CustomFieldValues::Canonicalizer;
+
 use strict;
 use warnings;
-
-package RT::Action::UpdateUserTimeWorked;
-use base 'RT::Action';
+use base 'RT::Base';
 
 =head1 NAME
 
-RT::Action::UpdateUserTimeWorked - RT's scrip action to set/update the time
-worked for a user each time they log time worked on a ticket
+RT::CustomFieldValues::Canonicalizer - base class for custom field value
+canonicalizers
+
+=head1 SYNOPSIS
 
 =head1 DESCRIPTION
 
-This action is used as an action for the 'On TimeWorked Change' condition.
+This class is the base class for custom field value canonicalizers. To
+implement a new canonicalizer, you must create a new class that subclasses
+this class. Your subclass must implement the method L</CanonicalizeValue> as
+documented below. You should also implement the method L</Description> which
+is the label shown to users. Finally, add the new class name to
+L<RT_Config/@CustomFieldValuesCanonicalizers>.
 
-When it fires, a ticket attribute stores the amount of time the user updating
-the ticket worked on it.
+See L<RT::CustomFieldValues::Canonicalizer::Uppercase> for a complete
+example.
+
+=head2 new
+
+The object constructor takes one argument: L<RT::CurrentUser> object.
+
+=cut
+
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $self  = {};
+    bless ($self, $class);
+    $self->CurrentUser(@_);
+    return $self;
+}
+
+=head2 CanonicalizeValue
+
+Receives a parameter hash including C<CustomField> (an L<RT::CustomField>
+object) and C<Content> (a string of user-provided content).
+
+You may also access C<< $self->CurrentUser >> in case you need the user's
+language or locale.
+
+This method is expected to return the canonicalized C<Content>.
 
 =cut
 
-sub Prepare {
-    return 1;
+sub CanonicalizeValue {
+    my $self = shift;
+    die "Subclass " . ref($self) . " of " . __PACKAGE__ . " does not implement required method CanonicalizeValue";
 }
 
-sub Commit {
-    my $self   = shift;
-    my $ticket = $self->TicketObj;
-    my $txn    = $self->TransactionObj;
+=head2 Description
 
-    my $time_worked_attr = $ticket->FirstAttribute('TimeWorked');
-    # if the attribute is not defined, we will initialize it in the callback,
-    # so no need to handle it here
-    if ( $time_worked_attr ) {
-        my $time_worked = $time_worked_attr->Content;
-        $time_worked->{ $txn->CreatorObj->Name } += $txn->TimeTaken
-          || $txn->NewValue - $txn->OldValue;
-        $time_worked_attr->SetContent( $time_worked );
-    }
-}
-
-=head1 AUTHOR
-
-Best Practical Solutions, LLC E<lt>modules@bestpractical.comE<gt>
+A class method that returns the human-friendly name for this canonicalizer
+which appears in the admin UI. By default it is the class name, which is
+not so human friendly. You should override this in your subclass.
 
 =cut
+
+sub Description {
+    my $class = shift;
+    return $class;
+}
+
+RT::Base->_ImportOverlays();
 
 1;
+
