@@ -20,7 +20,7 @@ requires 'Devel::StackTrace', '1.19';
 requires 'Digest::base';
 requires 'Digest::MD5', '2.27';
 requires 'Digest::SHA';
-requires 'Email::Address', '1.897';
+requires 'Email::Address', '1.908';
 requires 'Email::Address::List', '0.02';
 requires 'Encode', '2.64';
 requires 'Errno';

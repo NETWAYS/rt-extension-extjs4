@@ -16,7 +16,7 @@ services:
       - RT_BUILD_DIR=/opt/rt4-build
       - RT_PREFIX=/opt/rt4
       - RT_CONFIG_DIR=/opt/rt4-build/conf.d
-      - RT_VERSION=rt-4.4.1
+      - RT_VERSION=rt-4.4.2rc2
       - RT_DB_TYPE=SQLite
       - RT_ENABLE_DEVELOPER=no
       - RTHOME=/opt/rt4
