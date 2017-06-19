@@ -18,6 +18,7 @@ RUN apt-get update \
     autoconf \
     build-essential \
     locales \
+    locales-all \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo $TZ > /etc/timezone \
