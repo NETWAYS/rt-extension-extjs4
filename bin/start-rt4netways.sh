@@ -4,6 +4,8 @@ docker run \
   --hostname=rt.netways.de \
   --privileged=true \
   --restart=always \
+  -e "LANG=de_DE.UTF-8" \
+  -e "LC_ALL=de_DE" \
   -d \
   -p 25:25 \
   -p 80:80 \
