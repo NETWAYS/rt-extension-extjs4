@@ -123,7 +123,8 @@ requires 'FCGI::ProcManager';
 requires 'Apache::DBI';
 
 # MySQL
-requires 'DBD::mysql', '2.1018';
+# Avoid bug with utf8 encoding: https://issues.bestpractical.com/Ticket/Display.html?id=32670
+requires 'DBD::mysql', '== 4.041';
 
 # SQLite
 requires 'DBD::SQLite', '1.00';
