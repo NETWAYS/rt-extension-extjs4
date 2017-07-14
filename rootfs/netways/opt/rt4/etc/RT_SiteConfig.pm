@@ -201,7 +201,7 @@ Set($RTx_QueueCategories_Map, [
 		items => ['Inbox Allgemein', 'Inbox Automails']
 	}, {
 		name => '02. Organisation',
-		items => ['Admin Aufgaben', 'Admin Beschaffung', 'Buha Aufgaben', 'Buha Kontingente', 'NETWAYS Billing', 'NETWAYS Holiday']
+		items => ['Admin Aufgaben', 'Admin Beschaffung', 'Buha Aufgaben', 'Buha Kontingente', 'Buha Projekte', 'NETWAYS Billing', 'NETWAYS Holiday']
 	}, {
 		name => '03. Management',
 		items => ['MA Aufgaben', 'MA Jobs']

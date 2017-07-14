@@ -1,2 +1,4 @@
-** OSDC 2016 - April - netways.de/osdc **
-** OSBConf 2016 - September - osbconf.org **
+** OSMC 2017 - November - osmc.de **
+** OSBconf 2017 - September - osbconf.org **
+** Icinga as a Service - nws.netways.de **
+
