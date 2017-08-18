@@ -1,10 +1,10 @@
 FROM rt4/source
 
 ARG POSTFIX_MAILNAME
-ARG "POSTFIX_MAILER_TYPE
+ARG POSTFIX_MAILER_TYPE
 
 ENV POSTFIX_MAILNAME ${POSTFIX_MAILNAME:-rt.localhost}
-ENV POSTFIX_MAILER_TYPE ${POSTFIX_MAILER_TYPE:-"Internet Site"}
+ENV POSTFIX_MAILER_TYPE ${POSTFIX_MAILER_TYPE:-'Internet Site'}
 
 RUN touch /etc/mailname && echo "$POSTFIX_MAILNAME" > /etc/mailname
 RUN echo "postfix postfix/mailname                string  ${POSTFIX_MAILNAME}" | debconf-set-selections
