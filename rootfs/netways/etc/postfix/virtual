@@ -60,7 +60,7 @@ service@rt.netways.de                   net-service
 support@rt.netways.de                   net-supp
 helpdesk@rt.netways.de                  net-supp
 premiumsupport@rt.netways.de            net-supp
-nws@rt.netways.de                       net-service
+nws@rt.netways.de                       net-nws
 
 # MS Infrastruktur
 infra-rt@rt.netways.de                  net-infra

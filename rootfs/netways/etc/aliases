@@ -169,6 +169,16 @@ net-supp: 		|"/opt/rt4/bin/rt-mailgate
 			--action correspond
 			--url http://localhost/"
 
+# Kundensupport NWS  ####################################################
+
+# nws@rt.netways.de
+net-nws:                |"/opt/rt4/bin/rt-mailgate
+                        --queue 'MS Support NWS'
+                        --action correspond
+                        --url http://localhost/"
+
+
+
 # MS Infrastruktur ####################################################
 
 # infra-rt@rt.netways.de
