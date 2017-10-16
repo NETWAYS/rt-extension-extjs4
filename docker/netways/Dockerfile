@@ -4,6 +4,7 @@ ARG RT_SOURCE
 
 ENV RTHOME ${RTHOME:-/opt/rt4}
 ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
+ENV GNUPGHOME ${GNUPGHOME:-/opt/rt4/var/data/gpg}
 
 COPY ./rootfs/netways/ /
 
