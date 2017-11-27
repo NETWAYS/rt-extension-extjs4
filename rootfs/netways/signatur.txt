@@ -1,3 +1,2 @@
-** OSMC 2017 - November - osmc.de **
 ** OSDC 2018 - Juni - osdc.de **
 ** Icinga as a Service - nws.netways.de **
