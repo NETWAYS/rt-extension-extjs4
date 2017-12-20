@@ -34,7 +34,7 @@ services:
         - RT_CONFIG_DIR=/opt/rt4-build/conf.d
         - RT_SOURCE=/opt/rt4-build/src
         - RT_PREFIX=/opt/rt4
-        - RT_VERSION=rt-4.4.2rc2
+        - RT_VERSION=rt-4.4.2
     image: "$RT_BUILD_NS/source"
 
   runtime:
