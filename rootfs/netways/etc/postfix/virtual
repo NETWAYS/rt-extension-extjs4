@@ -131,7 +131,4 @@ xrt@rt.netways.de                       net-xrt
 nws-invoice@rt.netways.de               net-buha-aufgaben
 
 # DEV Aufgaben intern
-github-sync@rt.netways.de 		net-dev-aufgabe
-
-# DEV Aufgaben intern
 github-sync@rt.netways.de 		net-dev-aufgaben
