@@ -309,6 +309,11 @@ net-buha-aufgaben: |"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'Buha Aufgaben'"
 
+# DEV Aufgaben intern
+net-dev-aufgaben: 	|"/opt/rt4/bin/rt-mailgate
+                        --url http://localhost/ --action correspond
+                        --queue 'DEV Aufgaben intern'"
+
 # TICKET ID
 net-rt: 		|"/opt/rt4/bin/rt-mailgate
 			--extension ticket
