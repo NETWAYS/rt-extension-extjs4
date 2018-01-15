@@ -1,5 +1,6 @@
 RT_PATH=/opt/rt4
 PATH=$RT_PATH/bin:$RT_PATH/sbin:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
-*/15 *  * * * root /usr/local/sbin/icinga-cron-resolve-automails.sh > /tmp/icinga-cron-resolve-automails.log 2>&1
-15   *  * * * root /opt/rt4/sbin/rt-ldapimport --import --no-groups > /dev/null 2>&1
+*/15 *  * *   * root /usr/local/sbin/icinga-cron-resolve-automails.sh > /tmp/icinga-cron-resolve-automails.log 2>&1
+15   *  * *   * root /opt/rt4/sbin/rt-ldapimport --import --no-groups > /dev/null 2>&1
+0    9  * */3 1 root /opt/rt4/bin/rtx-create.pl --ticket=4963 --template="Autocreate Task: Every Three Months"
