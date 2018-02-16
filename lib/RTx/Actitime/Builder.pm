@@ -121,7 +121,7 @@ sub isInactive {
     my $task = shift;
     my $name = shift;
 
-    if ($name =~ /$task->{'match_inactive'}/) {
+    if ($name =~ /$task->{'match_inactive'}/i) {
         return 1;
     }
 
@@ -133,7 +133,7 @@ sub isActive {
     my $task = shift;
     my $name = shift;
 
-    if ($name =~ /$task->{'match_active'}/) {
+    if ($name =~ /$task->{'match_active'}/i) {
         return 1;
     }
 
