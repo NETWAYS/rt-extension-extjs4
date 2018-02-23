@@ -4,7 +4,7 @@ use strict;
 use version;
 use Data::Dumper;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.0.2';
 
 sub new {
     my $classname = shift;
@@ -48,13 +48,13 @@ sub getTasks() {
         my $taskid = $self->generateTaskId($task->{'name'});
 
         my $match = '^('. join('|',@{ $task->{'active'} }). ')$';
-        $struct->{'match_active'} = qr{$match};
+        $struct->{'match_active'} = qr{$match}i;
 
         $match = '^('. join('|',@{ $task->{'inactive'} }). ')$';
-        $struct->{'match_inactive'} = qr{$match};
+        $struct->{'match_inactive'} = qr{$match}i;
 
         $match = '^('. join('|',(@{ $task->{'inactive'} }, @{ $task->{'active'} })). ')$';
-        $struct->{'match_all'} = qr{$match};
+        $struct->{'match_all'} = qr{$match}i;
 
         $struct->{'taskid'} = $taskid;
 
@@ -121,7 +121,7 @@ sub isInactive {
     my $task = shift;
     my $name = shift;
 
-    if ($name =~ /$task->{'match_inactive'}/i) {
+    if ($name =~ /$task->{'match_inactive'}/) {
         return 1;
     }
 
@@ -133,7 +133,7 @@ sub isActive {
     my $task = shift;
     my $name = shift;
 
-    if ($name =~ /$task->{'match_active'}/i) {
+    if ($name =~ /$task->{'match_active'}/) {
         return 1;
     }
 
