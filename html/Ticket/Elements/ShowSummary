@@ -59,18 +59,9 @@
         title_href   => ($can_modify || $can_modify_cf) ? RT->Config->Get('WebPath')."/Ticket/Modify.html" : "",
         &>
 
-    <&| /Widgets/TitleBox, title => loc('People'),
-        (($can_modify || $can_modify_owner || $can_modify_people) ? (title_href => RT->Config->Get('WebPath')."/Ticket/ModifyPeople.html?id=".$Ticket->Id) : ()),
-        class => 'ticket-info-people',
-    &><& /Ticket/Elements/ShowPeople, Ticket => $Ticket &></&>
-% $m->callback( %ARGS, CallbackName => 'AfterPeople' );
     <& /Ticket/Elements/ShowAttachments, Ticket => $Ticket, Attachments => $Attachments, Count => RT->Config->Get('AttachmentListCount') &>
 % $m->callback( %ARGS, CallbackName => 'AfterAttachments' );
     <& /Ticket/Elements/ShowRequestor, Ticket => $Ticket &>
-% $m->callback( %ARGS, CallbackName => 'LeftColumn' );
-  </td>
-  <td valign="top" class="boxcontainer">
-% $m->callback( %ARGS, CallbackName => 'RightColumnTop' );
 % if ( RT->Config->Get('EnableReminders') ) {
     <&|/Widgets/TitleBox, title => loc("Reminders"),
         title_href => RT->Config->Get('WebPath')."/Ticket/Reminders.html?id=".$Ticket->Id,
@@ -84,6 +75,16 @@
     </&>
 % }
 % $m->callback( %ARGS, CallbackName => 'AfterReminders' );
+% $m->callback( %ARGS, CallbackName => 'LeftColumn' );
+</td>
+<td valign="top" class="boxcontainer">
+% $m->callback( %ARGS, CallbackName => 'RightColumnTop' );
+
+<&| /Widgets/TitleBox, title => loc('People'),
+    (($can_modify || $can_modify_owner || $can_modify_people) ? (title_href => RT->Config->Get('WebPath')."/Ticket/ModifyPeople.html?id=".$Ticket->Id) : ()),
+    class => 'ticket-info-people',
+&><& /Ticket/Elements/ShowPeople, Ticket => $Ticket &></&>
+% $m->callback( %ARGS, CallbackName => 'AfterPeople' );
     <&| /Widgets/TitleBox, title => loc("Dates"),
         ($can_modify ? (title_href => RT->Config->Get('WebPath')."/Ticket/ModifyDates.html?id=".$Ticket->Id) : ()),
         class => 'ticket-info-dates',
