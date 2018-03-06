@@ -47,11 +47,12 @@
 %# END BPS TAGGED BLOCK }}}
 <table>
   <tr class="owner">
-    <td class="label"><&|/l&>Owner</&>:</td>
+    <td class="label" style="vertical-align: top;"><&|/l&>Owner</&>:</td>
 % my $owner = $Ticket->OwnerObj;
     <td class="value"><& /Elements/ShowUser, User => $owner, Ticket => $Ticket &>
     <& /Elements/ShowUserEmailFrequency, User => $owner, Ticket => $Ticket &>
 % $m->callback( User => $owner, Ticket => $Ticket, %ARGS, CallbackName => 'AboutThisUser' );
+    <& RTx-QuickAddPrincipal, Type=>'Owner', Ticket=>$Ticket, Title => 'Give to' &>
     </td>
   </tr>
 
@@ -80,8 +81,11 @@
     <td class="value"><& ShowGroupMembers, Group => $Ticket->Cc, Ticket => $Ticket &></td>
   </tr>
   <tr class="admincc<% $Ticket->AdminCc->MembersObj->Count ? q{} : q{ unset-field}%>">
-    <td class="labeltop"><&|/l&>AdminCc</&>:</td>
-    <td class="value"><& ShowGroupMembers, Group => $Ticket->AdminCc, Ticket => $Ticket &></td>
+    <td class="labeltop" style="vertical-align: top;"><&|/l&>AdminCc</&>:</td>
+    <td class="value">
+      <& ShowGroupMembers, Group => $Ticket->AdminCc, Ticket => $Ticket &>
+      <& RTx-QuickAddPrincipal, Type=>'AdminCc', Group=>$Ticket->AdminCc, Ticket=>$Ticket &>
+    </td>
   </tr>
 
 % my $multi_roles = $Ticket->QueueObj->CustomRoles;
