@@ -51,7 +51,8 @@
     title_href => $query_link_url.$QueryString,
     titleright => $customize ? loc('Edit') : '',
     titleright_href => $customize,
-    hideable => $hideable &>
+    hideable => $hideable,
+    class => $addClass &>
 <& $query_display_component, hideable => $hideable, %$ProcessedSearchArg, ShowNavigation => 0, Class => 'RT::Tickets', HasResults => $HasResults, PreferOrderBy => 1 &>
 </&>
 <%init>
@@ -130,6 +131,33 @@ foreach ( $SearchArg, $ProcessedSearchArg ) {
 }
 
 my $QueryString = '?' . $m->comp( '/Elements/QueryString', %$SearchArg );
+
+# NETWAYS: Test for results
+if (RT->Config->Get('RTx_NETWAYS_ShowSearchOnlyWithResults') eq '1') {
+    my $Collection = RT::Tickets->new( $session{'CurrentUser'} );
+    $Collection->FromSQL($ProcessedSearchArg->{'Query'});
+    return unless ($Collection->CountAll());
+}
+
+# NETWAYS: Add title box css classes
+my $desc = $search->Description;
+my $addClass = '';
+
+if ($desc =~ /due/i) {
+    $addClass = 'netways-tickets-due';
+}
+elsif ($desc =~ /unowned/i) {
+    $addClass = 'netways-tickets-nobody';
+}
+elsif ($desc =~ /watched/i) {
+    $addClass = 'netways-tickets-watched';
+}
+elsif ($desc =~ /request/i) {
+    $addClass = 'netways-tickets-request';
+}
+else {
+    $addClass = 'netways-tickets-default';
+}
 
 my $title_raw;
 if ($ShowCount) {
