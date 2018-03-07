@@ -90,7 +90,7 @@
 % }
 </style>
 % # Leave %ARGS for backward compatibility
-% $m->callback( %ARGS, CallbackName => 'Head', ARGSRef => \%ARGS );
+% $m->callback( %ARGS, CallbackName => 'Head', ARGSRef => \%ARGS, Title => \$Title );
 
 <& HeaderJavascript, focus => $Focus, onload => $onload, RichText => $RichText &>
 
