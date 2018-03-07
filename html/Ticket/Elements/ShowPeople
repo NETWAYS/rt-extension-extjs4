@@ -52,7 +52,7 @@
     <td class="value"><& /Elements/ShowUser, User => $owner, Ticket => $Ticket &>
     <& /Elements/ShowUserEmailFrequency, User => $owner, Ticket => $Ticket &>
 % $m->callback( User => $owner, Ticket => $Ticket, %ARGS, CallbackName => 'AboutThisUser' );
-    <& RTx-QuickAddPrincipal, Type=>'Owner', Ticket=>$Ticket, Title => 'Give to' &>
+    <& RT-Extension-QuickAddPrincipal, Type=>'Owner', Ticket=>$Ticket, Title => 'Give to' &>
     </td>
   </tr>
 
@@ -84,7 +84,7 @@
     <td class="labeltop" style="vertical-align: top;"><&|/l&>AdminCc</&>:</td>
     <td class="value">
       <& ShowGroupMembers, Group => $Ticket->AdminCc, Ticket => $Ticket &>
-      <& RTx-QuickAddPrincipal, Type=>'AdminCc', Group=>$Ticket->AdminCc, Ticket=>$Ticket &>
+      <& RT-Extension-QuickAddPrincipal, Type=>'AdminCc', Group=>$Ticket->AdminCc, Ticket=>$Ticket &>
     </td>
   </tr>
 

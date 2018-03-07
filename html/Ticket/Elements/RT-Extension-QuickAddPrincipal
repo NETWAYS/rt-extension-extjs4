@@ -5,7 +5,7 @@
       if (uri !== '<% loc($Title) %>') {
         window.location.href = uri;
       } else {
-        console.log('RTx-QuickAddPrincipal: No principal selected');
+        console.log('RT-Extension-QuickAddPrincipal: No principal selected');
       }
     });
 
@@ -15,7 +15,7 @@
         if (uri) {
             window.location.href = uri;
         } else {
-            alert('RTx-QuickAddPrincipal: Could not alter "<% $Type %>"');
+            alert('RT-Extension-QuickAddPrincipal: Could not alter "<% $Type %>"');
         }
     });
   });
@@ -32,7 +32,7 @@
     </form>
 </div>
 <%init>
-return unless(RT->Config->Get('RTx_NETWAYS_EnableQuickAssign') && RT->Config->Get('RTx_NETWAYS_QuickAssignGroup'));
+return unless(RT->Config->Get('RT_Extension_Netways_EnableQuickAssign') && RT->Config->Get('RT_Extension_Netways_QuickAssignGroup'));
 
 my $hexUid          = genHexUID64();
 my $formName        = 'form_' . $hexUid;
@@ -52,7 +52,7 @@ sub genHexUID64{
     return $UID;
 }
 
-$CustomGroup->LoadUserDefinedGroup(RT->Config->Get('RTx_NETWAYS_QuickAssignGroup'));
+$CustomGroup->LoadUserDefinedGroup(RT->Config->Get('RT_Extension_Netways_QuickAssignGroup'));
 
 my $Members = $CustomGroup->UserMembersObj();
 

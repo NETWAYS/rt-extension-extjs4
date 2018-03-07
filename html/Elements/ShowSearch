@@ -133,7 +133,7 @@ foreach ( $SearchArg, $ProcessedSearchArg ) {
 my $QueryString = '?' . $m->comp( '/Elements/QueryString', %$SearchArg );
 
 # NETWAYS: Test for results
-if (RT->Config->Get('RTx_NETWAYS_ShowSearchOnlyWithResults') eq '1') {
+if (RT->Config->Get('RT_Extension_Netways_ShowSearchOnlyWithResults') eq '1') {
     my $Collection = RT::Tickets->new( $session{'CurrentUser'} );
     $Collection->FromSQL($ProcessedSearchArg->{'Query'});
     return unless ($Collection->CountAll());
