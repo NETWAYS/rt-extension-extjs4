@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -47,12 +47,13 @@
 %# END BPS TAGGED BLOCK }}}
 <&|/Widgets/TitleBox,
     title => loc(RT::SavedSearch->EscapeDescription($search->Description), $ProcessedSearchArg->{'Rows'}),
+    title_raw => $title_raw,
     title_href => $query_link_url.$QueryString,
     titleright => $customize ? loc('Edit') : '',
     titleright_href => $customize,
     hideable => $hideable,
     class => $addClass &>
-<& $query_display_component, hideable => $hideable, %$ProcessedSearchArg, ShowNavigation => 0, Class => 'RT::Tickets' &>
+<& $query_display_component, hideable => $hideable, %$ProcessedSearchArg, ShowNavigation => 0, Class => 'RT::Tickets', HasResults => $HasResults, PreferOrderBy => 1 &>
 </&>
 <%init>
 my $search;
@@ -82,6 +83,7 @@ if ($SavedSearch) {
         $query_display_component
             = '/Search/Elements/' . $SearchArg->{SearchType};
         $query_link_url = RT->Config->Get('WebPath') . "/Search/$SearchArg->{SearchType}.html";
+        $ShowCount = 0;
     } elsif ($ShowCustomize) {
         $customize = RT->Config->Get('WebPath') . '/Search/Build.html?'
             . $m->comp( '/Elements/QueryString',
@@ -126,21 +128,6 @@ foreach ( $SearchArg, $ProcessedSearchArg ) {
 
     # extract-message-catalog would "$1", so we avoid quotes for loc calls
     $_->{'Format'} =~ s/__loc\(["']?(\w+)["']?\)__/my $f = "$1"; loc($f)/ge;
-    if ( $_->{'Query'} =~ /__Bookmarks__/ ) {
-        $_->{'Rows'} = 999;
-
-        # DEPRECATED: will be here for a while up to 4.4
-        RT->Deprecated(
-            Remove  => "4.4",
-            Instead => "id = '__Bookmarked__'",
-            Message => "The __Bookmarks__ query syntax is deprecated",
-            Object  => $search,
-        );
-
-        my @bookmarks = $session{'CurrentUser'}->UserObj->Bookmarks;
-        my $query = join(" OR ", map " id = '$_' ", @bookmarks ) || 'id=0';
-        $_->{'Query'} =~ s/__Bookmarks__/( $query )/g;
-    }
 }
 
 my $QueryString = '?' . $m->comp( '/Elements/QueryString', %$SearchArg );
@@ -171,6 +158,19 @@ elsif ($desc =~ /request/i) {
 else {
     $addClass = 'netways-tickets-default';
 }
+
+my $title_raw;
+if ($ShowCount) {
+    my $tickets = RT::Tickets->new( $session{'CurrentUser'} );
+    $tickets->FromSQL($ProcessedSearchArg->{Query});
+    my $count = $tickets->CountAll();
+
+    $title_raw = '<span class="results-count">' . loc('(Found [quant,_1,ticket,tickets])', $count) . '</span>';
+
+    # don't repeat the search in CollectionList
+    $ProcessedSearchArg->{Collection} = $tickets;
+    $ProcessedSearchArg->{TotalFound} = $count;
+}
 </%init>
 <%ARGS>
 $Name           => undef
@@ -178,5 +178,7 @@ $SavedSearch    => undef
 %Override       => ()
 $IgnoreMissing  => undef
 $hideable       => 1
-$ShowCustomize => 1
+$ShowCustomize  => 1
+$ShowCount      => RT->Config->Get('ShowSearchResultCount')
+$HasResults     => undef
 </%ARGS>

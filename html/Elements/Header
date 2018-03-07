@@ -2,7 +2,7 @@
 %#
 %# COPYRIGHT:
 %#
-%# This software is Copyright (c) 1996-2015 Best Practical Solutions, LLC
+%# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
 %#                                          <sales@bestpractical.com>
 %#
 %# (Except where explicitly superseded by other copyright notices)
@@ -50,7 +50,7 @@
 <!DOCTYPE html>
 % }
 
-<html lang="en">
+<html lang="<% $lang %>">
   <head>
     <title><%$Title%></title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -90,7 +90,7 @@
 % }
 </style>
 % # Leave %ARGS for backward compatibility
-% $m->callback( %ARGS, CallbackName => 'Head', ARGSRef => \%ARGS, Title => \$Title);
+% $m->callback( %ARGS, CallbackName => 'Head', ARGSRef => \%ARGS, Title => \$Title );
 
 <& HeaderJavascript, focus => $Focus, onload => $onload, RichText => $RichText &>
 
@@ -106,8 +106,16 @@
   <& /Elements/PersonalQuickbar, %ARGS &>
 </div>
 % }
+% if ($ShowTitle) {
 <div id="header"><h1><% $Title %></h1></div>
+% }
 <%INIT>
+my $lang = 'en';
+$lang = $session{'CurrentUser'}->LanguageHandle->language_tag
+     if $session{'CurrentUser'}
+     && $session{'CurrentUser'}->LanguageHandle
+     && $session{'CurrentUser'}->LanguageHandle->language_tag;
+
 $r->headers_out->{'Pragma'} = 'no-cache';
 $r->headers_out->{'Cache-control'} = 'no-cache';
 
@@ -149,6 +157,7 @@ $Focus => ''
 $Title =>  'RT'
 $Refresh => 0
 $ShowBar => 1
+$ShowTitle => 1
 $URL => undef
 $RSSAutoDiscovery => undef
 $onload => undef
