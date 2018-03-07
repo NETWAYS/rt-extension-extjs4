@@ -1,10 +1,12 @@
-use strict;
 use inc::Module::Install;
 
-RTx('RTx-NETWAYS');
-author('Marius Hein <marius.hein@netways.de>');
-version('1.0');
-license('gpl');
+RTx     'RT-Extension-Netways';
+license 'gpl_2';
+repository 'https://git.netways.org/rt4/rtx-netways';
+version_from 'lib/RT/Extension/Netways.pm';
+author_from 'lib/RT/Extension/Netways.pm';
 
-&WriteAll;
+requires_rt '4.4.2';
 
+sign;
+WriteAll;

@@ -20,7 +20,7 @@
 				if (mergeElement.dom.value && doSubmit === false) {
 					e.preventDefault();
 					
-					var url = "<% RT->Config->Get('WebURL') %>/Helpers/RTx-TicketProvider";
+					var url = "<% RT->Config->Get('WebURL') %>/Helpers/RT-Extension-TicketProvider";
 					var target = parseInt(mergeElement.dom.value);
 					var source = parseInt('<% $id %>');
 					

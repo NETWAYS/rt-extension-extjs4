@@ -40,9 +40,9 @@
 	
 </script>
 <%init>
-	my $commentAddress = $m->comp('/Elements/RTx-EmailTag:commentFromTicket', Ticket => $TicketObj);
-	my $replyAddress =  $m->comp('/Elements/RTx-EmailTag:replyFromTicket', Ticket => $TicketObj);
-	my $timeTag = $m->comp('/Elements/RTx-TitleTag:createFromTicket', Ticket => $TicketObj);
+	my $commentAddress = $m->comp('/Elements/RT-Extension-EmailTag:commentFromTicket', Ticket => $TicketObj);
+	my $replyAddress =  $m->comp('/Elements/RT-Extension-EmailTag:replyFromTicket', Ticket => $TicketObj);
+	my $timeTag = $m->comp('/Elements/RT-Extension-TitleTag:createFromTicket', Ticket => $TicketObj);
 </%init>
 <%args>
 	$TicketObj

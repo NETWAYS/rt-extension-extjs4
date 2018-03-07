@@ -1,7 +1,7 @@
 <%init>
 
 	# https://devops.netways.de/issues/515
-	if ((my $AdminCcGroup = RT->Config->Get('RTx_NETWAYS_UserRequestorGroup'))) {
+	if ((my $AdminCcGroup = RT->Config->Get('RT_Extension_Netways_UserRequestorGroup'))) {
 		my $Groups = $session{'CurrentUser'}->UserObj->OwnGroups;
 		
 		$Groups->Limit(
