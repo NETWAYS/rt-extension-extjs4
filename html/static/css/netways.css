@@ -1,0 +1,8 @@
+#mergeConfirmation p span, #mergeFailure p span {
+    font-weight: bold;
+}
+
+#mergeConfirmation button + a {
+    float: right;
+    line-height: normal;  // Gets otherwise 1px more height than the button
+}

@@ -1,112 +1,88 @@
+<div id="mergeConfirmation" class="modal">
+	<p>
+		You're about to merge ticket:<br>
+		<br>
+		<span class="mergeSource">
+			<% $m->comp('/Elements/RT-Extension-TitleTag:createFromTicket', Ticket => $Ticket) %> (<% $Ticket->Status %>)
+		</span><br>
+		<br>
+		into:<br>
+		<br>
+		<span class="mergeTarget"></span><br>
+		<br>
+		Are you sure you want to proceed?
+	</p>
+	<button rel="modal:close">Perform merge</button>
+	<a rel="modal:close" class="button">No, I changed my mind</a>
+</div>
+
+<div id="mergeFailure" class="modal">
+	<p>
+		Merge not possible:<br>
+		<br>
+		<span class="mergeReason"></span>
+	</p>
+	<a rel="modal:close" class="button">Close</a>
+</div>
+
 <script type="text/javascript">
-	
-	Ext.onReady(function() {
-		var elements = Ext.select("input");
-		var form, mergeElement;
-		var doSubmit = false;
-		
-		
-		elements.each(function(el, composite, idx) {
-			if (el.dom.name.match(/MergeInto/)) {
-				form = el.parent('form');
-				mergeElement = el;
-				return false;
-			}
-		});
-		
-		
-		if (form && mergeElement) {
-			form.on('submit', function(e, el, eOpt) {
-				if (mergeElement.dom.value && doSubmit === false) {
-					e.preventDefault();
-					
-					var url = "<% RT->Config->Get('WebURL') %>/Helpers/RT-Extension-TicketProvider";
-					var target = parseInt(mergeElement.dom.value);
-					var source = parseInt('<% $id %>');
-					
-					if (target === source) {
-						Ext.MessageBox.show({
-							icon: Ext.Msg.ERROR,
-							title: 'Doh!',
-							msg: Ext.String.format('Source and target ticket are the same!'),
-							buttons: Ext.MessageBox.OK,
-						});
-						return;
-					}
-					
-					Ext.Ajax.request({
-						url: url,
-						params: {
-							tickets: source + ',' + target
-						},
-						success: function(response) {
-							try {
-								data = Ext.decode(response.responseText, true);
-								if (Ext.isObject(data) && data.success) {									
-									if (data.resultCount !== 2) {
-										Ext.MessageBox.show({
-											icon: Ext.Msg.ERROR,
-											title: 'Doh!',
-											msg: Ext.String.format('Target ticket #{0} is not mergable!', target),
-											buttons: Ext.MessageBox.OK,
-										});
-										return;
-									}
-									
-									var result = data.result;
-									
-									var template = new Ext.XTemplate('#{id} - {subject} ({status})');
-									
-									var oSource = {};
-									var oTarget = {};
-									
-									try {
-										oSource = Ext.Array.filter(result, function(v) { return parseInt(v.id)==source && true; })[0];
-									} catch(e) {
-										console.log(e);
-									}
-									
-									try {
-										oTarget = Ext.Array.filter(result, function(v) { return parseInt(v.id)==target && true; })[0];
-									} catch(e) {
-										console.log(e);
-									}
-									
-									var strSource = template.apply(oSource);
-									var strTarget = template.apply(oTarget);
-									
-									Ext.MessageBox.show({
-										msg: Ext.String.format(
-												"You're about to merge ticket"
-												+ "<br /><br /><span style=\"font-weight: bolder;\">{0}</span>"
-												+ "<br /><br >into"
-												+ "<br /><br /><span style=\"font-weight: bolder;\">{1}</span>"
-												+ "<br /><br />Are you sure to proceed?", strSource, strTarget),
-										buttons: Ext.MessageBox.YESNO,
-										icon: Ext.Msg.WARNING,
-										title: 'Think for one minute...',
-										fn: function(buttonId) {
-											if (buttonId === 'yes') {
-												doSubmit = true;
-												form.dom.submit();
-											}
-										}
-									});
-								}
-							} catch(e) {
-								console.log(e);
+	const rtName = '<% RT->Config->Get('rtname') %>';
+	const ticketDetailsPattern = /id: ticket\/(\d+)\s+Subject: (.*)$\s+Status: (.*)$/m;
+	const ticketErrorPattern = /# (.*)$/m;
+
+	var $ = jQuery;  // Don't know why that's not the damn default..
+
+	$(document).on('ready', function() {
+		var $mergeInput = $('input[name="<% $Ticket->Id %>-MergeInto"]');
+		if (! $mergeInput.length) {
+			return;
+		}
+
+		$mergeInput.closest('form').on('submit', function (event) {
+			var $mergeConfirmation = $('#mergeConfirmation');
+			if ($mergeConfirmation.is(':visible')) {  // RT's version of jQuery Modal has no isActive() :(
+				$.modal.close();
+				this.submit();  // Shouldn't be necessary but is. It's as if the browser remembers that we called preventDefault forever until a reload -.-
+			} else if ($mergeInput.val()) {
+				event.preventDefault();
+
+				var targetId = $mergeInput.val();
+				var $form = $(this);
+
+				$('input[name="SubmitTicket"]', $form).prop('disabled', true);
+				$.ajax({
+					url: '<% RT->Config->Get('WebURL') %>/REST/1.0/ticket/' + targetId + '/show?format=l&fields=Subject,Status',
+					complete: function (req, textStatus) {
+						$('input[name="SubmitTicket"]', $form).prop('disabled', false);
+					},
+					// No error handler because RT seems not to return any real HTTP errors...
+					success: function (data, textStatus, req) {
+						var matches = data.match(ticketDetailsPattern);
+						if (matches) {
+							// Does not re-use targetId because the target may have already been merged into something else
+							$('.mergeTarget', $mergeConfirmation).html(
+								'[' + rtName + ' #' + matches[1] + ']: ' + matches[2] + ' (' + matches[3] + ')'
+							);
+							$mergeConfirmation.modal();
+						} else {
+							var errors = data.match(ticketErrorPattern);
+							if (errors) {
+								var $mergeFailure = $('#mergeFailure');
+								$('.mergeReason', $mergeFailure).html(errors[1]);
+								$mergeFailure.modal();
+							} else {
+								console.error('Failed to parse result data:\n', data);
+								alert("That didn't quite work. Please contact an administrator.");
 							}
 						}
-					});
-				}
-				
-			});
-		}
+					}
+				});
+			}
+		});
 	});
-	
 </script>
 <%init>
-	my $id = $ARGSRef->{'id'};	
+	my $Ticket = LoadTicket($ARGSRef->{'id'});
 </%init>
 <%args>
 	$ARGSRef
