@@ -4,6 +4,8 @@ package RT::Extension::Netways;
 
 our $VERSION = '1.1.0';
 
+RT->AddStyleSheets('netways.css');
+
 =head1 NAME
 
 RT-Extension-Netways - [One line description of module's purpose here]
