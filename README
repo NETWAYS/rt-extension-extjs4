@@ -6,6 +6,22 @@ DESCRIPTION
 
     http://www.netways.de
 
+    These features are the following:
+        * Custom header for tickets [Configurable]
+        * Register ticket authors as AdminCc instead of Requestor [Configurable]
+        * Read-Only boxes under a ticket's basics to quickly copy and share details
+        * Quick removal of poeple registered as AdminCc or Requestor
+        * Quick assign of people as AdminCc or Owner [Configurable]
+        * Switched positions of ticket people and reminders
+        * Safety measures when merging tickets (aka A modal confirmation dialog)
+        * Empty search result boxes are automatically hidden (e.g. on "RT at a glance") [Configurable]
+        * Additional CSS classes for search result boxes (e.g. on "RT at a glance")
+            - netways-tickets-default (If no other of the following applies)
+            - netways-tickets-request
+            - netways-tickets-watched
+            - netways-tickets-nobody
+            - netways-tickets-due
+
 RT VERSION
     Works with RT 4.4.2
 
@@ -24,6 +40,30 @@ INSTALLATION
             rm -rf /opt/rt4/var/mason_data/obj
 
     Restart your webserver
+
+CONFIGURATION
+    $RT_Extension_Netways_EnableTagFormat
+        If enabled, applies the custom header for tickets.
+
+    $RT_Extension_Netways_UserRequestorGroup
+        The group of which authors must be a member to get registered as AdminCc instead of Requestor.
+
+    $RT_Extension_Netways_EnableQuickAssign
+        If enabled, shows the form controls to quickly assign people as AdminCc or Owner.
+
+    $RT_Extension_Netways_QuickAssignGroup
+        Which group's members should be choosable when showing the quick assign form controls.
+
+    $RT_Extension_Netways_ShowSearchOnlyWithResults
+        If enabled, hides empty search result boxes automatically. (e.g. on "RT at a glance")
+
+    Example
+        # Enables everything provided by RT::Extension::Netways
+        Set($RT_Extension_Netways_EnableTagFormat, 1);
+        Set($RT_Extension_Netways_UserRequestorGroup, 'NETWAYS');
+        Set($RT_Extension_Netways_EnableQuickAssign, 1);
+        Set($RT_Extension_Netways_QuickAssignGroup, 'NETWAYS');
+        Set($RT_Extension_Netways_ShowSearchOnlyWithResults, 1);
 
 AUTHOR
     NETWAYS GmbH <info@netways.de>
