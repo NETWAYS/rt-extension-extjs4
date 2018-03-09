@@ -8,7 +8,7 @@ RT->AddStyleSheets('netways.css');
 
 =head1 NAME
 
-RT-Extension-Netways - [One line description of module's purpose here]
+RT-Extension-Netways - Changes on the RT system for the NETWAYS workflow
 
 =head1 DESCRIPTION
 
@@ -19,8 +19,6 @@ http://www.netways.de
 =head1 RT VERSION
 
 Works with RT 4.4.2
-
-[Make sure to use requires_rt and rt_too_new in Makefile.PL]
 
 =head1 INSTALLATION
 
