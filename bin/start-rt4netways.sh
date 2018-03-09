@@ -13,4 +13,5 @@ docker run \
   -v /home/rt/signatur:/signatur \
   -v /home/rt/gpg:/opt/rt4/var/data/gpg \
   -v /home/rt/smime:/opt/rt4/var/data/smime \
+  -v /var/log/request-tracker:/var/log/request-tracker
   rt4/rt4netways

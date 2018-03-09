@@ -6,8 +6,9 @@ ENV RTHOME ${RTHOME:-/opt/rt4}
 ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
 ENV GNUPGHOME ${GNUPGHOME:-/opt/rt4/var/data/gpg}
 
-COPY ./rootfs/netways/ /
+VOLUME /var/log/
 
+COPY ./rootfs/netways/ /
 RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
   && chown root.rt /opt/rt4/etc/RT_SiteConfig.pm
 
@@ -36,3 +37,4 @@ RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main
 RUN /usr/local/sbin/update-postfix-tables.sh
 
 EXPOSE 25 80 443
+

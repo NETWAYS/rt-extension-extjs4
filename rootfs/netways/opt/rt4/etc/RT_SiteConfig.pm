@@ -32,7 +32,9 @@ Set($DatabaseName, "rt4_net_support");
 
 Set($LogToSyslog, "error");
 Set($LogToSTDERR, undef);
-Set($LogToFile, undef);
+Set($LogToFile , 'notice'); #Attention! https://rt-wiki.bestpractical.com/wiki/LogsConfig
+Set($LogDir, '/var/log/request-tracker');
+Set($LogToFileNamed, "rt.log");
 Set($LogStackTraces, undef);
 
 # XSS referrer check
@@ -51,7 +53,8 @@ Set($ParseNewMessageForTicketCcs, 1);
 Set($ShowHistory, 'delay');
 
 # Set($RTAddressRegexp, '^.+\@rt.netways.de$');
-Set($RTAddressRegexp, '^(nobody\@web\.|.+\@rt\.|(service|info|office|abuse|billing|changes|einkauf|events|fax|hardware|hostmaster|reports|.*support|sales|shop|sun|tradoria|tickets?|grafik|telekom|hq|jobs?)\@)netways\.de$');
+# Set($RTAddressRegexp, '^.*\@netways.de$');
+Set($RTAddressRegexp, '^(nobody\@web\.|.+\@rt\.|(marketing|nws|service|info|office|abuse|billing|changes|einkauf|events|fax|hardware|hostmaster|reports|.*support|sales|shop|sun|tradoria|tickets?|grafik|telekom|hq|jobs?|schulungsanmeldung|devopsdays\.attendee)\@)netways\.de$');
 Set($CorrespondAddress , 'rt@rt.netways.de');
 Set($CommentAddress , 'xrt@rt.netways.de');
 Set($SetOutgoingMailFrom, 1);
