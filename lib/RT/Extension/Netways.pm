@@ -1,6 +1,9 @@
+package RT::Extension::Netways;
+
 use strict;
 use warnings;
-package RT::Extension::Netways;
+
+use 5.010;
 
 our $VERSION = '1.1.0';
 
@@ -12,9 +15,9 @@ RT-Extension-Netways - Changes on the RT system for the NETWAYS workflow
 
 =head1 DESCRIPTION
 
-Some special features for the NETWAYS GmbH.
+Special features for NETWAYS GmbH workflow.
 
-http://www.netways.de
+https://www.netways.de
 
 =head1 RT VERSION
 
