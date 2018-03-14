@@ -113,7 +113,7 @@
 	use Data::Dumper;
 	use subs qw(BuildQueueStruct);
 
-	my $ref = RT->Config->Get('RTx_QueueCategories_Map');
+	my $ref = [];
 	
 	my $struct = {};
 	
@@ -122,11 +122,28 @@
 	BuildQueueStruct($ref, $struct);
 	
 	sub BuildQueueStruct {
+		return unless (exists $session{CurrentUser});
+
 		my $ref = shift;
 		my $struct = shift;
-		foreach my $item(@{$ref}) {
-			foreach my $id(@{ $item->{'items'} }) {
-				$struct->{$id} = $item->{'name'};
+		my $cf = RT->Config->Get('QueCat_CF') // 'QueueCategory';
+		my %queueCategories = ();
+
+		my $queuesSearch = RT::Queues->new($session{CurrentUser});
+		$queuesSearch->LimitToEnabled;
+		while (my $queue = $queuesSearch->Next) {
+			my $queueCategory = $queue->FirstCustomFieldValue($cf);
+			next unless (defined $queueCategory);
+
+			$struct->{$queue->Name} = $queueCategory;
+			$queueCategories{$queueCategory} = [] unless (exists $queueCategories{$queueCategory});
+			push @{$queueCategories{$queueCategory}}, $queue->Name
+		}
+
+		for my $queueCategory (sort keys %queueCategories) {
+			push @$ref, {
+				name  => $queueCategory,
+				items => [sort @{$queueCategories{$queueCategory}}]
 			}
 		}
 	}
