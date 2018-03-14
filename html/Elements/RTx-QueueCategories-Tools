@@ -129,6 +129,7 @@
 		my $cf = RT->Config->Get('QueCat_CF') // 'QueueCategory';
 		my %queueCategories = ();
 
+		my %queuesOrder = ();
 		my $queuesSearch = RT::Queues->new($session{CurrentUser});
 		$queuesSearch->LimitToEnabled;
 		while (my $queue = $queuesSearch->Next) {
@@ -137,7 +138,8 @@
 
 			$struct->{$queue->Name} = $queueCategory;
 			$queueCategories{$queueCategory} = [] unless (exists $queueCategories{$queueCategory});
-			push @{$queueCategories{$queueCategory}}, $queue->Name
+			push @{$queueCategories{$queueCategory}}, $queue->Name;
+			$queuesOrder{$queue->Name} = $queue->SortOrder
 		}
 
 		my %valuesOrder = ();
@@ -152,7 +154,7 @@
 		for my $queueCategory (sort { $valuesOrder{$a} <=> $valuesOrder{$b} } keys %queueCategories) {
 			push @$ref, {
 				name  => $queueCategory,
-				items => [sort @{$queueCategories{$queueCategory}}]
+				items => [sort { $queuesOrder{$a} <=> $queuesOrder{$b} } @{$queueCategories{$queueCategory}}]
 			}
 		}
 	}
