@@ -140,7 +140,16 @@
 			push @{$queueCategories{$queueCategory}}, $queue->Name
 		}
 
-		for my $queueCategory (sort keys %queueCategories) {
+		my %valuesOrder = ();
+		my $field = RT::CustomField->new($session{CurrentUser});
+		$field->LoadByName(Name => $cf, ObjectType => 'RT::Queue', IncludeDisabled => 0, IncludeGlobal => 1);
+		my $valuesSearch = $field->Values;
+
+		while (my $value = $valuesSearch->Next) {
+			$valuesOrder{$value->Name} = $value->SortOrder
+		}
+
+		for my $queueCategory (sort { $valuesOrder{$a} <=> $valuesOrder{$b} } keys %queueCategories) {
 			push @$ref, {
 				name  => $queueCategory,
 				items => [sort @{$queueCategories{$queueCategory}}]
