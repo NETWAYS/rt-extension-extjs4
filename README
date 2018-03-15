@@ -1,0 +1,49 @@
+NAME
+    RT::Extension::QueueCategories
+
+DESCRIPTION
+    A simple extension that works with RT 4.4.2 which provides queues
+    grouping by categories.
+
+RT VERSION
+    Works with RT 4.4.2
+
+INSTALLATION
+    perl Makefile.PL
+    make
+    make install
+        May need root permissions
+
+    Edit your /opt/rt4/etc/RT_SiteConfig.pm
+        Add this line:
+
+            Plugin('RT::Extension::QueueCategories');
+
+    Clear your mason cache
+            rm -rf /opt/rt4/var/mason_data/obj
+
+    Restart your webserver
+
+CONFIGURATION
+    Create a custom field "QueueCategory" of type "Select one value"
+    Add the desired categories as values
+    Apply it to all queues (globally)
+    Edit each queue to be categorized and set QueueCategory as desired
+
+  $QueCat_CF
+    An alternative custom field to use.
+
+AUTHOR
+    NETWAYS GmbH support@netways.de <mailto:support@netways.de>
+
+BUGS
+    All bugs should be reported at GitHub
+    <https://github.com/NETWAYS/rt-extension-queuecategories/issues>.
+
+LICENSE AND COPYRIGHT
+    This software is Copyright (c) 2018 by NETWAYS GmbH
+
+    This is free software, licensed under:
+
+      The GNU General Public License, Version 2, June 1991
+
