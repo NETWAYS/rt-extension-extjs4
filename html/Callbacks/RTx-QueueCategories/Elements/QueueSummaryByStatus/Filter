@@ -1,6 +1,0 @@
-<%init>
-	$m->comp('/Elements/RTx-QueueCategories-Tools:SortQueueArray', Queues => $Queues);
-</%init>
-<%args>
-	$Queues => ()
-</%args>

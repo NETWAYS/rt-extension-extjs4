@@ -14,7 +14,7 @@ Install:
 
 Changes in RT configuration file:
 
-    Plugin('RTx::QueueCategories');
+    Plugin('RT::Extension::QueueCategories');
 
 ## Configuration
 
@@ -34,5 +34,5 @@ Both of them fall back to alphabetical order.
 The custom field's name isn't limited to "QueueCategories".
 An alternative name can be configured in RT configuration file:
 
-    Plugin('RTx::QueueCategories');
+    Plugin('RT::Extension::QueueCategories');
     Set($QueCat_CF, 'QueGrp');

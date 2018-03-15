@@ -1,4 +1,4 @@
-package RTx::QueueCategories;
+package RT::Extension::QueueCategories;
 
 use strict;
 
@@ -11,7 +11,7 @@ our $VERSION="1.0.0";
 
 =head1 NAME
 
-RTx::QueueCategories
+RT::Extension::QueueCategories
 
 =head1 VERSION
 
