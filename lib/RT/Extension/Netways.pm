@@ -130,16 +130,9 @@ If enabled, hides empty search result boxes automatically. (e.g. on "RT at a gla
 
 NETWAYS GmbH <lt>support@netways.de<gt>
 
-=for html <p>All bugs should be reported via email to <a
-href="mailto:bug-RT-Extension-Netways@rt.cpan.org">bug-RT-Extension-Netways@rt.cpan.org</a>
-or via the web at <a
-href="http://rt.cpan.org/Public/Dist/Display.html?Name=RT-Extension-Netways">rt.cpan.org</a>.</p>
+=head1 BUGS
 
-=for text
-    All bugs should be reported via email to
-        bug-RT-Extension-Netways@rt.cpan.org
-    or via the web at
-        http://rt.cpan.org/Public/Dist/Display.html?Name=RT-Extension-Netways
+All bugs should be reported on L<Gitlab|https://git.netways.org/rt4/rt-extension-netways>.
 
 =head1 LICENSE AND COPYRIGHT
 
