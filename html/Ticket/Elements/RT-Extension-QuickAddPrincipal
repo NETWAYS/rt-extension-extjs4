@@ -32,7 +32,7 @@
     </form>
 </div>
 <%init>
-return unless(RT->Config->Get('RT_Extension_Netways_EnableQuickAssign') && RT->Config->Get('RT_Extension_Netways_QuickAssignGroup'));
+return unless(RT->Config->Get('Netways_EnableQuickAssign') && RT->Config->Get('Netways_QuickAssignGroup'));
 
 my $hexUid          = genHexUID64();
 my $formName        = 'form_' . $hexUid;
@@ -52,7 +52,7 @@ sub genHexUID64{
     return $UID;
 }
 
-$CustomGroup->LoadUserDefinedGroup(RT->Config->Get('RT_Extension_Netways_QuickAssignGroup'));
+$CustomGroup->LoadUserDefinedGroup(RT->Config->Get('Netways_QuickAssignGroup'));
 
 my $Members = $CustomGroup->UserMembersObj();
 

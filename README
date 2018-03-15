@@ -42,28 +42,28 @@ INSTALLATION
     Restart your webserver
 
 CONFIGURATION
-    $RT_Extension_Netways_EnableTagFormat
+    $Netways_EnableTagFormat
         If enabled, applies the custom header for tickets.
 
-    $RT_Extension_Netways_UserRequestorGroup
+    $Netways_UserRequestorGroup
         The group of which authors must be a member to get registered as AdminCc instead of Requestor.
 
-    $RT_Extension_Netways_EnableQuickAssign
+    $Netways_EnableQuickAssign
         If enabled, shows the form controls to quickly assign people as AdminCc or Owner.
 
-    $RT_Extension_Netways_QuickAssignGroup
+    $Netways_QuickAssignGroup
         Which group's members should be choosable when showing the quick assign form controls.
 
-    $RT_Extension_Netways_ShowSearchOnlyWithResults
+    $Netways_ShowSearchOnlyWithResults
         If enabled, hides empty search result boxes automatically. (e.g. on "RT at a glance")
 
     Example
         # Enables everything provided by RT::Extension::Netways
-        Set($RT_Extension_Netways_EnableTagFormat, 1);
-        Set($RT_Extension_Netways_UserRequestorGroup, 'NETWAYS');
-        Set($RT_Extension_Netways_EnableQuickAssign, 1);
-        Set($RT_Extension_Netways_QuickAssignGroup, 'NETWAYS');
-        Set($RT_Extension_Netways_ShowSearchOnlyWithResults, 1);
+        Set($Netways_EnableTagFormat, 1);
+        Set($Netways_UserRequestorGroup, 'NETWAYS');
+        Set($Netways_EnableQuickAssign, 1);
+        Set($Netways_QuickAssignGroup, 'NETWAYS');
+        Set($Netways_ShowSearchOnlyWithResults, 1);
 
 AUTHOR
     NETWAYS GmbH <info@netways.de>

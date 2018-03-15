@@ -1,5 +1,5 @@
 <%init>
-	if (RT->Config->Get('RT_Extension_Netways_EnableTagFormat')) {
+	if (RT->Config->Get('Netways_EnableTagFormat')) {
 		$$Title = $m->comp('/Elements/RT-Extension-TitleTag:rewriteExisting', Title => $$Title);
 	}
 </%init>
