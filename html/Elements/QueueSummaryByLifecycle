@@ -67,7 +67,7 @@ for my $queue (@queues) {
 
     $i++;
 </%PERL>
-<& /Elements/RTx-QueueCategories-Tools:GroupHeader, Queue => $queue->{Name}, Span => scalar(@cur_statuses) &>
+<& /Elements/RT-Extension-QueueCategories-Tools:GroupHeader, Queue => $queue->{Name}, Span => scalar(@cur_statuses) &>
 <tr class="<% $i%2 ? 'oddline' : 'evenline'%>" >
 
 <td>
