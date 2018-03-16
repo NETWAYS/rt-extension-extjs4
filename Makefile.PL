@@ -1,11 +1,11 @@
-use strict;
 use inc::Module::Install;
 
-RTx('RT-Extension-QueueCategories');
-author('Marius Hein <marius.hein@netways.de>');
-version('1.0');
-license('gpl');
-readme_from('lib/RT/Extension/QueueCategories.pm');
+RTx     'RT-Extension-QueueCategories';
+license 'gpl_2';
+repository 'https://github.com/NETWAYS/rt-extension-queuecategories';
+readme_from 'lib/RT/Extension/QueueCategories.pm';
 
-&WriteAll;
+requires_rt '4.4.2';
 
+sign;
+WriteAll;
