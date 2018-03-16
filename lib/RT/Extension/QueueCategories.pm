@@ -61,9 +61,9 @@ Add this line:
 
 =back
 
-=head2 C<$QueCat_CF>
+=head2 C<$QueueCategories_CFName>
 
-An alternative custom field to use.
+An alternative custom field name to use.
 
 =head1 AUTHOR
 

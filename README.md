@@ -98,5 +98,5 @@ An alternative name can be configured in RT configuration file:
 ```
 Plugin('RT::Extension::QueueCategories');
 
-Set($QueCat_CF, 'MyQueueCategory');
+Set($QueueCategories_CFName, 'MyQueueCategory');
 ```

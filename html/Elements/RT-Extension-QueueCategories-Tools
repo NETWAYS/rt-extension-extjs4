@@ -126,7 +126,7 @@
 
 		my $ref = shift;
 		my $struct = shift;
-		my $cf = RT->Config->Get('QueCat_CF') // 'QueueCategory';
+		my $cf = RT->Config->Get('QueueCategories_CFName') // 'QueueCategory';
 		my %queueCategories = ();
 
 		my %queuesOrder = ();

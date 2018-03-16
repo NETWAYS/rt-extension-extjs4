@@ -30,8 +30,8 @@ CONFIGURATION
     Apply it to all queues (globally)
     Edit each queue to be categorized and set QueueCategory as desired
 
-  $QueCat_CF
-    An alternative custom field to use.
+  $QueueCategories_CFName
+    An alternative custom field name to use.
 
 AUTHOR
     NETWAYS GmbH support@netways.de <mailto:support@netways.de>
