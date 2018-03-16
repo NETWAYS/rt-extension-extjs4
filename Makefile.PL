@@ -1,9 +1,10 @@
-use strict;
 use inc::Module::Install;
 
-RTx('RT-Extension-Actitime');
-author('Marius Hein <marius.hein@netways.de>');
-version('0.2');
-license('gpl');
+RTx     'RT-Extension-Actitime';
+license 'gpl_2';
+repository 'https://git.netways.org/rt4/rtx-actitime';
 
-&WriteAll;
+requires_rt '4.2';
+
+sign;
+WriteAll;
