@@ -1,20 +1,77 @@
-# RT Queue Categories
+# QueueCategories Extension for Request Tracker
 
-RequestTracker extension to group queues by categories:
+#### Table of Contents
+
+1. [About](#about)
+2. [License](#license)
+3. [Support](#support)
+4. [Requirements](#requirements)
+5. [Installation](#installation)
+6. [Configuration](#configuration)
+
+## About
+
+Provides queues grouping by categories:
 
 ![Create new ticket](doc/new-ticket.png)
 ![Queues stats](doc/stats.png)
 
-## Quickstart
+## License
 
-Install:
+This project is licensed under the terms of
+the GNU General Public License Version 2, Copyright held by author.
 
-    # perl Makefile.PL
-    # make install
+## Support
 
-Changes in RT configuration file:
+For bugs and feature requests please head over to our
+[issue tracker](https://github.com/NETWAYS/rt-extension-queuecategories/issues).
+You may also send us an email to [support@netways.de](mailto:support@netways.de)
+for general questions or to get technical support.
 
-    Plugin('RT::Extension::QueueCategories');
+## Requirements
+
+- RT 4.4.2
+
+## Installation
+
+Extract this extension to a temporary location.
+
+Git clone:
+
+```
+cd /usr/local/src
+git clone https://github.com/NETWAYS/rt-extension-queuecategories
+```
+
+Tarball download (latest [release](https://github.com/NETWAYS/rt-extension-queuecategories/releases/latest)):
+
+```
+cd /usr/local/src
+wget https://github.com/NETWAYS/rt-extension-queuecategories/archive/v1.0.0.zip
+unzip v1.0.0.zip
+```
+
+Navigate into the source directory and install the extension.
+
+```
+perl Makefile.PL
+make
+make install
+```
+
+Clear your mason cache.
+
+```
+rm -rf /opt/rt4/var/mason_data/obj
+```
+
+Restart your web server.
+
+```
+systemctl restart httpd
+
+systemctl restart apache2
+```
 
 ## Configuration
 
