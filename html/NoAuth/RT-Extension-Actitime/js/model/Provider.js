@@ -1,13 +1,13 @@
 Ext.define("Actitime.model.Provider", {
     extend: "Ext.data.Model",
-    
+
     requires: [
         "Actitime.model.Task"
     ],
-    
+
     fields: [{
         name: "project",
-        type: "string" 
+        type: "string"
     }, {
         name: "sum",
         type: "int"
@@ -59,16 +59,16 @@ Ext.define("Actitime.model.Provider", {
         type: "string",
         mapping: "inactive.labels"
     }],
-    
+
     associations: [{
         type: "hasMany",
         model: "Actitime.model.Task",
         name: "tasks"
     }],
-    
+
     proxy: {
         type: "ajax",
-        url: "<% RT->Config->Get("WebURL") %>RTx/Actitime/Provider.html",
+        url: "<% RT->Config->Get("WebURL") %>RT/Extension/Actitime/Provider.html",
         reader: {
             type: "json",
             root: "tasks"

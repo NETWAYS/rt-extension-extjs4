@@ -1,7 +1,7 @@
 use strict;
 use inc::Module::Install;
 
-RTx('RTx-Actitime');
+RTx('RT-Extension-Actitime');
 author('Marius Hein <marius.hein@netways.de>');
 version('0.2');
 license('gpl');
