@@ -224,7 +224,7 @@ Set($RTx_QueueCategories_Map, [
 		items => ['Event Aufgaben', 'Training Aufgaben', 'Marketing Aufgaben', 'Marketing Grafik']
 	}, {
 		name => '09. Teilnehmerqueues',
-		items => ['TM Training', 'TM OSMC', 'TM OSDC', 'TM OSBC', 'TM DOST', 'TM DevOpsDays', 'VT OSMC', 'VT OSDC', 'VT OSBC', 'VT DOST', 'TM Events']
+		items => ['TM Training', 'TM OSMC', 'TM OSDC', 'TM OSCAMP', 'TM OSBC', 'TM DOST', 'TM DevOpsDays', 'VT OSMC', 'VT OSDC', 'VT OSCAMP', 'VT OSBC', 'VT DOST', 'TM Events']
 	}
 ]);
 
