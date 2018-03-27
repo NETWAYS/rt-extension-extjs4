@@ -5,7 +5,7 @@
 %       if (defined($client_id) && $client_id > 0) {
         <div actitime:customerid="<% $client_id %>"></div>
 %       }
-        <div actitime:actitimeurl="<% RT->Config->Get('RTx_Actitime_HTTP_URL') %>"></div>
+        <div actitime:actitimeurl="<% RT->Config->Get('Actitime_HTTP_URL') %>"></div>
     </div>
 </&>
 % }
@@ -14,10 +14,10 @@
         Object => RT->System,
         Right => "ShowActitimeIntegration"
     );
-    
-    my $cfname = RT->Config->Get('RTx_Actitime_CUSTOMER_FIELD_NAME');
+
+    my $cfname = RT->Config->Get('Actitime_CUSTOMER_FIELD_NAME');
     my $client_id = undef;
-    
+
     if ($cfname) {
         $client_id = $Ticket->CustomFieldValuesAsString($cfname);
     }

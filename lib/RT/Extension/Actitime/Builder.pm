@@ -1,4 +1,4 @@
-package RTx::Actitime::Builder;
+package RT::Extension::Actitime::Builder;
 
 use strict;
 use version;
@@ -17,11 +17,11 @@ sub new {
         'tasks'             => {},
         'connection'        => shift,
         'show_all'
-            => RT->Config->Get('RTx_Actitime_TASK_SHOW_ALL') || 0,
+            => RT->Config->Get('Actitime_TASK_SHOW_ALL') || 0,
         'budget_warning_percent'
-            => RT->Config->Get('RTx_Actitime_BUDGET_WARNING_PERCENT') || 100,
+            => RT->Config->Get('Actitime_BUDGET_WARNING_PERCENT') || 100,
         'budget_critical_percent'
-            => RT->Config->Get('RTx_Actitime_BUDGET_CRITICAL_PERCENT') || 100,
+            => RT->Config->Get('Actitime_BUDGET_CRITICAL_PERCENT') || 100,
     }, $type;
 
     $obj->getTasks();
@@ -40,7 +40,7 @@ sub generateTaskId {
 sub getTasks() {
     my $self = shift;
 
-    my $tasks = RT->Config->Get('RTx_Actitime_TASK_CONFIGURATION') || [];
+    my $tasks = RT->Config->Get('Actitime_TASK_CONFIGURATION') || [];
 
     foreach my $task(@{ $tasks }) {
         my $struct = {};
@@ -60,12 +60,12 @@ sub getTasks() {
 
         $struct->{'taskname'} = $task->{'name'};
 
-        $struct->{'budget_warning_percent'} = 
+        $struct->{'budget_warning_percent'} =
             exists($task->{'budget_warning_percent'}) ?
             $task->{'budget_warning_percent'} :
             $self->{'budget_warning_percent'};
 
-        $struct->{'budget_critical_percent'} = 
+        $struct->{'budget_critical_percent'} =
             exists($task->{'budget_critical_percent'}) ?
             $task->{'budget_critical_percent'} :
             $self->{'budget_critical_percent'};
@@ -236,7 +236,7 @@ sub buildData {
             $name = $data->{'project'}. ' / '. $data->{'task'};
         }
 
-        $taskid = $taskid. "_". $data->{'projectid'}; 
+        $taskid = $taskid. "_". $data->{'projectid'};
 
         my $record = {};
 
