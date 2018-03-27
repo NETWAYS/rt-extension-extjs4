@@ -100,6 +100,10 @@ puppettraining.teilnehmer@rt.netways.de net-puptrain-teilnehmer
 osdc.teilnehmer@rt.netways.de           net-osdc-teilnehmer
 osdc.referent@rt.netways.de             net-osdc-referent
 
+# OSCAMP
+oscamp.teilnehmer@rt.netways.de           net-oscamp-teilnehmer
+oscamp.referent@rt.netways.de             net-oscamp-referent
+
 # OSBC
 osbc.teilnehmer@rt.netways.de           net-osbc-teilnehmer
 osbc.referent@rt.netways.de             net-osbc-referent

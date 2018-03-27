@@ -268,6 +268,16 @@ net-osdc-referent:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
 			--queue 'VT OSDC'"
 
+# oscamp.teilnehmer@rt.netways.de
+net-oscamp-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/
+			--action correspond
+                     	--queue 'TM OSCAMP'"
+
+net-oscamp-referent:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/ --action correspond
+			--queue 'VT OSCAMP'"
+
 # osbc.teilnehmer@rt.netways.de
 net-osbc-teilnehmer:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
