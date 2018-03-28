@@ -66,7 +66,7 @@ Edit your `/opt/rt4/etc/RT_SiteConfig.pm`
 
 Add this line:
 
-    Plugin('RT::Extension::UpdateHistory');
+    Plugin('RT::Extension::QueueCategories');
 
 Clear your mason cache:
 
