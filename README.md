@@ -11,21 +11,26 @@
 
 ## About
 
-Provides queue grouping by categories for
+Allows you to categorize queues by a specific custom field.
 
-- Ticket creation drop-down
+In addition to the default functionality of custom fields, this extension utilizes the values of this custom field to
+group queues in the following areas:
 
-![Create new ticket](doc/new-ticket.png)
+- Quick Ticket Creation Dropdown
 
-- Dashboard element
+  The one in the top right corner.  
+  ![Create new ticket](doc/new-ticket.png)
 
-![Queues stats](doc/stats.png)
+- QueueList Dashboard Element
+
+  The one that comes by default with RT.  
+  ![Queues stats](doc/stats.png)
 
 ## License
 
 This project is licensed under the terms of the GNU General Public License Version 2.
 
-This software is Copyright (c) 2018 by NETWAYS GmbH <[support@netways.de](mailto:support@netways.de)>.
+This software is Copyright (c) 2018 by NETWAYS GmbH [support@netways.de](mailto:support@netways.de).
 
 ## Support
 
@@ -42,61 +47,56 @@ Extract this extension to a temporary location.
 
 Git clone:
 
-```
-cd /usr/local/src
-git clone https://github.com/NETWAYS/rt-extension-queuecategories
-```
+    cd /usr/local/src
+    git clone https://github.com/NETWAYS/rt-extension-queuecategories
 
 Tarball download (latest [release](https://github.com/NETWAYS/rt-extension-queuecategories/releases/latest)):
 
-```
-cd /usr/local/src
-wget https://github.com/NETWAYS/rt-extension-queuecategories/archive/v1.0.0.zip
-unzip v1.0.0.zip
-```
+    cd /usr/local/src
+    wget https://github.com/NETWAYS/rt-extension-queuecategories/archive/master.zip
+    unzip master.zip
 
 Navigate into the source directory and install the extension.
 
-```
-perl Makefile.PL
-make
-make install
-```
+    perl Makefile.PL
+    make
+    make install
 
-Clear your mason cache.
+Edit your `/opt/rt4/etc/RT_SiteConfig.pm`
 
-```
-rm -rf /opt/rt4/var/mason_data/obj
-```
+Add this line:
 
-Restart your web server.
+    Plugin('RT::Extension::UpdateHistory');
 
-```
-systemctl restart httpd
+Clear your mason cache:
 
-systemctl restart apache2
-```
+    rm -rf /opt/rt4/var/mason_data/obj
+
+Restart your webserver.
 
 ## Configuration
 
-1. Create a custom field `QueueCategory` of type `Select one value`.
-2. Add the desired categories as values and specify their sort order.
-3. Apply it to all queues (globally).
-4. Edit each queue to be categorized and set `QueueCategory` as desired.
+In order to enable this extension's functionality it is required to create a custom field first. This custom field
+needs to be of the type "Select one value" and have the name "QueueCategory". (Although the name is configurable,
+see below)
 
-### Custom order
+Once the custom field has been created, define the categories you want to use as values for the field. Remember to
+apply the field to those queues you want to categorize and to manage authorization before continuing.
 
-Categories are sorted by the sort order of the custom field's value for `QueueCategory`.
-Queues are sorted by their own sort order.
-Both of them fall back to alphabetical order.
+Now edit each queue you want to categorize and choose a value for the custom field. That's it.
 
-### Custom field customization
+### Order of Categories
 
-The custom field's name isn't limited to `QueueCategories`.
-An alternative name can be configured in RT configuration file:
+It's possible to adjust the order of categories by defining a sort order for each value of the custom field.
+If no custom sort order is provided, categories are sorted alphabetically by default.
 
-```
+### Alternative Custom Field Name
+
+To use an alternative name for the custom field, define `$QueueCategories_CFName` and provide it as a string.
+
+#### Example
+
+```perl
 Plugin('RT::Extension::QueueCategories');
-
-Set($QueueCategories_CFName, 'MyQueueCategory');
+Set($QueueCategories_CFName, 'Queue Group');
 ```

@@ -2,8 +2,17 @@ NAME
     RT::Extension::QueueCategories
 
 DESCRIPTION
-    A simple extension that works with RT 4.4.2 which provides queues
-    grouping by categories.
+    Allows you to categorize queues by a specific custom field.
+
+    In addition to the default functionality of custom fields, this
+    extension utilizes the values of this custom field to group queues in
+    the following areas:
+
+    Quick Ticket Creation Dropdown
+        The one in the top right corner.
+
+    QueueList Dashboard Element
+        The one that comes by default with RT.
 
 RT VERSION
     Works with RT 4.4.2
@@ -25,20 +34,36 @@ INSTALLATION
     Restart your webserver
 
 CONFIGURATION
-    Create a custom field "QueueCategory" of type "Select one value"
-    Add the desired categories as values
-    Apply it to all queues (globally)
-    Edit each queue to be categorized and set QueueCategory as desired
+    In order to enable this extension's functionality it is required to
+    create a custom field first. This custom field needs to be of the type
+    "Select one value" and have the name "QueueCategory". (Although the name
+    is configurable, see below)
+
+    Once the custom field has been created, define the categories you want
+    to use as values for the field. Remember to apply the field to those
+    queues you want to categorize and to manage authorization before
+    continuing.
+
+    Now edit each queue you want to categorize and choose a value for the
+    custom field. That's it.
+
+  Order of Categories
+    It's possible to adjust the order of categories by defining a sort order
+    for each value of the custom field. If no custom sort order is provided,
+    categories are sorted alphabetically by default.
 
   $QueueCategories_CFName
     An alternative custom field name to use.
 
+   Example
+    Set($QueueCategories_CFName, 'Queue Group');
+
 AUTHOR
-    NETWAYS GmbH support@netways.de <mailto:support@netways.de>
+    NETWAYS GmbH <support@netways.de>
 
 BUGS
-    All bugs should be reported at GitHub
-    <https://github.com/NETWAYS/rt-extension-queuecategories/issues>.
+    All bugs should be reported on GitHub
+    <https://github.com/NETWAYS/rt-extension-queuecategories>.
 
 LICENSE AND COPYRIGHT
     This software is Copyright (c) 2018 by NETWAYS GmbH
