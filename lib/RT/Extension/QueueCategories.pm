@@ -4,7 +4,7 @@ use 5.10.1;
 use strict;
 use version;
 
-our $VERSION="1.0.0";
+our $VERSION='2.0.0';
 
 =pod
 
