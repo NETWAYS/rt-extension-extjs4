@@ -30,16 +30,4 @@ Set(%FullTextSearch,
    Enable  => 1,
    Indexed => 0,
 );
-Set($HomepageComponents, [qw(
-       QuickCreate
-       Quicksearch
-       QueueList
-       MyAdminQueues
-       MySupportQueues
-       MyReminders
-       RefreshHomepage
-       Dashboards
-       SavedSearches
-       RTx-UserSearch
-       RTx-TicketHistory
-)]);
+
