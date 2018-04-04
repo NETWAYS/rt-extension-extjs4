@@ -8,7 +8,8 @@ ENV RTHOME ${RTHOME:-/opt/rt4}
 COPY ./rootfs/icinga/ /
 
 RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
-  && chown root.rt /opt/rt4/etc/RT_SiteConfig.pm \
+  && chown -R root.rt /opt/rt4/etc/RT_SiteConfig.pm \
+     /opt/rt4/etc/RT_SiteConfig.d \
   && chmod 755 /usr/local/sbin/icinga-cron-resolve-automails.sh
 
 RUN rt4-install-extensions.sh \
