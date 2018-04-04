@@ -29,13 +29,12 @@ RUN rt4-install-extensions.sh \
   rtx-extjs4 \
   rtx-historycomponent \
   rt-extension-netways \
-  rtx-queuecategories \
+  rt-extension-queuecategories \
   rtx-ticketactions \
   rtx-updatehistory \
   rt-extension-usersearch \
   RT-Extension-ExtractCustomFieldValues \
-  rtx-action-subjectandevent \
-  rtx-customfieldvalues-asset
+  rtx-action-subjectandevent
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
 

@@ -7,3 +7,4 @@ Plugin('RTx::AddServiceData');
 Plugin('RT::Action::ChangeOwner');
 Plugin('RT::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
+Plugin('RT::Extension::QueueCategories');
