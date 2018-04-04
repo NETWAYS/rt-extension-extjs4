@@ -1,9 +1,7 @@
 Set($WebDomain, 'rt.icinga.com');
 Set($WebPath, "");
 Set($WebPort, 443);
-
 Set($RestrictReferrer, undef);
-
 Set(@MasonParameters, (
        static_source => 1,
        buffer_preallocate_size => 16777216, # 16MB

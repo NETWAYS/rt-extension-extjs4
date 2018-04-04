@@ -1,8 +1,6 @@
 Plugin('RTx::DBCustomField');
 
-
 Set($RTx_DBCustomField_DisablePool, 0);
-
 Set($RTx_DBCustomField_Connections, {
 	'sugarcrm' => {
 		'dsn'			=> 'DBI:mysql:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
@@ -26,7 +24,6 @@ Set($RTx_DBCustomField_Connections, {
 	}
 
 });
-
 Set ($RTx_DBCustomField_Queries, {
 	'actitime' => {
 		'connection' => 'actitime',
@@ -331,7 +328,6 @@ Set ($RTx_DBCustomField_Queries, {
 	}
 
 });
-
 Set($RTx_DBCustomField_Fields, {
 	'Client'	    => 'companies',
 	'Opportunity'	=> 'opportunities',

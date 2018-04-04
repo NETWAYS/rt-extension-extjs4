@@ -4,7 +4,6 @@ Set(%GnuPG,
     Passphrase             => undef,
     OutgoingMessagesFormat => "RFC", # Inline
 );
-
 Set(%SMIME,
     Enable => 0,
     OpenSSL => 'openssl',

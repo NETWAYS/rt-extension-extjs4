@@ -1,4 +1,3 @@
-# Authentication
 Set($WebRemoteUserAuth, 1);
 Set($WebFallbackToRTLogin, 1);
 Set($AutoCreateNonExternalUsers, 1);
