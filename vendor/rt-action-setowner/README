@@ -1,0 +1,61 @@
+NAME
+    RT-Action-SetOwner - Scrip action to control the owner of a ticket
+
+DESCRIPTION
+    Scrip action to control the owner of a ticket in two ways.
+
+RT VERSION
+    Works with RT 4.2
+
+INSTALLATION
+    perl Makefile.PL
+    make
+    make install
+        May need root permissions
+
+    Edit your /opt/rt4/etc/RT_SiteConfig.pm
+        Add this line:
+
+            Plugin('RT::Action::SetOwner');
+
+    Clear your mason cache
+            rm -rf /opt/rt4/var/mason_data/obj
+
+    Restart your webserver
+
+CONFIGURATION
+    Owner configured by template:
+
+    1. Create new template with name or id of the user,
+    2. Create a new script use this action and select your new created
+    template as template argument,
+    3. Test and have fun!
+
+    Owner by scrip argument:
+
+    1. Be a DB admin and connect to your RT database,
+    2. Copy the row from Scrip table with the 'ExecModule' 'SetOwner' and
+    add new 'Argument' value representing your user and place a new
+    description,
+    3. Create a new Scrip with your new ScriptAction created above,
+    4. Test and have fun!
+
+    Nobody user:
+
+    1. Create a new Scrip action with 'Set to nobody' action,
+    2. Test and have fun!
+
+AUTHOR
+    NETWAYS GmbH <lt>support@netways.de<gt>
+
+BUGS
+    All bugs should be reported on GitHub
+    <https://github.com/NETWAYS/rt-extension-action-setowner>.
+
+LICENSE AND COPYRIGHT
+    This software is Copyright (c) 2018 by NETWAYS GmbH
+
+    This is free software, licensed under:
+
+      The GNU General Public License, Version 2, June 1991
+

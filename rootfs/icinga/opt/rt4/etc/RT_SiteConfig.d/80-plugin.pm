@@ -3,7 +3,7 @@ Plugin('RTx::CreateLinkedTickets');
 Plugin('RTx::ExtJS4');
 Plugin('RTx::QueueCategories');
 Plugin('RTx::UpdateHistory');
-Plugin('RTx::Action::SetOwner');
+Plugin('RT::Action::SetOwner');
 Plugin('RTx::Action::ChangeOwner');
 Plugin('RTx::DBCustomField');
 Plugin('RTx::HistoryComponent');
