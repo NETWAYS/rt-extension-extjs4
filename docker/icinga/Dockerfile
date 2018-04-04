@@ -15,6 +15,7 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
 
 RUN rt4-install-extensions.sh \
   rt-action-setowner \
+  rt-action-changeowner \
   rtx-addservicedata \
   rtx-create-external \
   rtx-createlinkedtickets \
@@ -27,7 +28,6 @@ RUN rt4-install-extensions.sh \
   rtx-ticketactions \
   rtx-updatehistory \
   rt-extension-usersearch \
-  rtx-action-changeowner \
   RT-Extension-ExtractCustomFieldValues
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf

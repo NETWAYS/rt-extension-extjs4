@@ -4,7 +4,7 @@ Plugin('RTx::HistoryComponent');
 Plugin('RT::Extension::UserSearch');
 Plugin('RT::Extension::ExtractCustomFieldValues');
 Plugin('RTx::AddServiceData');
+Plugin('RT::Action::ChangeOwner');
 Plugin('RT::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
-Plugin('RTx::Action::ChangeOwner');
 Plugin('RT::CustomFieldValues::Assets');
