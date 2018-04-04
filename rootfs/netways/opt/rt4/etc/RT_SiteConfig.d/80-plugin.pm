@@ -1,7 +1,7 @@
 Plugin('RTx::ExtJS4');
 Plugin('RTx::UpdateHistory');
 Plugin('RTx::HistoryComponent');
-Plugin('RTx::UserSearch');
+Plugin('RT::Extension::UserSearch');
 Plugin('RT::Extension::ExtractCustomFieldValues');
 Plugin('RTx::AddServiceData');
 Plugin('RTx::Action::SetOwner');

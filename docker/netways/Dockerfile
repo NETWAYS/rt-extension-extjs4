@@ -30,7 +30,7 @@ RUN rt4-install-extensions.sh \
   rtx-queuecategories \
   rtx-ticketactions \
   rtx-updatehistory \
-  rtx-usersearch \
+  rt-extension-usersearch \
   RT-Extension-ExtractCustomFieldValues \
   rtx-action-subjectandevent \
   rtx-action-changeowner \

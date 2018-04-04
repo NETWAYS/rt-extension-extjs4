@@ -8,6 +8,5 @@ Set($HomepageComponents, [qw(
     RefreshHomepage
     Dashboards
     SavedSearches
-    RTx-UserSearch
     RTx-TicketHistory
 )]);
