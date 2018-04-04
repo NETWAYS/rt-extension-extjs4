@@ -1,0 +1,43 @@
+<tr>
+	<td class="label"><&|/l&>Reply Address</&>:</td>
+	<td class="value">
+		<input readonly="readonly" class="xrt-netways-titletag" type="text" value="<% $replyAddress %>" style="width: 350px;" />
+	</td>
+</tr>
+
+<tr>
+	<td class="label"><&|/l&>Comment Address</&>:</td>
+	<td class="value">
+		<input readonly="readonly" class="xrt-netways-titletag" type="text" value="<% $commentAddress %>" style="width: 350px;" />
+	</td>
+</tr>
+
+<tr>
+	<td class="label"><&|/l&>Time Tag</&>:</td>
+	<td class="value">
+		<input readonly="readonly" class="xrt-netways-titletag" type="text" value="<% $timeTag %>" style="width: 350px;" />
+	</td>
+</tr>
+
+<script type="text/javascript">
+	(function() {
+		var $ = jQuery;  // Don't know why that's not the damn default..
+
+		$("table input.xrt-netways-titletag").on('focus', function (event) {
+			event.preventDefault();
+
+			var $el = $(this);
+			setTimeout(function () {
+				$el.select();
+			}, 100);
+		});
+	})();
+</script>
+<%init>
+	my $commentAddress = $m->comp('/Elements/RT-Extension-EmailTag:commentFromTicket', Ticket => $TicketObj);
+	my $replyAddress =  $m->comp('/Elements/RT-Extension-EmailTag:replyFromTicket', Ticket => $TicketObj);
+	my $timeTag = $m->comp('/Elements/RT-Extension-TitleTag:createFromTicket', Ticket => $TicketObj);
+</%init>
+<%args>
+	$TicketObj
+</%args>

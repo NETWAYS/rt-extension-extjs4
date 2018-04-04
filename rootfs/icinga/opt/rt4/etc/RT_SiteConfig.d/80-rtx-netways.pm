@@ -1,7 +1,7 @@
-Plugin('RTx::NETWAYS');
+Plugin('RT::Extension::Netways');
 
-Set($RTx_NETWAYS_EnableQuickAssign, 1);
-Set($RTx_NETWAYS_QuickAssignGroup, 'icinga-edit');
-Set($RTx_NETWAYS_UserRequestorGroup, 'icinga-edit');
-Set($RTx_NETWAYS_EnableTagFormat, 1);
-Set($RTx_NETWAYS_ShowSearchOnlyWithResults, 0);
+Set($Netways_EnableQuickAssign, 1);
+Set($Netways_QuickAssignGroup, 'icinga-edit');
+Set($Netways_UserRequestorGroup, 'icinga-edit');
+Set($Netways_EnableTagFormat, 1);
+Set($Netways_ShowSearchOnlyWithResults, 0);
