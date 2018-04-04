@@ -18,7 +18,7 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
 
 RUN rt4-install-extensions.sh \
   rtx-action-setowner \
-  rtx-actitime \
+  rt-extension-actitime \
   rtx-addservicedata \
   rtx-create-external \
   rtx-createlinkedtickets \
