@@ -1,0 +1,56 @@
+<&| /Widgets/TitleBox, title => loc('My last [_1] tickets', 10) &>
+
+<table cellspacing="0" width="100%" class="ticket-list collection-as-table">
+
+	<tr>
+		<th class="collection-as-table" style="text-align: right;">#</th>
+		<th class="collection-as-table"><% loc('Subject') %></th>
+		<th class="collection-as-table"><% loc('Status') %></th>
+		<th class="collection-as-table"><% loc('Queue') %></th>
+		<th class="collection-as-table"><% loc('Last Seen') %></th>
+	</tr>
+
+% for ($session{'CurrentUser'}->RecentlyViewedTickets()) {
+%	my ($ticketId, $timestamp) = @$_;
+%	my $Ticket = LoadTicket($ticketId);
+% 	my $link = RT->Config->Get('WebURL') . 'Ticket/Display.html?id=' . $Ticket->Id;
+
+	<tr class="<% (++$i % 2) ? 'oddline' : 'evenline' %>">
+		<td class="collection-as-table" align="right"><a href="<% $link %>"><% $ticketId %></a></td>
+		<td class="collection-as-table"><& .createSubject, Subject => $Ticket->Subject || loc('(No subject)'), href => $link &></td>
+		<td class="collection-as-table"><% $Ticket->Status %></td>
+		<td class="collection-as-table"><% $Ticket->QueueObj->Name %></td>
+		<td class="collection-as-table"><% $now->DiffAsString($timestamp) %></td>
+	</tr>
+% }
+
+</table>
+
+</&>
+
+<%def .createSubject>
+	<a href="<% $href %>" title="<% $Subject %>"><% $sub %></a>
+	<%init>
+		my $sub = $Subject;
+		if (length($sub) > $length) {
+			$sub = substr($sub, 0, $length) . '...';
+		}
+	</%init>
+	<%args>
+		$Subject
+		$href
+		$length => 30
+	</%args>
+</%def>
+<%init>
+
+if (!exists $session{'CurrentUser'}) {
+	return;
+}
+
+my $i = 0;
+my $now = new RT::Date($session{'CurrentUser'});
+
+$now->SetToNow();
+
+</%init>

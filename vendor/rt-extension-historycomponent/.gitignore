@@ -1,0 +1,15 @@
+.*
+!.git
+blib*
+Makefile
+Makefile.old
+pm_to_blib*
+*.tar.gz
+cover_db
+pod2htm*.tmp
+/RT-Extension-HistoryComponent*
+*.bak
+*.swp
+/MYMETA.*
+/t/tmp
+/xt/tmp
