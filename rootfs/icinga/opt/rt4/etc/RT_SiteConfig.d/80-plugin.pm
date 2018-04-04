@@ -6,6 +6,6 @@ Plugin('RTx::UpdateHistory');
 Plugin('RT::Action::ChangeOwner');
 Plugin('RT::Action::SetOwner');
 Plugin('RTx::DBCustomField');
-Plugin('RTx::HistoryComponent');
+Plugin('RT::Extension::HistoryComponent');
 Plugin('RT::Extension::UserSearch');
 Plugin('RTx::AddServiceData');

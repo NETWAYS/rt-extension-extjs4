@@ -27,7 +27,7 @@ RUN rt4-install-extensions.sh \
   rtx-dbcustomfield \
   rt-extension-emailheader \
   rtx-extjs4 \
-  rtx-historycomponent \
+  rt-extension-historycomponent \
   rt-extension-netways \
   rtx-queuecategories \
   rtx-ticketactions \
