@@ -20,7 +20,7 @@ RUN rt4-install-extensions.sh \
   rtx-create-external \
   rtx-createlinkedtickets \
   rtx-dbcustomfield \
-  rtx-emailheader \
+  rt-extension-emailheader \
   rtx-extjs4 \
   rtx-historycomponent \
   rt-extension-netways \
