@@ -7,4 +7,3 @@ Plugin('RTx::AddServiceData');
 Plugin('RT::Action::SetOwner');
 Plugin('RTx::Action::SubjectAndEvent');
 Plugin('RTx::Action::ChangeOwner');
-Plugin('RT::CustomFieldValues::Assets');
