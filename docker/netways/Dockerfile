@@ -18,7 +18,7 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
      /var/log/request-tracker
 
 RUN rt4-install-extensions.sh \
-  rtx-action-setowner \
+  rt-action-setowner \
   rt-extension-actitime \
   rtx-addservicedata \
   rtx-create-external \
