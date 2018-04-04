@@ -1,0 +1,49 @@
+NAME
+    RT-Extension-UserSearch - Provides a portlet to list members of a
+    configurable group
+
+DESCRIPTION
+    This portlet lists privileged users and their ticket count grouped by state.
+    Only users with the permission `ShowUserSearch` can add this portlet
+    to their homepage dashboard.
+
+RT VERSION
+    Works with RT 4.4.2
+
+INSTALLATION
+    perl Makefile.PL
+    make
+    make install
+        May need root permissions
+
+    Edit your /opt/rt4/etc/RT_SiteConfig.pm
+        Add this line:
+
+            Plugin('RT::Extension::UserSearch');
+
+    Clear your mason cache
+            rm -rf /opt/rt4/var/mason_data/obj
+
+    Restart your webserver
+
+CONFIGURATION
+
+    Navigate into Admin - Global - Group Rights and select the group to modify.
+    Select the Rights for staff tab and tick Show the usersearch box.
+
+    Users need to edit their dashboard and add the RT-Extension-UserSearch droplet.
+
+AUTHOR
+    NETWAYS GmbH <lt>support@netways.de<gt>
+
+BUGS
+    All bugs should be reported on GitHub
+    <https://github.com/NETWAYS/rt-extension-usersearch>.
+
+LICENSE AND COPYRIGHT
+    This software is Copyright (c) 2018 by NETWAYS GmbH
+
+    This is free software, licensed under:
+
+      The GNU General Public License, Version 2, June 1991
+
