@@ -1,0 +1,5 @@
+<& /Widgets/MergeDialog, id => $ARGSRef->{'id'} &>
+
+<%args>
+	$ARGSRef
+</%args>
