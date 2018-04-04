@@ -86,10 +86,8 @@ sub doConnect {
            RT->Config->Get('RTx_Actitime_DB_PASS')
         );
         
-        if ($self->isApplicable) {
-            RT->Logger->debug('RT::Extension::Actitime: Connection to DB server successful');
-        } else {
-            RT->Logger->error('RT::Extension::Actitime: Connection to DB server failed: ' . DBI::errstr);
+        if ($self->getConnection()->ping()) {
+            RT->Logger->debug('RTx::Actitime: DB server pinged successfully');
         }
     }
 }
