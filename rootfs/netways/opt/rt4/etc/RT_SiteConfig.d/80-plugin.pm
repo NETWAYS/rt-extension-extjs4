@@ -1,6 +1,6 @@
 Plugin('RTx::ExtJS4');
 Plugin('RTx::UpdateHistory');
-Plugin('RTx::HistoryComponent');
+Plugin('RT::Extension::HistoryComponent');
 Plugin('RT::Extension::UserSearch');
 Plugin('RT::Extension::ExtractCustomFieldValues');
 Plugin('RTx::AddServiceData');
