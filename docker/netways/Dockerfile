@@ -22,7 +22,7 @@ RUN rt4-install-extensions.sh \
   rt-action-setowner \
   rt-extension-actitime \
   rtx-addservicedata \
-  rtx-create-external \
+  rt-extension-create-external \
   rtx-createlinkedtickets \
   rtx-dbcustomfield \
   rt-extension-emailheader \
