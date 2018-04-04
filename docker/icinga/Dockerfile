@@ -22,7 +22,7 @@ RUN rt4-install-extensions.sh \
   rtx-emailheader \
   rtx-extjs4 \
   rtx-historycomponent \
-  rtx-netways \
+  rt-extension-netways \
   rtx-queuecategories \
   rtx-ticketactions \
   rtx-updatehistory \
