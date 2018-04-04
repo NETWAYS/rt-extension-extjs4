@@ -18,6 +18,7 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
      /var/log/request-tracker
 
 RUN rt4-install-extensions.sh \
+  rt-action-changeowner \
   rt-action-setowner \
   rt-extension-actitime \
   rtx-addservicedata \
@@ -34,7 +35,6 @@ RUN rt4-install-extensions.sh \
   rt-extension-usersearch \
   RT-Extension-ExtractCustomFieldValues \
   rtx-action-subjectandevent \
-  rtx-action-changeowner \
   rtx-customfieldvalues-asset
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
