@@ -10,4 +10,5 @@ tags
 .sconsign*
 *.sublime-workspace
 rt4netways.tgz
+.idea/
 

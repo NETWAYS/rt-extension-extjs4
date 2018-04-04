@@ -1,0 +1,10 @@
+Plugin('RTx::ExtJS4');
+Plugin('RTx::UpdateHistory');
+Plugin('RTx::HistoryComponent');
+Plugin('RTx::UserSearch');
+Plugin('RT::Extension::ExtractCustomFieldValues');
+Plugin('RTx::AddServiceData');
+Plugin('RTx::Action::SetOwner');
+Plugin('RTx::Action::SubjectAndEvent');
+Plugin('RTx::Action::ChangeOwner');
+Plugin('RT::CustomFieldValues::Assets');
