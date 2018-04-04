@@ -39,7 +39,7 @@ do
 	if [[ ! -d $PLUGIN_PATH ]]
 	then
 		echo "* Path not found for plugin '$I'"
-		continue
+		exit 1
 	else
 		echo "* Creating Makefile ($PERL $INIT_MAKE_FILE)"
 	fi
