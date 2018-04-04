@@ -7,5 +7,5 @@ Plugin('RTx::Action::SetOwner');
 Plugin('RTx::Action::ChangeOwner');
 Plugin('RTx::DBCustomField');
 Plugin('RTx::HistoryComponent');
-Plugin('RTx::UserSearch');
+Plugin('RT::Extension::UserSearch');
 Plugin('RTx::AddServiceData');
