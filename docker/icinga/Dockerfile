@@ -5,6 +5,7 @@ ARG RT_SOURCE
 ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
 ENV RTHOME ${RTHOME:-/opt/rt4}
 
+COPY ./vendor $RT_SOURCE
 COPY ./rootfs/icinga/ /
 
 RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \

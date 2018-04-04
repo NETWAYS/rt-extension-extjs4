@@ -8,6 +8,7 @@ ENV GNUPGHOME ${GNUPGHOME:-/opt/rt4/var/data/gpg}
 
 VOLUME /var/log/request-tracker
 
+COPY ./vendor $RT_SOURCE
 COPY ./rootfs/netways/ /
 
 RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
