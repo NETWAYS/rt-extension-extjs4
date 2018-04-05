@@ -1,4 +1,4 @@
-Plugin('EmailHeader');
+Plugin('RT::Extension::EmailHeader');
 
 Set($EmailHeader_AdditionalHeaders, {
     'Return-Path' => 'rt+__Ticket(id)__@rt.icinga.com'
