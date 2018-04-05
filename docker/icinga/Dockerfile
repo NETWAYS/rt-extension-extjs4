@@ -21,7 +21,6 @@ RUN rt4-install-extensions.sh \
   rt-extension-createlinkedtickets \
   rt-extension-dbcustomfield \
   rt-extension-emailheader \
-  rtx-extjs4 \
   rt-extension-historycomponent \
   rt-extension-netways \
   rt-extension-queuecategories \
