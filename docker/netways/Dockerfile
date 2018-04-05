@@ -24,7 +24,7 @@ RUN rt4-install-extensions.sh \
   rt-extension-addservicedata \
   rt-extension-create-external \
   rt-extension-createlinkedtickets \
-  rtx-dbcustomfield \
+  rt-extension-dbcustomfield \
   rt-extension-emailheader \
   rtx-extjs4 \
   rt-extension-historycomponent \
