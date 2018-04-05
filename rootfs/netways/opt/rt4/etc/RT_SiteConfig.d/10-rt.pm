@@ -30,4 +30,4 @@ Set(%FullTextSearch,
    Enable  => 1,
    Indexed => 0,
 );
-
+Set($PlainTextMono, 1);
