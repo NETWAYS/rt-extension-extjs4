@@ -4,7 +4,7 @@ Plugin('RTx::UpdateHistory');
 Plugin('RT::Extension::HistoryComponent');
 Plugin('RT::Extension::UserSearch');
 Plugin('RT::Extension::ExtractCustomFieldValues');
-Plugin('RTx::AddServiceData');
+Plugin('RT::Extension::AddServiceData');
 Plugin('RT::Action::ChangeOwner');
 Plugin('RT::Action::SetOwner');
 Plugin('RT::Extension::QueueCategories');

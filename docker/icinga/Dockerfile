@@ -16,7 +16,7 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
 RUN rt4-install-extensions.sh \
   rt-action-setowner \
   rt-action-changeowner \
-  rtx-addservicedata \
+  rt-extension-addservicedata \
   rt-extension-create-external \
   rtx-createlinkedtickets \
   rtx-dbcustomfield \

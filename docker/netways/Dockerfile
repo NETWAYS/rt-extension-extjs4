@@ -21,7 +21,7 @@ RUN rt4-install-extensions.sh \
   rt-action-changeowner \
   rt-action-setowner \
   rt-extension-actitime \
-  rtx-addservicedata \
+  rt-extension-addservicedata \
   rt-extension-create-external \
   rtx-createlinkedtickets \
   rtx-dbcustomfield \

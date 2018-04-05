@@ -1,0 +1,88 @@
+NAME
+    RT-Extension-AddServiceData
+
+DESCRIPTION
+    Add ticket meta data from webservices.
+
+RT VERSION
+    Works with RT 4.2
+
+INSTALLATION
+    perl Makefile.PL
+    make
+    make install
+        May need root permissions
+
+    Edit your /opt/rt4/etc/RT_SiteConfig.pm
+        Add this line:
+
+            Plugin('RT::Extension::AddServiceData');
+
+    Clear your mason cache
+            rm -rf /opt/rt4/var/mason_data/obj
+
+    Restart your webserver
+
+CONFIGURATION
+    Please combine this Action with a template and the following code:
+
+  Template Example
+    - Queries the URL with the parameter configured
+    - Iterate through the results
+    - Add for each row a new requestor with email in hash
+
+            {
+                    Type => 'AddRequestors',
+
+                    Field => 'email',
+
+                    RequestModule => 'RT::Extension::AddServiceData::HTTPRequest',
+
+                    RequestConfig => {
+                            uri => 'http://localhost:10088/iddp/data/db/idoit.owner/rest?q=isys_obj__sysid="__CustomField(SysID)__"&connection=__QueueName__'
+                    },
+
+                    ParserModule => 'RT::Extension::AddServiceData::RESTParser'
+            }
+
+    Add a CustomFieldValue
+
+            {
+                    Type => 'AddCustomFieldValue',
+
+                    Field => 'accounts_id',
+                    CustomField => 'client',
+
+                    RequestModule => 'RT::Extension::AddServiceData::HTTPRequest',
+
+                    RequestConfig => {
+                            uri => 'http://localhost:10088/iddp/data/db/sugarcrm.contacts/rest?q=email_address="__RequestorAddresses__"',
+                            user => 'testuser',
+                            pass => 'testuser'
+                    },
+
+                    ParserModule => 'RT::Extension::AddServiceData::RESTParser'
+            }
+
+    Allowed replace strings:
+
+            __CustomField(<NAME>)__
+            __QueueName__
+            __RequestorAddresses__
+
+    (All other implementations of RT::Ticket -> __<METHOD>__)
+
+AUTHOR
+    NETWAYS GmbH <lt>support@netways.de<gt>
+
+BUGS
+    All bugs should be reported on GitHub
+    <https://github.com/NETWAYS/rt-extension-addservicedata>.
+
+LICENSE AND COPYRIGHT
+    This software is Copyright (c) 2018 by NETWAYS GmbH
+
+    This is free software, licensed under:
+
+      The GNU General Public License, Version 2, June 1991
+
