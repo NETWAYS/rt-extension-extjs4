@@ -73,6 +73,10 @@ jQuery( function($) {
                     }
                 });
             },
+            focus: function(event, ui) {
+                // Prevents the focused entry's value from being inserted into the input
+                return false;
+            },
             select: function(event, ui) {
                 // Clear the input. Prevents the user from thinking it's
                 // possible to change the selection by simply typing..
