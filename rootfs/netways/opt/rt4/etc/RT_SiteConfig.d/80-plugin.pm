@@ -1,6 +1,5 @@
 Plugin('RTx::ExtJS4'); # Frozen, dependency from Actitime
 
-Plugin('RTx::UpdateHistory');
 Plugin('RT::Extension::HistoryComponent');
 Plugin('RT::Extension::UserSearch');
 Plugin('RT::Extension::ExtractCustomFieldValues');
