@@ -166,6 +166,8 @@ requires 'Pod::Simple', '3.24';
 # NETWAYS
 requires 'Hook::LexWrap';
 requires 'JSON::XS';
+requires 'Date::Holidays::DE';
+requires 'Date::Holidays';
 
 # RT::Authen::ExternalAuth
 requires 'Net::SSLeay';

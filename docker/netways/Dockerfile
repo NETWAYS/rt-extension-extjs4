@@ -30,7 +30,7 @@ RUN rt4-install-extensions.sh \
   rt-extension-historycomponent \
   rt-extension-netways \
   rt-extension-queuecategories \
-  rtx-ticketactions \
+  rt-extension-ticketactions \
   rtx-updatehistory \
   rt-extension-usersearch \
   RT-Extension-ExtractCustomFieldValues \

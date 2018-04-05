@@ -95,8 +95,9 @@ RUN apt-get clean && apt-get update \
     libhtml-formattext-withlinks-andtables-perl \
     libdata-pageset-perl \
     libscope-upper-perl \
+    libdate-calc-perl \
   && rm -rf lib/apt/lists/*
 
 ADD rootfs/generic/opt/rt4-build/cpanfile ${RT_BUILD_DIR}/cpanfile
 
-RUN cpanm --notest --installdeps ${RT_BUILD_DIR}
+RUN cpanm --force --notest --installdeps ${RT_BUILD_DIR}
