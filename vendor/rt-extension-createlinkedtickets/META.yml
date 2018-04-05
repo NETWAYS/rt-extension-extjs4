@@ -1,7 +1,7 @@
 ---
-abstract: 'RT-Extension-Netways Extension'
+abstract: 'RT-Extension-CreateLinkedTickets Extension'
 author:
-  - 'NETWAYS GmbH <lt>support@netways.de<gt>'
+  - 'NETWAYS GmbH L<support@netways.de|mailto:support@netways.de>'
 build_requires:
   ExtUtils::MakeMaker: 6.59
 configure_requires:
@@ -13,17 +13,15 @@ license: gpl_2
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
-name: RT-Extension-Netways
+name: RT-Extension-CreateLinkedTickets
 no_index:
   directory:
-    - html
     - inc
-    - static
 requires:
   perl: 5.10.1
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-  repository: https://git.netways.org/rt4/rt-extension-netways
+  repository: https://github.com/NETWAYS/rt-extension-createlinkedtickets
 version: 2.0.0
 x_module_install_rtx_version: '0.40'
 x_requires_rt: 4.4.2
