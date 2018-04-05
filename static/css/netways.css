@@ -18,7 +18,7 @@
 
 #mergeConfirmation button + a {
     float: right;
-    line-height: normal;  // Gets otherwise 1px more height than the button
+    line-height: normal;  /* Gets otherwise 1px more height than the button */
 }
 
 #mergeFailure a.close-modal {

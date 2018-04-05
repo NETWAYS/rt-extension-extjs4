@@ -16,7 +16,9 @@ meta-spec:
 name: RT-Extension-Netways
 no_index:
   directory:
+    - html
     - inc
+    - static
 requires:
   perl: 5.10.1
 resources:
