@@ -1,0 +1,59 @@
+.rt-extension-quickaccess-button {
+    display: inline-block;
+    width: 1.5em;
+    font-size: large;
+    color: #666;
+    text-align: center;
+    padding: 0.25em;
+    text-decoration: none !important;
+    position: relative;
+}
+
+.rt-extension-quickaccess-button:visited {
+    color: #666 !important;
+}
+
+.rt-extension-quickaccess-button:hover:not(.rt-extension-quickaccess-button-disabled) {
+    background-color: #f1f1f1;
+    -o-transition:.2s;
+    -ms-transition:.2s;
+    -moz-transition:.2s;
+    -webkit-transition:.2s;
+    transition:.2s;
+}
+
+.rt-extension-quickaccess-button:hover:not(.rt-extension-quickaccess-button-disabled) svg {
+    color: #F05E32;
+    -o-transition:.2s;
+    -ms-transition:.2s;
+    -moz-transition:.2s;
+    -webkit-transition:.2s;
+    transition:.2s;
+}
+
+.rt-extension-quickaccess-tooltip {
+    position: absolute;
+    z-index: 1000;
+    margin: 0.75em 0.5em;
+    border: 1px #c1c1c1 solid;
+    padding: 0.5em;
+    background-color: #f1f1f1;
+    white-space: nowrap;
+    font-size: small;
+    color: #666;
+    white-space: pre;
+}
+
+*:not(:hover) .rt-extension-quickaccess-tooltip,
+.rt-extension-quickaccess-tooltip:hover {
+    display: none;
+}
+
+.rt-extension-quickaccess-button-disabled {
+    cursor: not-allowed;
+    color: #ccc;
+}
+
+.rt-extension-quickaccess-button-disabled:visited {
+    color: #ccc !important;
+}
