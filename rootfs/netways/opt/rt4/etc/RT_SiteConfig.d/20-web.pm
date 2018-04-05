@@ -12,3 +12,4 @@ Set(@MasonParameters, (
        # preloads => ['/Elements/*']
 ));
 Set($WebSessionClass, "Apache::Session::File");
+Set($WebURL, 'https://localhost:8443');

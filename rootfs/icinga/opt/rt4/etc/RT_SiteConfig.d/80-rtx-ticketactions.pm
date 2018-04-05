@@ -1,4 +1,6 @@
-Plugin('RTx::TicketActions');
+Plugin('RT::Extension::TicketActions');
 
-Set($RTx_TicketActions_ShowQuickAccess, 1);
-Set($RTx_TicketActions_FontAwesome, 'https://cdn.netways.de/font-awesome/4.5.0/css/font-awesome.min.css');
+Set($TicketActions_FollowUpDays, [1, 3, 10]);
+Set($TicketActions_FollowUpTime, '10:00:00');
+Set($TicketActions_HolidaysCountry, 'DE');
+Set($TicketActions_SkipDaysOfWeek, ['sat', 'sun']);
