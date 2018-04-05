@@ -23,7 +23,7 @@ RUN rt4-install-extensions.sh \
   rt-extension-actitime \
   rtx-addservicedata \
   rt-extension-create-external \
-  rtx-createlinkedtickets \
+  rt-extension-createlinkedtickets \
   rtx-dbcustomfield \
   rt-extension-emailheader \
   rtx-extjs4 \

@@ -18,14 +18,14 @@ RUN rt4-install-extensions.sh \
   rt-action-changeowner \
   rtx-addservicedata \
   rt-extension-create-external \
-  rtx-createlinkedtickets \
+  rt-extension-createlinkedtickets \
   rtx-dbcustomfield \
   rt-extension-emailheader \
   rtx-extjs4 \
   rt-extension-historycomponent \
   rt-extension-netways \
   rt-extension-queuecategories \
-  rtx-ticketactions \
+  rt-extension-ticketactions \
   rtx-updatehistory \
   rt-extension-usersearch \
   RT-Extension-ExtractCustomFieldValues
