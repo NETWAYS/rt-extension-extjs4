@@ -1,337 +1,194 @@
-Plugin('RTx::DBCustomField');
+Plugin('RT::Extension::DBCustomField');
 
-Set($RTx_DBCustomField_DisablePool, 0);
-Set($RTx_DBCustomField_Connections, {
+Set($DBCustomField_DisablePool, 0);
+Set($DBCustomField_Suggestion_Limit, 10);
+
+# Connections
+Set($DBCustomField_Connections, {
 	'sugarcrm' => {
-		'dsn'			=> 'DBI:mysql:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
-		'username'		=> 'sugarcrm',
-		'password'		=> '5qk8LiDqsVgq',
-		'autoconnect'		=> 1
-	},
-
-	'actitime' => {
-       	'dsn' => 'DBI:mysql:database=actitime;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
-	        'username' => 'reporting',
-	        'password' => 'Yee3IeSh',
-	        'autoconnect' => 1
+		'dsn'		=> 'DBI:mysql:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
+		'username'	=> 'sugarcrm',
+		'password'	=> '5qk8LiDqsVgq',
+		'autoconnect'	=> 1
 	},
 
 	'rt4' => {
-       	'dsn' => 'DBI:mysql:database=rt4_net_support;host=mysql1.adm.netways.de;port=3306;mysql_enable_utf8=1',
-	        'username' => 'reporting',
-	        'password' => 'Yee3IeSh',
-	        'autoconnect' => 1
+       		'dsn' 		=> 'DBI:mysql:database=rt4_net_support;host=mysql1.adm.netways.de;port=3306;mysql_enable_utf8=1',
+	        'username' 	=> 'reporting',
+	        'password' 	=> 'Yee3IeSh',
+	        'autoconnect' 	=> 1
 	}
 
 });
-Set ($RTx_DBCustomField_Queries, {
-	'actitime' => {
-		'connection' => 'actitime',
-		'query' => q{
-			SELECT __DBCF_FIELDS__
-			from viewTimeSelect ts
-			order by mode
-		},
 
-		'searchfields' => ['ts.mode', 'ts.divisor'],
-		'searchop' => 'OR',
-
-		'fields' => {
-			'mode' => 'ts.mode',
-			'divisor' => 'ts.divisor'
-		},
-
-		'field_tpl' => q{
-			{mode}({divisor})
-		},
-
-		'field_id' => 'divisor',
-
-		'returnquery' => q{
-                       CALL sprTimeFromTicket(__TICKET(id)__, __VALUE__);
-               },
-
-               'returnfields' => {
-               	'mode'			=> 'mode',
-               	'divisor'		=> 'divisor',
-               	'ticket'		=> 'ticket',
-               	'c_billable'		=> 'c_billable',
-               	'c_remote'		=> 'c_remote',
-               	'c_onsite'		=> 'c_onsite',
-               	'c_nonbillable'		=> 'c_nonbillable',
-               	'nonbillable_taskid'	=> 'nonbillable_taskid',
-               	'remote_taskid'		=> 'remote_taskid',
-               	'onsite_taskid'		=> 'onsite_taskid',
-               	'link'			=> 'link'
-               },
-
-               'returnfield_id' => 'divisor',
-
-               'returnfield_config' => {
-               	height => 100
-               },
-
-               'returnfield_tpl' => q{
-               	Config type: {mode}({divisor})
-
-               	<tpl if="c_billable">
-               		<div>
-               			<strong style="color: #009900;">Billable</strong>: {c_billable}
-               			<dl style="padding: 0 0 0 0; margin: 0 0 0 0;">
-               				<dd style="margin: 0 0 0 10px">
-               					remote: {c_remote} (<a href="{link}{remote_taskid}" target="_blank">link</a>)
-               				</dd>
-               				<dd style="margin: 0 0 0 10px">
-               					onsight: {c_onsite} (<a href="{link}{onsite_taskid}" target="_blank">link</a>)
-               				</dd>
-               			</dl>
-               			<strong style="color: #cc0033;">Non-billable</strong>: {c_nonbillable} (<a href="{link}{nonbillable_taskid}" target="_blank">link</a>)
-               		</div>
-               	</tpl>
-
-               },
-
-               'returnfield_small_tpl' => q{
-               		{mode} (billable: <strong style="color: #009900;">{c_billable}</strong>/<a href="{link}{remote_taskid}" target="_blank">{c_remote}</a>/<a href="{link}{onsite_taskid}" target="_blank">{c_onsite}</a>, non-billable: <a href="{link}{nonbillable_taskid}" target="_blank"><strong style="color: #cc0033;">{c_nonbillable}</strong></a>)}
-		},
-
-       'companies' => {
-
+# Queries
+Set ($DBCustomField_Queries, {
+	# Companies from SugarCRM
+	'companies' => {
+		# The connection to use
        		'connection'    => 'sugarcrm',
 
-               'query' => q{
-                       SELECT
-                       __DBCF_FIELDS__
-                       from accounts a
-                       inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                       WHERE a.deleted=0 and (__DBCF_WHERE__)
-                       order by shortname
-                       LIMIT 300;
-               },
+		# The query to fetch auto-completion suggestions with. `field_value' is mandatory
+		# and any occurrence of `?' is replaced with a user's input.
+		'suggestions' => q{
+			SELECT
+			cstm.net_global_id_c AS field_value,
+			cstm.shortname_c AS shortname,
+			a.name AS name
+			FROM accounts a
+			INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+			WHERE a.deleted=0 AND (
+				cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?
+			)
+			ORDER BY shortname
+		},
 
-               'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
-               'searchop'      => 'OR',
+		# The display template to use for each entry returned by the suggestions query. To reference specific
+		# columns here encapsulate their name with curly braces. The default is just `{field_value}'
+		# HTML support: Yes
+		'suggestions_tpl' => q{
+		    <div>
+			<strong>{shortname}</strong>
+			<div>{name} (<strong>{field_value}</strong>)</div>
+		    </div>
+		},
 
-               'fields'         => {
-               	'shortname'	=> 'cstm.shortname_c',
-               	'globalid'	=> 'cstm.net_global_id_c',
-               	'name'		=> 'a.name'
-               },
+		# The query to fetch display values with. `field_value' is only required when not defining
+		# a custom display template. A single occurrence of `?' is replaced with the value internally
+		# stored by RT.
+		'display_value' => q{
+			SELECT
+			cstm.net_global_id_c AS field_value,
+			cstm.shortname_c AS shortname
+			FROM accounts a
+			INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+			WHERE cstm.net_global_id_c = ?
+		},
 
-               'field_id' => 'cstm.net_global_id_c',
-
-               'field_tpl' => q{
-               	<div>
-	                	<tpl if="shortname">
-	                		<div><span style="font-weight: bold;">{shortname}</span></div>
-	                	</tpl>
-	                	<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
-               	</div>
-              	},
-
-              	'field_config' => {},
-
-               'returnquery'   => q{
-                       SELECT
-                               __DBCF_FIELDS__
-                       from accounts a
-                       inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                       where a.deleted=0 and cstm.net_global_id_c=?
-                       LIMIT 100
-               },
-
-               'returnfields'         => {
-               	'shortname'	=> 'cstm.shortname_c',
-               	'globalid'	=> 'cstm.net_global_id_c',
-               	'name'		=> 'a.name'
-               },
-
-               'returnfield_id' => 'cstm.net_global_id_c',
-
-               'returnfield_config' => {
-               	height => 50
-               },
-
-               'returnfield_tpl' => q{
-               	<div>
-	                	<tpl if="shortname">
-	                		<div><span style="font-weight: bold;">{shortname}</span></div>
-	                	</tpl>
-	                	<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
-               	</div>
-               },
-
-               'returnfield_small_tpl' => q{{shortname} ({globalid})}
-
-
+		# The display template to use when showing the custom field value to users. To reference specific
+		# columns here encapsulate their name with curly braces. The default is just `{field_value}'.
+		# HTML support: Yes, but try to avoid manipulating the layout too much (e.g. with block elements)
+		'display_value_tpl' => '{shortname} (<i>{field_value}</i>)'
 	},
 
+	# RT Recipients, Urlaubsvertretung
 	'rt4users' => {
+		# The connection to use
+		'connection'	=> 'rt4',
 
-                       'connection'    => 'rt4',
-
-               'query' => q{
-                       SELECT
-                       __DBCF_FIELDS__
-			from Users u
-			inner join GroupMembers m on m.memberid = u.id
-			inner join Groups g on g.id = m.groupid
-			inner join Principals p on p.id = u.id
-			where g.name = 'NETWAYS'
-			and p.Disabled = 0
-			and u.Realname not like ''
-			and u.Realname != 'NETWAYS' and (__DBCF_WHERE__)
+		# The query to fetch auto-completion suggestions with. `field_value' is mandatory
+		# and any occurrence of `?' is replaced with a user's input.
+		'suggestions' 	=> q{
+			SELECT
+			u.id AS field_value,
+			u.RealName AS realname,
+			u.NickName AS nickname
+			FROM Users u
+			INNER JOIN GroupMembers m ON m.memberid = u.id
+			INNER JOIN Groups g ON g.id = m.groupid
+			INNER JOIN Principals p ON p.id = u.id
+			WHERE g.name = 'NETWAYS'
+			AND p.Disabled = 0
+			AND u.Realname NOT LIKE ''
+			AND u.Realname != 'NETWAYS'
+			AND (
+				u.RealName LIKE ? OR u.NickName LIKE ?
+			)
 			order by u.RealName
-			LIMIT 100;
-               },
+		},
 
-               'searchfields'  => ['u.RealName', 'u.NickName'],
-               'searchop'      => 'OR',
+		# The display template to use for each entry returned by the suggestions query. To reference specific
+		# columns here encapsulate their name with curly braces. The default is just `{field_value}'
+		# HTML support: Yes
+		'suggestions_tpl' => q{
+			<div>
+				<div>{realname} (<strong>{nickname}</strong>)</div>
+			</div>
+		},
 
-               'fields'         => {
-  			'id' 		=> 'u.id',
-                       'realname'     => 'u.RealName',
-                       'nickname'      => 'u.NickName'
-               },
+		# The query to fetch display values with. `field_value' is only required when not defining
+		# a custom display template. A single occurrence of `?' is replaced with the value internally
+		# stored by RT.
+		'display_value'   => q{
+			SELECT
+			u.id AS field_value,
+			u.RealName AS realname,
+			u.NickName AS nickname
+			FROM Users u
+			WHERE u.id = ?
+		},
 
-               'field_id' => 'u.id',
+		# The display template to use when showing the custom field value to users. To reference specific
+		# columns here encapsulate their name with curly braces. The default is just `{field_value}'.
+		# HTML support: Yes, but try to avoid manipulating the layout too much (e.g. with block elements)
+		'display_value_tpl' => '{realname} (<i>{nickname}</i>)'
+	},
 
-               'field_tpl' => q{
-                       <div>
-                               <tpl if="realname">
-                                       <div><span style="font-weight: bold;">{realname} ({nickname})</span></div>
-                               </tpl>
-                       </div>
-               },
-
-               'field_config' => {},
-
-               'returnquery'   => q{
-                       SELECT
-                       __DBCF_FIELDS__
-                       from Users u
-			where u.id=?
-                       LIMIT 100
-               },
-
-               'returnfields'         => {
-                       'id'     => 'u.id',
-                       'realname'      => 'u.RealName',
-                       'nickname'          => 'u.NickName'
-               },
-
-               'returnfield_id' => 'u.id',
-
-               'returnfield_config' => {
-                       height => 50
-               },
-
-               'returnfield_tpl' => q{
-                       <div>
-                               <tpl if="realname">
-                                       <div><span style="font-weight: bold;">{realname} ({nickname})</span></div>
-                               </tpl>
-                       </div>
-               },
-
-               'returnfield_small_tpl' => q{{RealName} ({NickName})}
-
-
-       },
-
-
+	# Opportunities from SugarCRM
 	'opportunities' => {
+		# The connection to use
+		'connection'    => 'sugarcrm',
 
-       	'connection'    => 'sugarcrm',
+		# The query to fetch auto-completion suggestions with. `field_value' is mandatory
+		# and any occurrence of `?' is replaced with a user's input.
+		'suggestions' 	=> q{
+			SELECT
+			opportunities.id AS field_value,
+			opportunities.name AS opportunity,
+			accounts.name AS name,
+			cstm.net_global_id_c AS globalid,
+			cstm.shortname_c AS shortname
+			FROM accounts_opportunities ao
+			LEFT JOIN accounts ON ao.account_id = accounts.id
+			INNER JOIN accounts_cstm cstm ON cstm.id_c = accounts.id
+			LEFT JOIN opportunities ON ao.opportunity_id = opportunities.id
+			WHERE accounts.deleted = 0
+			AND (
+				cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR accounts.name LIKE ? OR opportunities.name LIKE ?
+			)
+			ORDER BY opportunity
+		},
 
-               'query' => q{
-					SELECT __DBCF_FIELDS__
-					FROM accounts_opportunities as ao
-					LEFT JOIN accounts
-					on ao.account_id = accounts.id
-					inner join accounts_cstm cstm
-					on cstm.id_c = accounts.id
-					LEFT JOIN opportunities
-					on ao.opportunity_id = opportunities.id
-					WHERE accounts.deleted=0 __DBCF_AND_WHERE__
-					order by opportunity
-					LIMIT 300;
-               },
+		# The display template to use for each entry returned by the suggestions query. To reference specific
+		# columns here encapsulate their name with curly braces. The default is just `{field_value}'
+		# HTML support: Yes
+		'suggestions_tpl' => q{
+		    <div>
+			<div><i>{opportunity}</i> (<strong>{shortname}</strong>)</div>
+			<div>{name} (<strong>{globalid}</strong>)</div>
+		    </div>
+		},
 
-               'searchfields'  => ['cstm.shortname_c', 'accounts.name', 'cstm.net_global_id_c', 'opportunities.name'],
-               'searchop'      => 'OR',
+		# The query to fetch display values with. `field_value' is only required when not defining
+		# a custom display template. A single occurrence of `?' is replaced with the value internally
+		# stored by RT.
+		'display_value'   => q{
+			SELECT
+			opportunities.id AS field_value,
+			opportunities.name AS opportunity,
+			accounts.name AS name,
+			cstm.net_global_id_c AS globalid,
+			cstm.shortname_c AS shortname
+			FROM accounts_opportunities ao
+			LEFT JOIN accounts ON ao.account_id = accounts.id
+			INNER JOIN accounts_cstm cstm ON cstm.id_c = accounts.id
+			LEFT JOIN opportunities ON ao.opportunity_id = opportunities.id
+			WHERE accounts.deleted = 0
+			AND opportunities.id = ?
+			ORDER BY opportunity
+		},
 
-               'fields'         => {
-               	'shortname'			=> 'cstm.shortname_c',
-               	'globalid'			=> 'cstm.net_global_id_c',
-               	'name'				=> 'accounts.name',
-               	'opportunity'		=> 'opportunities.name',
-               	'opportunity_id'	=> 'opportunities.id'
-               },
-
-               'field_id' => 'opportunities.id',
-
-               'field_id_type' => 'string',
-
-               'field_tpl' => q{
-               	<div>
-               		<div style="font-style: italic;">{opportunity}</div>
-	                	<tpl if="shortname">
-	                		<div><span style="font-weight: bold;">{shortname}</span></div>
-	                	</tpl>
-	                	<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
-               	</div>
-              	},
-
-              	'field_config' => {},
-
-               'returnquery'   => q{
-                   SELECT __DBCF_FIELDS__
-					FROM accounts_opportunities as ao
-					LEFT JOIN accounts
-					on ao.account_id = accounts.id
-					inner join accounts_cstm cstm
-					on cstm.id_c = accounts.id
-					LEFT JOIN opportunities
-					on ao.opportunity_id = opportunities.id
-					WHERE accounts.deleted=0 and opportunities.id=?
-					order by opportunity
-					LIMIT 300;
-               },
-
-               'returnfields'         => {
-               	'shortname'			=> 'cstm.shortname_c',
-               	'globalid'			=> 'cstm.net_global_id_c',
-               	'name'				=> 'accounts.name',
-               	'opportunity'		=> 'opportunities.name',
-               	'opportunity_id'	=> 'opportunities.id'
-               },
-
-               'returnfield_id' => 'opportunities.id',
-
-               'returnfield_config' => {
-               	height => 50
-               },
-
-               'returnfield_tpl' => q{
-               	<div>
-               		<div style="font-style: italic;">{opportunity}</div>
-	                	<tpl if="shortname">
-	                		<div><span style="font-weight: bold;">{shortname}</span></div>
-	                	</tpl>
-	                	<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
-               	</div>
-               },
-
-               'returnfield_small_tpl' => q{{opportunity} ({shortname}, {globalid})}
-
+		# The display template to use when showing the custom field value to users. To reference specific
+		# columns here encapsulate their name with curly braces. The default is just `{field_value}'.
+		# HTML support: Yes, but try to avoid manipulating the layout too much (e.g. with block elements)
+               'display_value_tpl' => q{{opportunity} ({shortname}, {globalid})}
 	}
-
 });
-Set($RTx_DBCustomField_Fields, {
-	'Client'	    => 'companies',
+
+# Query to CF mapping
+Set($DBCustomField_Fields, {
+	'Client'	=> 'companies',
 	'Opportunity'	=> 'opportunities',
-	'Vertreter'	    => 'rt4users',
-    'Recipient'     => 'rt4users',
-	'Zeit erbracht'	=> 'actitime'
+	'Vertreter'	=> 'rt4users',
+	'Recipient'	=> 'rt4users',
 });
