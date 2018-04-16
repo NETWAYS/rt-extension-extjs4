@@ -21,6 +21,7 @@ RUN apt-get update \
     libapache2-mod-perl2 \
     logrotate \
     nfs-common \
+    less \
     vim \
   && rm -rf /var/lib/apt/lists/*
 
