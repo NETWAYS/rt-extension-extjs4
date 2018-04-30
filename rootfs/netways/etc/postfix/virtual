@@ -117,7 +117,7 @@ devopsdays.attendee@rt.netways.de       net-devopsdays-teilnehmer
 
 # Privacy
 privacy@rt.netways.de			net-privacy
-datenschutz@netways.de			net-privacy
+datenschutz@@rt.netways.de		net-privacy
 
 # Rakuten
 tradoria@rt.netways.de                  net-service
