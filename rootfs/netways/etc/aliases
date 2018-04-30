@@ -324,6 +324,13 @@ net-dev-aufgaben: 	|"/opt/rt4/bin/rt-mailgate
                         --url http://localhost/ --action correspond
                         --queue 'DEV Aufgaben intern'"
 
+# Privacy              ################################################
+
+net-privacy	       |"/opt/rt4/bin/rt-mailgate
+                       --url http://localhost/
+                       --action correspond
+                       --queue 'MA Privacy'
+
 # TICKET ID
 net-rt: 		|"/opt/rt4/bin/rt-mailgate
 			--extension ticket
