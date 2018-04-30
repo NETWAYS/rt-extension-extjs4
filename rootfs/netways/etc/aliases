@@ -195,14 +195,14 @@ net-infra:      |"/opt/rt4/bin/rt-mailgate
 net-jobs:               |"/opt/rt4/bin/rt-mailgate
                        --url http://localhost/
                        --action correspond
-                       --queue 'MA Jobs'
+                       --queue 'MA Jobs'"
 
 # Marketing          ################################################
 
 net-marketing:          |"/opt/rt4/bin/rt-mailgate
                        --url http://localhost/
                        --action correspond
-                       --queue 'Marketing Aufgaben'
+                       --queue 'Marketing Aufgaben'"
 
 net-grafik:		|"/opt/rt4/bin/rt-mailgate
                        --url http://localhost/
@@ -326,10 +326,10 @@ net-dev-aufgaben: 	|"/opt/rt4/bin/rt-mailgate
 
 # Privacy              ################################################
 
-net-privacy	       |"/opt/rt4/bin/rt-mailgate
+net-privacy:	       |"/opt/rt4/bin/rt-mailgate
                        --url http://localhost/
                        --action correspond
-                       --queue 'MA Privacy'
+                       --queue 'MA Privacy'"
 
 # TICKET ID
 net-rt: 		|"/opt/rt4/bin/rt-mailgate
