@@ -47,13 +47,13 @@ sub getTasks() {
 
         my $taskid = $self->generateTaskId($task->{'name'});
 
-        my $match = '^('. join('|',@{ $task->{'active'} }). ')$';
+        my $match = '^('. join('|',@{ $task->{'active'} }). ')';
         $struct->{'match_active'} = qr{$match}i;
 
-        $match = '^('. join('|',@{ $task->{'inactive'} }). ')$';
+        $match = '^('. join('|',@{ $task->{'inactive'} }). ')';
         $struct->{'match_inactive'} = qr{$match}i;
 
-        $match = '^('. join('|',(@{ $task->{'inactive'} }, @{ $task->{'active'} })). ')$';
+        $match = '^('. join('|',(@{ $task->{'inactive'} }, @{ $task->{'active'} })). ')';
         $struct->{'match_all'} = qr{$match}i;
 
         $struct->{'taskid'} = $taskid;
