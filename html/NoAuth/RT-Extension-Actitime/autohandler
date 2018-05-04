@@ -13,6 +13,7 @@ if ($file =~ /\.(gif|png|jpe?g)$/i) {
 } else {
     &RT::Interface::Web::StaticFileHeaders();
     $r->content_type('application/x-javascript');
+    $r->header_out('Access-Control-Allow-Origin', RT->Config->Get("WebURL"));
     $m->call_next();
     return();
 }
