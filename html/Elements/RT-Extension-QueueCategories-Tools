@@ -122,15 +122,14 @@
 	BuildQueueStruct($ref, $struct);
 	
 	sub BuildQueueStruct {
-		return unless (exists $session{CurrentUser});
-
+		my $systemUser = RT->SystemUser;
 		my $ref = shift;
 		my $struct = shift;
 		my $cf = RT->Config->Get('QueueCategories_CFName') // 'QueueCategory';
 		my %queueCategories = ();
 
 		my %queuesOrder = ();
-		my $queuesSearch = RT::Queues->new($session{CurrentUser});
+		my $queuesSearch = RT::Queues->new($systemUser);
 		$queuesSearch->LimitToEnabled;
 		while (my $queue = $queuesSearch->Next) {
 			my $queueCategory = $queue->FirstCustomFieldValue($cf);
@@ -143,7 +142,7 @@
 		}
 
 		my %valuesOrder = ();
-		my $field = RT::CustomField->new($session{CurrentUser});
+		my $field = RT::CustomField->new($systemUser);
 		$field->LoadByName(Name => $cf, ObjectType => 'RT::Queue', IncludeDisabled => 0, IncludeGlobal => 1);
 		my $valuesSearch = $field->Values;
 
