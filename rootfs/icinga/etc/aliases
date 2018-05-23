@@ -58,6 +58,6 @@ icinga-infrastructure: |"/opt/rt4/bin/rt-mailgate
 
 icinga-privacy: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Infrastructure'
+            --queue 'Privacy'
             --action correspond
             --url http://localhost"
