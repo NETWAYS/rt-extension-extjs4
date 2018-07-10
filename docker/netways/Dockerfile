@@ -34,7 +34,8 @@ RUN rt4-install-extensions.sh \
   rt-extension-updatehistory \
   rt-extension-usersearch \
   RT-Extension-ExtractCustomFieldValues \
-  rtx-action-subjectandevent
+  rtx-action-subjectandevent \
+  rt-extension-calendarinvitation
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
 
