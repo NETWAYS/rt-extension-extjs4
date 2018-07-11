@@ -95,6 +95,7 @@ schulungsanmeldung@rt.netways.de        net-training
 training.allgemein@rt.netways.de        net-nagtrain-allgemein
 nagiostraining.teilnehmer@rt.netways.de net-nagtrain-teilnehmer
 puppettraining.teilnehmer@rt.netways.de net-puptrain-teilnehmer
+training@rt.netways.de			net-training
 
 # OSDC
 osdc.teilnehmer@rt.netways.de           net-osdc-teilnehmer

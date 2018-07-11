@@ -343,3 +343,4 @@ net-xrt: 		|"/opt/rt4/bin/rt-mailgate
 			--queue 'Inbox Allgemein'
 			--action comment
 			--url http://localhost/"
+
