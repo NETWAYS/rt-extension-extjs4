@@ -291,7 +291,7 @@ net-osbc-referent:	|"/opt/rt4/bin/rt-mailgate
 net-training:	|"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/
 			--action correspond
-		        --queue 'TM Training'"
+		        --queue 'Training Aufgaben'"
 
 # Deutsche OpenStack Tage
 
