@@ -95,47 +95,47 @@ net-inbox-rechnung: 	|"/opt/rt4/bin/rt-mailgate
 			--queue 'Inbox Allgemein'
 			--action correspond"
 
-# Inbox Einkauf -> Sales Aufgaben intern ######################################
-
+# Inbox Einkauf -> Sales Beschaffung ######################################
+# 570022
 # einkauf@rt.netways.de
 net-einkauf: 		|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
 # khein.einkauf@rt.netways.de
 net-einkauf-khein: 	|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
 # mschuster.einkauf@rt.netways.de
 net-einkauf-mschuster: 	|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
 # jhein.einkauf@rt.netways.de
 net-einkauf-jhein: 	|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
 # berk.einkauf@rt.netways.de
 net-einkauf-berk: 	|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
 # mkrodel.einkauf@rt.netways.de
 net-einkauf-mkrodel: 	|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
 # sgundel.einkauf@rt.netways.de
 net-einkauf-sgundel: 	|"/opt/rt4/bin/rt-mailgate
-			--queue 'Sales Aufgaben intern'
+			--queue 'Sales Beschaffung'
 			--action correspond
 			--url http://localhost/"
 
