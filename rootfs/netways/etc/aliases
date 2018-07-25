@@ -153,15 +153,15 @@ net-shop:  		|"/opt/rt4/bin/rt-mailgate
 			--action correspond
 			--queue 'Shop Bestellungen'"
 
-# Kundensupport Contracts ####################################################
+# Kundensupport Hosting /Customer Hosting ####################################################
 
 # service@rt.netways.de
 net-service: 		|"/opt/rt4/bin/rt-mailgate
-			--queue 'MS Support Hosting'
+			--queue 'MS Customer Hosting'
 			--action correspond
 			--url http://localhost/"
 
-# Kundensupport Hosting ####################################################
+# Kundensupport Contracts ####################################################
 
 # support, helpdesk, premiumsupport @rt.netways.de
 net-supp: 		|"/opt/rt4/bin/rt-mailgate
