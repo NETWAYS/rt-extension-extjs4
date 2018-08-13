@@ -314,6 +314,18 @@ net-event-teilnehmer:  |"/opt/rt4/bin/rt-mailgate
            --url http://localhost/ --action correspond
            --queue 'TM Events'"
 
+# General event CFP
+net-event-cfp:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/ --action correspond
+			--queue 'VT Conference'"
+# General event attendee 
+
+net-event-attendee:	|"/opt/rt4/bin/rt-mailgate
+			--url http://localhost/ --action correspond
+			--queue 'TM Conference'"
+
+
+
 # Buchhaltung
 net-buha-aufgaben: |"/opt/rt4/bin/rt-mailgate
 			--url http://localhost/ --action correspond
