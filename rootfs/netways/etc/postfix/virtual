@@ -80,11 +80,11 @@ presse@rt.netways.de                    net-presse
 events@rt.netways.de                    net-event-allgemein
 
 # CfP
-cfp@netways.de				net-event-cfp
+cfp@rt.netways.de				net-event-cfp
 
 # General event
 tmevents@rt.netways.de          	net-event-teilnehmer
-conference@netways.de			net-event-attendee
+conference@rt.netways.de			net-event-attendee
 
 # OSMC
 osmc.referent@rt.netways.de             net-nagkon-referent
