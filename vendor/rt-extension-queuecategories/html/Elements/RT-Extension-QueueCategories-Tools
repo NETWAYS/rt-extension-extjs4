@@ -150,7 +150,7 @@
 			$valuesOrder{$value->Name} = $value->SortOrder
 		}
 
-		for my $queueCategory (sort { $valuesOrder{$a} <=> $valuesOrder{$b} || $a cmp $b } keys %queueCategories) {
+		for my $queueCategory (sort { $valuesOrder{$a} // 0 <=> $valuesOrder{$b} // 0 || $a cmp $b } keys %queueCategories) {
 			push @$ref, {
 				name  => $queueCategory,
 				items => [sort { $queuesOrder{$a} <=> $queuesOrder{$b} || $a cmp $b } @{$queueCategories{$queueCategory}}]
