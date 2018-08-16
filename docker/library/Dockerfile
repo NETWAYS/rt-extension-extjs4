@@ -96,6 +96,7 @@ RUN apt-get clean && apt-get update \
     libdata-pageset-perl \
     libscope-upper-perl \
     libdate-calc-perl \
+    libfile-cache-perl \
   && rm -rf lib/apt/lists/*
 
 ADD rootfs/generic/opt/rt4-build/cpanfile ${RT_BUILD_DIR}/cpanfile

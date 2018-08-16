@@ -168,6 +168,10 @@ requires 'Hook::LexWrap';
 requires 'JSON::XS';
 requires 'Date::Holidays::DE';
 requires 'Date::Holidays';
+requires 'Storable';
+requires 'Cache::FileCache';
+requires 'JSON::MaybeXS';
+
 
 # RT::Authen::ExternalAuth
 requires 'Net::SSLeay';
