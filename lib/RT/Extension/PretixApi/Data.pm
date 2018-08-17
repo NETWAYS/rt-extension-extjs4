@@ -4,6 +4,8 @@ use strict;
 use warnings FATAL => 'all';
 
 use RT::Extension::PretixApi qw($BASE_URI $AUTH_TOKEN);
+use RT;
+
 use Cache::FileCache;
 use LWP::UserAgent;
 use HTTP::Request;
@@ -54,6 +56,42 @@ sub request {
     return $request;
 }
 
+sub has_sub_events {
+    my $self = shift;
+    my $organizers = shift;
+    my $event = shift;
+
+    my $ref = $self->get_event($organizers, $event);
+    return sprintf('%d', $ref->{'has_subevents'}) // 0;
+}
+
+sub get_event {
+    my $self = shift;
+    my $organizers = shift;
+    my $event = shift;
+
+    my $cache_key = 'event-' . join('-', $organizers, $event);
+    my $code = $self->{'cache'}->get($cache_key);
+
+    if (defined $code) {
+        return $code;
+    }
+
+    my $uri = sprintf('/organizers/%s/events/%s', $organizers, $event);
+    my $req = $self->request($uri);
+
+    my $res = $self->ua()->request($req);
+
+    unless ($res->is_success) {
+        RT->Logger->error(sprintf('Pretix API error: %s (%s)', $res->status_line, $uri));
+        return undef;
+    }
+
+    my $ref = decode_json($res->content);
+    $self->{'cache'}->set($cache_key, $ref->{'code'});
+    return $ref;
+}
+
 sub get_voucher {
     my $self = shift;
     my $organizers = shift;
@@ -64,7 +102,7 @@ sub get_voucher {
         return '';
     }
 
-    my $cache_key = join('-', $organizers, $event, $voucher_id);
+    my $cache_key = 'voucher-' . join('-', $organizers, $event, $voucher_id);
     my $code = $self->{'cache'}->get($cache_key);
 
     if (defined $code) {
@@ -92,7 +130,7 @@ sub get_order {
     my $event = shift;
     my $order_code = shift;
 
-    my $cache_key = join('-', $organizers, $event, $order_code);
+    my $cache_key = 'order-' . join('-', $organizers, $event, $order_code);
     my $order = $self->{'cache'}->get($cache_key);
 
     if (defined $order) {
