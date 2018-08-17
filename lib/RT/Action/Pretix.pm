@@ -179,6 +179,9 @@ sub Prepare  {
                     if (! $api->has_sub_events($organizer, $event)) {
                         $self->{'_queue'} = $QUEUE_SUB_EVENT;
                     }
+                    if (! $self->{'_queue'}) {
+                        $self->{'_queue'} = $self->TicketObj->Queue;
+                    }
 
                     RT->Logger->info(sprintf('Pretix: organizer=%s, event=%s, order=%s', $organizer, $event, $order_code));
 
@@ -239,7 +242,7 @@ sub Prepare  {
 sub Commit {
     my $self = shift;
 
-    if ($self->{'_queue'} != $self->TicketObj->Queue) {
+    if ($self->{'_queue'} && $self->{'_queue'} != $self->TicketObj->Queue) {
         $self->TicketObj->SetQueue($self->{'_queue'});
     }
 
