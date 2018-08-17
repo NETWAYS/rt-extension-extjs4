@@ -8,7 +8,7 @@ use warnings;
 use RT::Extension::PretixApi::Data;
 use Text::Template;
 
-our $CHILD_SUBJECT_FORMAT = RT->Config->Get('PretixAttendee_Subject_Format') //
+our $CHILD_SUBJECT_FORMAT = RT->Config->Get('Pretix_Attendee_Subject_Format') //
     'Attendee for {$event}, order {$order} | {$name}';
 
 our $CHILD_SUBJECT_TEMPLATE = Text::Template->new(
@@ -16,13 +16,19 @@ our $CHILD_SUBJECT_TEMPLATE = Text::Template->new(
     SOURCE => $CHILD_SUBJECT_FORMAT
 );
 
-our $TOP_SUBJECT_FORMAT = RT->Config->Get('PretixTop_Subject_Format') //
+our $TOP_SUBJECT_FORMAT = RT->Config->Get('Pretix_Top_Subject_Format') //
     'Order has been placed {$order} for {$event} | {$name}';
 
 our $TOP_SUBJECT_TEMPLATE = Text::Template->new(
     TYPE => 'STRING',
     SOURCE => $TOP_SUBJECT_FORMAT
 );
+
+our $TOP_RESOLVE_TICKET = RT->Config->Get('Pretix_Top_Resolve_Ticket') // 0;
+
+our $QUEUE_DEFAULT = RT->Config->Get('Pretix_Queue_Default') // '';
+
+our $QUEUE_SUB_EVENT = RT->Config->Get('Pretix_Queue_SubEvent') // '';
 
 sub _process_ticket_data {
     my $self = shift;
@@ -137,6 +143,46 @@ sub Prepare  {
                     my $organizer = $1;
                     my $event = $2;
 
+                    if ($QUEUE_DEFAULT) {
+                        my $qdefault = RT::Queue->new(RT->SystemUser);
+                        $qdefault->Load($QUEUE_DEFAULT);
+                        if ($qdefault->Id) {
+                            $QUEUE_DEFAULT = $qdefault->Id;
+                        } else {
+                            RT->Logger->error(
+                                sprintf(
+                                    'Pretix: Could not load Queue from $Pretix_Queue_Default=%s, abort',
+                                    $QUEUE_DEFAULT
+                                )
+                            );
+                            return;
+                        }
+                    }
+
+                    if ($QUEUE_SUB_EVENT) {
+                        my $qsub = RT::Queue->new(RT->SystemUser);
+                        $qsub->Load($QUEUE_SUB_EVENT);
+                        if ($qsub->Id) {
+                            $QUEUE_SUB_EVENT = $qsub->Id;
+                        } else {
+                            RT->Logger->error(
+                                sprintf(
+                                    'Pretix: Could not load Queue from $Pretix_Queue_SubEvent=%s, abort',
+                                    $QUEUE_SUB_EVENT
+                                )
+                            );
+                            return
+                        }
+                    }
+
+                    $self->{'_queue'} = $QUEUE_DEFAULT;
+                    if (! $api->has_sub_events($organizer, $event)) {
+                        $self->{'_queue'} = $QUEUE_SUB_EVENT;
+                    }
+                    if (! $self->{'_queue'}) {
+                        $self->{'_queue'} = $self->TicketObj->Queue;
+                    }
+
                     RT->Logger->info(sprintf('Pretix: organizer=%s, event=%s, order=%s', $organizer, $event, $order_code));
 
                     my $data = $api->get_order($organizer, $event, $order_code);
@@ -160,33 +206,26 @@ sub Prepare  {
                         }
 
                         # If we have only one position (equals to one attendee) we use the base ticket
-                        my $ticket = undef;
-                        if ($count_positions == 1) {
-                            $ticket = $self->TicketObj;
-
-                        # If we have more than one position, we create child tickets for the attendees
-                        } else {
-                            # Because we do not have the top ticket processed
-                            unless ($top_processed) {
-                                my %tmp_values = %{ $data };
-                                delete $tmp_values{'positions'};
-                                $self->_process_ticket_data($config, $self->TicketObj, \%tmp_values);
-                                $top_processed = 1;
-                            }
-
-                            $ticket = RT::Ticket->new(RT->SystemUser);
-
-                            my $mime = $self->TransactionObj->Attachments->First->ContentAsMIME(Children => 1);
-
-                            my ($id, $transaction, $msg) = $ticket->Create(
-                                Queue      => $self->TicketObj->Queue,
-                                Subject    => $CHILD_SUBJECT_TEMPLATE->fill_in(HASH => \%values),
-                                RefersTo   => [$self->TicketObj->id],
-                                MIMEObj    => $mime
-                            );
-
-                            RT->Logger->debug(sprintf('Pretix: Created ticket %d (%s)', $ticket->id, $ticket->Subject));
+                        # Because we do not have the top ticket processed
+                        unless ($top_processed) {
+                            my %tmp_values = %{ $data };
+                            delete $tmp_values{'positions'};
+                            $self->_process_ticket_data($config, $self->TicketObj, \%tmp_values);
+                            $top_processed = 1;
                         }
+
+                        my $ticket = RT::Ticket->new(RT->SystemUser);
+
+                        my $mime = $self->TransactionObj->Attachments->First->ContentAsMIME(Children => 1);
+
+                        my ($id, $transaction, $msg) = $ticket->Create(
+                            Queue      => $self->{'_queue'},
+                            Subject    => $CHILD_SUBJECT_TEMPLATE->fill_in(HASH => \%values),
+                            RefersTo   => [$self->TicketObj->id],
+                            MIMEObj    => $mime
+                        );
+
+                        RT->Logger->debug(sprintf('Pretix: Created ticket %d (%s)', $ticket->id, $ticket->Subject));
 
                         $self->_process_ticket_data($config, $ticket, \%values);
                     }
@@ -202,6 +241,20 @@ sub Prepare  {
 
 sub Commit {
     my $self = shift;
+
+    if ($self->{'_queue'} && $self->{'_queue'} != $self->TicketObj->Queue) {
+        $self->TicketObj->SetQueue($self->{'_queue'});
+    }
+
+    if ($TOP_RESOLVE_TICKET) {
+        my ($id, $msg) = $self->TicketObj->_SetStatus(
+            Status => 'resolved',
+            RecordTransaction => 0,
+        );
+
+        RT->Logger->debug(sprintf('Pretix: Top ticket resolved: %d (%s)', $id, $msg));
+    }
+
     return 1;
 
 }

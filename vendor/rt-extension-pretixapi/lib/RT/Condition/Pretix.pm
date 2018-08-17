@@ -11,10 +11,10 @@ use warnings;
 sub IsApplicable {
     my $self = shift;
 
-    my $REGEX = RT->Config->Get('PretixSender_Regexp') // '';
+    my $REGEX = RT->Config->Get('Pretix_Sender_Regexp') // '';
     unless ($REGEX) {
-        RT->Logger->error('Pretix: $PretixSender_Regexp not set!');
-        die('Pretix: $PretixSender_Regexp not set!');
+        RT->Logger->error('Pretix: $Pretix_Sender_Regexp not set!');
+        die('Pretix: $Pretix_Sender_Regexp not set!');
     }
 
     foreach my $email ($self->TicketObj->Requestors->MemberEmailAddresses) {
