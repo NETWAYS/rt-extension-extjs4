@@ -21,8 +21,8 @@ The plugin tests new tickets if they contain pretix order codes. If so, it does 
  * Add data to customfields
  * Set requestor mail based on attendee
 
-If a order contains more that one attendee, we create tickets for every attendee and link the new tickets
-to the order.
+For every attendee a new ticket is created and linked to the order ticket (top ticket). If needed, the tickets
+can be moved to other queues.
 
 ![RT At A Glance](doc/ticket1.png)
 
@@ -121,17 +121,17 @@ The prefix ```cf``` means custom fields by name or id, ```ticket``` means direct
 
 ### Mandatory
 
-**$PretixApi_Base_URI**
+**$Pretix_Api_Base_URI**
 
 Base URI to the pretix api, with version entry point, e.g.
 
 ```https://tickets.foo.bar/api/v1```
 
-**$PretixApi_Auth_Token**
+**$Pretix_Api_Auth_Token**
 
 Auth token for API access.
 
-**$PretixSender_Regexp**
+**$Pretix_Sender_Regexp**
 
 E-mail-address of the pretix system. This is needed to identify mail from the pretix system.
 
@@ -143,7 +143,7 @@ HTTP user agent to backtrace in logs. Defaults to rt name and pretix api version
 
 ```rt4test/0.9.0```
 
-**$PretixAttendee_Subject_Format**
+**$Pretix_Attendee_Subject_Format**
 
 How subject for child tickets are generated. Defaults to:
 
@@ -152,7 +152,7 @@ How subject for child tickets are generated. Defaults to:
 The string format is perl's [Text::Template](https://metacpan.org/pod/Text::Template) and 
 use the [template](#template) fields.
 
-**$PretixTop_Subject_Format**
+**$Pretix_Top_Subject_Format**
 
 How the subject of the top ticket is rewritten. Defaults to:
 
@@ -165,6 +165,18 @@ use the [template](#template) fields.
 **$Pretix_Twitter_QuestionId**
 
 The id of the custom question used for twitter handle. Defaults to ```75```.
+
+**$Pretix_Top_Resolve_Ticket**
+
+If set to ```1``` the top ticket is resolved on commit stage
+
+**$Pretix_Queue_Default**
+
+The order or attendee tickets are moved to this queue. Format is queue name or its id.
+
+**$Pretix_Queue_SubEvent**
+
+If the event is a sub event, the ticket is moved here. Format is queue name or its id.
 
 ### Example
 

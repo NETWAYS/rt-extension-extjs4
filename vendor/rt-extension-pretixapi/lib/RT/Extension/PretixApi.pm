@@ -1,8 +1,11 @@
-use strict;
-use warnings;
 package RT::Extension::PretixApi;
 
+use strict;
+use warnings;
+
 require Exporter;
+
+use RT;
 
 our @ISA = qw(Exporter);
 
@@ -15,15 +18,13 @@ our @EXPORT_OK = qw(
 
 our $VERSION = '0.9.0';
 
-BEGIN {
-    our $AUTH_TOKEN = RT->Config->Get('PretixApi_Auth_Token') // '';
+our $AUTH_TOKEN = RT->Config->Get('Pretix_Api_Auth_Token') // '';
 
-    die('$PretixApi_Auth_Token not configured') unless ($AUTH_TOKEN);
+die('$Pretix_Api_Auth_Token not configured') unless ($AUTH_TOKEN);
 
-    our $BASE_URI   = RT->Config->Get('PretixApi_Base_URI') // '';
+our $BASE_URI   = RT->Config->Get('Pretix_Api_Base_URI') // '';
 
-    die('$PretixApi_Base_URI not configured') unless ($BASE_URI);
-}
+die('$Pretix_Api_Base_URI not configured') unless ($BASE_URI);
 
 =head1 NAME
 
