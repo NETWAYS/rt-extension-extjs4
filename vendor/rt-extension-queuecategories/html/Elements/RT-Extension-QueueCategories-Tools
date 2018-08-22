@@ -2,21 +2,21 @@
 	<tr>
 		<th colspan="<%$Span+1%>">&nbsp;</th>
 	</tr>
-	
+
 	<tr>
 		<th class="collection-as-table" colspan="<%$Span+1%>"><%$headerId%></th>
 	</tr>
 	<%init>
-	
+
 		if (exists($struct->{$Queue})) {
-	
+
 			my $groupName = $struct->{$Queue};
 			if ($headerId && $headerId eq $groupName) {
 				return;
 			} else {
 				$headerId = $groupName;
 			}
-		
+
 		} else {
 			return;
 		}
@@ -33,16 +33,16 @@
 % 	}
 	<optgroup label="<%$headerId%>">
 	<%init>
-	
+
 		if (exists($struct->{$Queue})) {
-	
+
 			my $groupName = $struct->{$Queue};
 			if ($headerId && $headerId eq $groupName) {
 				return;
 			} else {
 				$headerId = $groupName;
 			}
-		
+
 		} else {
 			return;
 		}
@@ -57,45 +57,45 @@
 	<%init>
 		my @new = ();
 		my %seen = ();
-		
+
 		return unless (ref($ref) eq 'ARRAY');
-		
+
 		foreach my $item(@{$ref}) {
 			foreach my $id(@{ $item->{'items'} }) {
-				
+
 				foreach my $queue (@{ $Queues }) {
-				
+
 					my $queueName = undef;
-				
+
 					if (ref($queue) eq 'RT::Queue') {
 						$queueName = $queue->Name;
 					} elsif (ref($queue) eq 'HASH') {
 						$queueName = $queue->{Name};
 					}
-					
+
 					if ($queueName eq $id) {
 						push @new, $queue;
 						$seen{$queueName} = 1;
 					}
 				}
-				
+
 			}
 		}
-		
+
 		foreach my $queue (@{ $Queues }) {
 			my $queueName = undef;
-			
+
 			if (ref($queue) eq 'RT::Queue') {
 				$queueName = $queue->Name;
 			} elsif (ref($queue) eq 'HASH') {
 				$queueName = $queue->{Name};
 			}
-			
+
 			unless (exists($seen{$queueName})) {
 				splice(@new, 0, 0, $queue);
 			}
 		}
-		
+
 		@{ $Queues } = @new;
 	</%init>
 	<%args>
@@ -114,13 +114,13 @@
 	use subs qw(BuildQueueStruct);
 
 	my $ref = [];
-	
+
 	my $struct = {};
-	
+
 	my $headerId = undef;
-	
+
 	BuildQueueStruct($ref, $struct);
-	
+
 	sub BuildQueueStruct {
 		my $systemUser = RT->SystemUser;
 		my $ref = shift;
@@ -150,10 +150,10 @@
 			$valuesOrder{$value->Name} = $value->SortOrder
 		}
 
-		for my $queueCategory (sort { $valuesOrder{$a} // 0 <=> $valuesOrder{$b} // 0 || $a cmp $b } keys %queueCategories) {
+		for my $queueCategory (sort { ($valuesOrder{$a} // 0) <=> (($valuesOrder{$b} // 0) || $a cmp $b) } keys %queueCategories) {
 			push @$ref, {
 				name  => $queueCategory,
-				items => [sort { $queuesOrder{$a} <=> $queuesOrder{$b} || $a cmp $b } @{$queueCategories{$queueCategory}}]
+				items => [sort { ($queuesOrder{$a} // 0) <=> (($queuesOrder{$b} // 0) || $a cmp $b) } @{$queueCategories{$queueCategory}}]
 			}
 		}
 	}
