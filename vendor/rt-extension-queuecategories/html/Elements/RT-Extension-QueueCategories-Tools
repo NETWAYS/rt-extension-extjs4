@@ -109,7 +109,7 @@
 	</%init>
 </%method>
 
-<%once>
+<%shared>
 	use Data::Dumper;
 	use subs qw(BuildQueueStruct);
 
@@ -157,4 +157,4 @@
 			}
 		}
 	}
-</%once>
+</%shared>
