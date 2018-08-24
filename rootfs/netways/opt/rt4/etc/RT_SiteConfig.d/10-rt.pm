@@ -31,3 +31,9 @@ Set(%FullTextSearch,
    Indexed => 0,
 );
 Set($PlainTextMono, 1);
+Set($AutocompleteOwners, 1);
+Set($PreferRichText, 0);
+Set($AttachmentListCount, 2);
+Set($LogoLinkURL, 'https://netways.de');
+Set($$LogoAltText, 'NETWAYS RT');
+Set($ShowRTPortal, 0);
