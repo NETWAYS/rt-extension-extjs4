@@ -8,4 +8,4 @@ Plugin('RT::Extension::HistoryComponent');
 Plugin('RT::Extension::UserSearch');
 Plugin('RT::Extension::AddServiceData');
 Plugin('RT::Extension::CalendarInvitation');
-
+Plugin('RT::Extension::SearchFields');

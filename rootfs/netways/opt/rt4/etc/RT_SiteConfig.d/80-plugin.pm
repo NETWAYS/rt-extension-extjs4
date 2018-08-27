@@ -8,5 +8,6 @@ Plugin('RT::Action::ChangeOwner');
 Plugin('RT::Action::SetOwner');
 Plugin('RT::Extension::QueueCategories');
 Plugin('RT::Extension::CalendarInvitation');
+Plugin('RT::Extension::SearchFields');
 
 Plugin('RTx::Action::SubjectAndEvent'); # Frozen
