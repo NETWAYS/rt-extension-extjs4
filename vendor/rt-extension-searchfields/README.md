@@ -1,4 +1,4 @@
-# MySQL Query Hint Extension for RequestTracker
+# Additional Fields For Ticket Query Language
 
 #### Table of Contents
 
