@@ -10,7 +10,7 @@ ENV RT_PREFIX ${RT_PREFIX:-/opt/rt4}
 ENV RT_BUILD_DIR ${RT_BUILD_DIR:-/opt/rt4-build}
 ENV RT_CONFIG_DIR $RT_CONFIG_DIR:-/opt/rt4-build/conf.d}
 ENV RT_SOURCE ${RT_SOURCE:-/opt/rt4-build/src}
-ENV RT_VERSION ${RT_VERSION:-rt-4.4.2}
+ENV RT_VERSION ${RT_VERSION:-rt-4.4.3}
 
 COPY ./vendor $RT_SOURCE
 COPY ./rootfs/generic/usr/local/sbin/rt4-install-extensions.sh \
