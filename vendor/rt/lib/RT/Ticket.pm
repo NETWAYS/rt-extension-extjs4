@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2018 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -658,6 +658,7 @@ sub AddWatcher {
     my $group = $self->RoleGroup( $args{Type} );
     if ($group->id && $group->SingleMemberRoleGroup) {
         my $users = $group->UserMembersObj( Recursively => 0 );
+        $users->{find_disabled_rows} = 1;
         $original_user = $users->First;
         if ($original_user->PrincipalId == $principal->Id) {
             return 1;
@@ -1052,10 +1053,14 @@ sub TransactionAddresses {
     $attachments->LimitByTicket( $self->id );
     $attachments->Columns( qw( id Headers TransactionId));
 
-    $attachments->Limit(
-        FIELD => 'Parent',
-        VALUE => 0,
-    );
+    # If $TreatAttachedEmailAsFiles is set, don't parse child attachments
+    # for email addresses.
+    if ( RT->Config->Get('TreatAttachedEmailAsFiles') ){
+        $attachments->Limit(
+            FIELD => 'Parent',
+            VALUE => 0,
+        );
+    }
 
     $attachments->Limit(
         ALIAS         => $attachments->TransactionAlias,
@@ -1175,6 +1180,23 @@ sub QueueObj {
         my ($result) = $self->{_queue_obj}->Load( $self->__Value('Queue') );
     }
     return ($self->{_queue_obj});
+}
+
+sub Subject {
+    my $self = shift;
+
+    my $subject = $self->_Value( 'Subject' );
+    return $subject if defined $subject;
+
+    if ( RT->Config->Get( 'DatabaseType' ) eq 'Oracle' && $self->CurrentUserHasRight( 'ShowTicket' ) ) {
+
+        # Oracle treats empty strings as NULL, so it returns undef for empty subjects.
+        # Since '' is the default Subject value, returning '' is more correct.
+        return '';
+    }
+    else {
+        return undef;
+    }
 }
 
 sub SetSubject {
@@ -1876,6 +1898,11 @@ sub MergeInto {
     # Can't merge into yourself
     if ( $MergeInto->Id == $self->Id ) {
         return ( 0, $self->loc("Can't merge a ticket into itself") );
+    }
+
+    # Only tickets can be merged
+    unless ($MergeInto->Type eq 'ticket' && $self->Type eq 'ticket'){
+        return(0, $self->loc("Only tickets can be merged"));
     }
 
     # Make sure the current user can modify the new ticket.
@@ -3201,24 +3228,7 @@ sub CurrentUserCanSeeTime {
            !RT->Config->Get('HideTimeFieldsFromUnprivilegedUsers');
 }
 
-1;
-
-=head1 AUTHOR
-
-Jesse Vincent, jesse@bestpractical.com
-
-=head1 SEE ALSO
-
-RT
-
-=cut
-
 sub Table {'Tickets'}
-
-
-
-
-
 
 =head2 id
 

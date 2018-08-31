@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2018 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -135,11 +135,5 @@ sub Commit {
         }
     }
 }
-
-=head1 AUTHOR
-
-Best Practical Solutions, LLC E<lt>modules@bestpractical.comE<gt>
-
-=cut
 
 1;

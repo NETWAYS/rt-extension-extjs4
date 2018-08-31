@@ -3,7 +3,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2018 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -117,6 +117,7 @@ CGI::Cookie 1.20
 CGI::Emulate::PSGI
 CGI::PSGI 0.12
 Class::Accessor::Fast
+Clone
 Convert::Color
 Crypt::Eksblowfish
 CSS::Minifier::XS
@@ -199,19 +200,17 @@ set_dep( CORE => 'Symbol::Global::Name' => 0.05 ) if $] >= 5.019003;
 set_dep( CORE => CGI => 4.00 ) if $] > 5.019003;
 
 $deps{'MAILGATE'} = [ text_to_hash( << '.') ];
-Crypt::SSLeay
 Getopt::Long
 LWP::Protocol::https
-LWP::UserAgent 6.0
+LWP::UserAgent 6.02
 Mozilla::CA
-Net::SSL
 Pod::Usage
 .
 
 $deps{'CLI'} = [ text_to_hash( << '.') ];
 Getopt::Long 2.24
 HTTP::Request::Common
-LWP
+LWP 6.02
 Term::ReadKey
 Term::ReadLine
 Text::ParseWords
