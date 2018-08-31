@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2018 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -1122,7 +1122,7 @@ sub IsPassword {
         my $salt = substr($hash, 0, 4, "");
         return 0 unless RT::Util::constant_time_eq(
             substr(Digest::SHA::sha256($salt . Digest::MD5::md5(Encode::encode( "UTF-8", $value))), 0, 26),
-            $hash
+            $hash, 1
         );
     } elsif (length $stored == 32) {
         # Hex nonsalted-md5

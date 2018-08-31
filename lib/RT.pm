@@ -2,7 +2,7 @@
 #
 # COPYRIGHT:
 #
-# This software is Copyright (c) 1996-2017 Best Practical Solutions, LLC
+# This software is Copyright (c) 1996-2018 Best Practical Solutions, LLC
 #                                          <sales@bestpractical.com>
 #
 # (Except where explicitly superseded by other copyright notices)
@@ -200,6 +200,7 @@ sub Init {
     InitSystemObjects();
     InitClasses(%args);
     InitLogging();
+    ProcessPreInitMessages();
     InitPlugins();
     _BuildTableAttributes();
     RT::I18N->Init;
@@ -248,6 +249,10 @@ sub InitLogging {
     );
 
     unless ( $RT::Logger ) {
+
+        # preload UTF-8 encoding so that Encode:encode doesn't fail to load
+        # as part of throwing an exception
+        Encode::encode("UTF-8","");
 
         $RT::Logger = Log::Dispatch->new;
 
@@ -368,6 +373,15 @@ sub InitLogging {
         }
     }
     InitSignalHandlers();
+}
+
+# Some messages may have been logged before the logger was available.
+# Output them here.
+
+sub ProcessPreInitMessages {
+    foreach my $message ( @RT::Config::PreInitLoggerMessages ){
+        RT->Logger->debug($message);
+    }
 }
 
 sub InitSignalHandlers {
@@ -546,6 +560,10 @@ sub _BuildTableAttributes {
         RT::ObjectClass
         RT::ObjectTopic
         RT::Topic
+        RT::Asset
+        RT::Catalog
+        RT::CustomRole
+        RT::ObjectCustomRole
     );
 }
 
