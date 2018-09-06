@@ -185,3 +185,10 @@ requires 'CSS::Minifier::XS';
 requires 'HTML::FormatText::WithLinks::AndTables', '0.06';
 requires 'Data::Page::Pageset';
 requires 'Scope::Upper';
+
+# RT 4.6
+
+requires 'Encode::Detect::Detector';
+requires 'Encode::HanExtra';
+requires 'HTML::FormatExternal';
+requires 'HTML::Gumbo';
