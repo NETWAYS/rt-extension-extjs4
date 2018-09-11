@@ -71,6 +71,7 @@ use RT::Interface::Web::Menu;
 use RT::Interface::Web::Session;
 use RT::Interface::Web::Scrubber;
 use Digest::MD5 ();
+use Data::GUID;
 use List::MoreUtils qw();
 use JSON qw();
 use Plack::Util;
@@ -2491,7 +2492,7 @@ sub ProcessAttachments {
     );
 
     my $token = $args{'ARGSRef'}{'Token'}
-        ||= $args{'Token'} ||= Digest::MD5::md5_hex( rand(1024) );
+        ||= $args{'Token'} ||= Data::GUID->new()->as_string();
 
     my $update_session = 0;
 
