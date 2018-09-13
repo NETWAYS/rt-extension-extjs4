@@ -14,4 +14,4 @@ $CRON \
         --condition RT::Condition::Overdue \
         --action RT::Action::RecordComment \
         --transaction last \
-        --template "DEFAULT Overdue"
+        --template 93
