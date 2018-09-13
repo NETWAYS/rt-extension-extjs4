@@ -17,3 +17,4 @@ PATH=$RT_PATH/bin:$RT_PATH/sbin:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 5 8 1 9 * root /opt/rt4/bin/rtx-create.pl --ticket=451325 --template="Task-Yearly-1stSeptember" > /dev/null 2>&1
 
 0 11,15 * * 1-5 root /usr/local/sbin/rt-netways-cron-overdue.sh > /dev/null 2>&1
+0 10,12,13,14,15,16,17 * * 1-5 root /usr/local/sbin/rt-netways-cron-nobody.sh > /dev/null 2>&1
