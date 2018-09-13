@@ -19,5 +19,5 @@ Set($AutocompleteOwners, 0);
 Set($PreferRichText, 0);
 Set($AttachmentListCount, 2);
 Set($LogoLinkURL, 'https://icinga.com');
-Set($$LogoAltText, 'ICINGA RT');
+Set($LogoAltText, 'ICINGA RT');
 Set($ShowRTPortal, 0);
