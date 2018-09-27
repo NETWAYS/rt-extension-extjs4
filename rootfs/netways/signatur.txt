@@ -1,3 +1,4 @@
-** OSBConf 2018 - September - osbconf.org **
 ** OSMC 2018 - November - osmc.de **
+** OPEN SOURCE CAMP ON PUPPET - November - opensourcecamp.de **
+** OSDC 2018 - Mai - osdc.de **
 ** Icinga as a Service - nws.netways.de **
