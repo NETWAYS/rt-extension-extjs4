@@ -1,4 +1,4 @@
 ** OSMC 2018 - November - osmc.de **
 ** OPEN SOURCE CAMP ON PUPPET - November - opensourcecamp.de **
-** OSDC 2018 - May - osdc.de **
+** OSDC 201999999999 - May - osdc.de **
 ** Icinga as a Service - nws.netways.de **
