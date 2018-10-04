@@ -74,7 +74,7 @@ systemctl restart apache2
 
 ## Configuration
 
-Beside the ```RT_SiteConfig.pm``` you need a scrip and a template which configures the custom fields to be filled 
+Beside the ```RT_SiteConfig.pm``` you need a scrip and a template which configures the custom fields to be filled
 on ticket creation.
 
 ### Scrip Configuration
@@ -117,7 +117,7 @@ The prefix ```cf``` means custom fields by name or id, ```ticket``` means direct
 ```requestor``` is implemented at the moment.
 
 ![Template configuration](doc/template-configuration.png)
-    
+
 
 ### Mandatory
 
@@ -149,7 +149,7 @@ How subject for child tickets are generated. Defaults to:
 
 ```'Attendee for {$event}, order {$order} | {$name}'```
 
-The string format is perl's [Text::Template](https://metacpan.org/pod/Text::Template) and 
+The string format is perl's [Text::Template](https://metacpan.org/pod/Text::Template) and
 use the [template](#template) fields.
 
 **$Pretix_Top_Subject_Format**
@@ -159,12 +159,12 @@ How the subject of the top ticket is rewritten. Defaults to:
 ```'Order has been placed {$order} for {$event} | {$name}';```
 
 
-The string format is perl's [Text::Template](https://metacpan.org/pod/Text::Template) and 
+The string format is perl's [Text::Template](https://metacpan.org/pod/Text::Template) and
 use the [template](#template) fields.
 
 **$Pretix_Twitter_QuestionId**
 
-The id of the custom question used for twitter handle. Defaults to ```75```.
+The identifier of the custom question used for twitter handle. Defaults to ```twitter```.
 
 **$Pretix_Top_Resolve_Ticket**
 

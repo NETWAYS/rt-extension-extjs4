@@ -14,7 +14,7 @@ use Storable qw(freeze thaw);
 our $USER_AGENT = RT->Config->Get('Pretix_User_Agent')
     // RT->Config->Get('rtname') . '/' . $RT::Extension::PretixApi::VERSION;
 
-our $TWITTER_QUESTION_ID = RT->Config->Get('Pretix_Twitter_QuestionId') // 75;
+our $TWITTER_QUESTION_ID = RT->Config->Get('Pretix_Twitter_QuestionId') // 'twitter';
 
 our $CACHE_DISABLED = RT->Config->Get('Pretix_Cache_Disable') // 0;
 
@@ -222,7 +222,7 @@ sub get_order {
         };
 
         grep {
-            $position_append->{'twitter'} = $_->{'answer'} if $_->{'question'} eq $TWITTER_QUESTION_ID
+            $position_append->{'twitter'} = $_->{'answer'} if $_->{'question_identifier'} eq $TWITTER_QUESTION_ID
         } @{ $position->{'answers'} };
 
         if (exists($position->{'subevent'}) && $position->{'subevent'}) {
