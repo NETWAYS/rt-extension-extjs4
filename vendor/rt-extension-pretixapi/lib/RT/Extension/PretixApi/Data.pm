@@ -71,7 +71,9 @@ sub has_sub_events {
     my $event = shift;
 
     my $ref = $self->get_event($organizers, $event);
-    return sprintf('%d', $ref->{'has_subevents'}) // 0;
+    my $sub_flag = lc($ref->{'has_subevents'} // 'false');
+    return 1 if ($sub_flag eq 'true');
+    return 0;
 }
 
 sub get_sub_event {

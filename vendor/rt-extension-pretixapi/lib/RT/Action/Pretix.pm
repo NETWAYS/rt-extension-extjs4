@@ -176,7 +176,7 @@ sub Prepare  {
                     }
 
                     $self->{'_queue'} = $QUEUE_DEFAULT;
-                    if (! $api->has_sub_events($organizer, $event)) {
+                    if ($api->has_sub_events($organizer, $event)) {
                         $self->{'_queue'} = $QUEUE_SUB_EVENT;
                     }
                     if (! $self->{'_queue'}) {
