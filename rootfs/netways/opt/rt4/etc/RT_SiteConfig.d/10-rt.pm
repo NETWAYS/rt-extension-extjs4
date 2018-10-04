@@ -26,6 +26,10 @@ Set ($DefaultSearchResultFormat, qq{
   '<small>__LastUpdatedRelative__</small>',
   '<small>__TimeLeft__</small>'}
 );
+
+Set($DefaultSearchResultOrder, 'DESC');
+Set($DefaultSearchResultOrderBy,	'LastUpdated');
+
 Set(%FullTextSearch,
    Enable  => 1,
    Indexed => 0,
