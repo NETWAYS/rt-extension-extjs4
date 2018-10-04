@@ -1,11 +1,9 @@
 # NETWAYS productive RT
-###################################################################################
 
 # RT_NET_SUPPORT
 bugs.netways.de                         anything
 
-### INBOXES
-
+# INBOXES
 # INBOX Automails
 tickets@rt.netways.de                   net-tickets
 external-tickets@rt.netways.de          net-tickets
@@ -49,8 +47,7 @@ sgundel.einkauf@rt.netways.de           net-einkauf-sgundel
 sales@rt.netways.de                     net-sales
 shop@rt.netways.de                      net-shop
 hardware@rt.netways.de                  net-hardware
-demosysteme.sales@rt.netways.de         net-sales-demo
-demosysteme-register.sales@rt.netways.de                net-sales-demo-register
+
 
 # Grafik
 grafik@rt.netways.de                    net-grafik
@@ -65,8 +62,7 @@ nws@rt.netways.de                       net-nws
 # MS Infrastruktur/Web Services
 infra-rt@rt.netways.de                  net-infra
 
-### OTHER QUEUES
-
+# OTHER QUEUES
 # Jobs
 jobs@rt.netways.de                      net-jobs
 
@@ -75,22 +71,19 @@ marketing@rt.netways.de                 net-marketing
 presse@rt.netways.de                    net-presse
 
 # Event Services
-
 # Allgemein
 events@rt.netways.de                    net-event-allgemein
 
 # CfP
-cfp@rt.netways.de				net-event-cfp
+cfp@rt.netways.de                       net-event-cfp
 
 # General event
-tmevents@rt.netways.de          	net-event-teilnehmer
-conference@rt.netways.de			net-event-attendee
+tmevents@rt.netways.de                  net-event-teilnehmer
+conference@rt.netways.de                net-event-attendee
 
 # OSMC
-osmc.referent@rt.netways.de             net-nagkon-referent
 osmc.presse@rt.netways.de               net-nagkon-presse
 osmc.sponsor@rt.netways.de              net-nagkon-sponsor
-osmc.teilnehmer@rt.netways.de           net-nagkon-teilnehmer
 
 allgemein@rt.netways.de                 net-nagkon-allgemein
 
@@ -99,30 +92,11 @@ schulungsanmeldung@rt.netways.de        net-training
 training.allgemein@rt.netways.de        net-nagtrain-allgemein
 nagiostraining.teilnehmer@rt.netways.de net-nagtrain-teilnehmer
 puppettraining.teilnehmer@rt.netways.de net-puptrain-teilnehmer
-training@rt.netways.de			net-training
-
-# OSDC
-osdc.teilnehmer@rt.netways.de           net-osdc-teilnehmer
-osdc.referent@rt.netways.de             net-osdc-referent
-
-# OSCAMP
-oscamp.teilnehmer@rt.netways.de           net-oscamp-teilnehmer
-oscamp.referent@rt.netways.de             net-oscamp-referent
-
-# OSBC
-osbc.teilnehmer@rt.netways.de           net-osbc-teilnehmer
-osbc.referent@rt.netways.de             net-osbc-referent
-
-# DOST
-dost.referent@rt.netways.de       	net-dost-referent
-dost.teilnehmer@rt.netways.de     	net-dost-teilnehmer
-
-# DevOpsDays
-devopsdays.attendee@rt.netways.de       net-devopsdays-teilnehmer
+training@rt.netways.de                  net-training
 
 # Privacy
-privacy@rt.netways.de			net-privacy
-datenschutz@rt.netways.de		net-privacy
+privacy@rt.netways.de                   net-privacy
+datenschutz@rt.netways.de               net-privacy
 
 # Rakuten
 tradoria@rt.netways.de                  net-service
@@ -144,4 +118,4 @@ xrt@rt.netways.de                       net-xrt
 nws-invoice@rt.netways.de               net-buha-aufgaben
 
 # DEV Aufgaben intern
-github-sync@rt.netways.de 		net-dev-aufgaben
+github-sync@rt.netways.de               net-dev-aufgaben
