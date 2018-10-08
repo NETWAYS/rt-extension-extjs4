@@ -193,6 +193,10 @@ sub Prepare  {
                     RT->Logger->info(sprintf('Pretix: Got %d positions (attendees)', $count_positions));
 
                     foreach my $position (@positions) {
+                        # Drop all other positions without user data
+                        if (! $position->{'name'} && ! $position->{'email'}) {
+                          next;
+                        }
 
                         # Copy one position into the main order data
                         # that we have only one level
