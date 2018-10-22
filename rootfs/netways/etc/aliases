@@ -22,12 +22,6 @@ security: root
 # INBOX QUEUES
 # Inbox Automails
 
-# tickets, external-tickets @rt.netways.de
-net-tickets: |"/opt/rt4/bin/rt-mailgate
-      --url http://localhost/
-      --queue '29'
-      --action correspond"
-
 # root, rootmail @rt.netways.de
 net-root: |"/opt/rt4/bin/rt-mailgate
       --url http://localhost/
@@ -188,6 +182,12 @@ net-hardware: |"/opt/rt4/bin/rt-mailgate
 net-event-allgemein: |"/opt/rt4/bin/rt-mailgate
       --url http://localhost/ --action correspond
       --queue '23'
+
+# tickets, external-tickets @rt.netways.de
+net-tickets: |"/opt/rt4/bin/rt-mailgate
+      --url http://localhost/
+      --queue '23'
+      --action correspond"
 
 # presse@rt.netways.de
 net-nagkon-presse: |"/opt/rt4/bin/rt-mailgate

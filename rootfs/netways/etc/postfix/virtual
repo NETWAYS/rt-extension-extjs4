@@ -5,8 +5,6 @@ bugs.netways.de                         anything
 
 # INBOXES
 # INBOX Automails
-tickets@rt.netways.de                   net-tickets
-external-tickets@rt.netways.de          net-tickets
 hostmaster@rt.netways.de                net-hostmaster
 abuse@rt.netways.de                     net-abuse
 changes@rt.netways.de                   net-changes
@@ -73,6 +71,10 @@ presse@rt.netways.de                    net-presse
 # Event Services
 # Allgemein
 events@rt.netways.de                    net-event-allgemein
+
+# Tickets
+tickets@rt.netways.de                   net-tickets
+external-tickets@rt.netways.de          net-tickets
 
 # CfP
 cfp@rt.netways.de                       net-event-cfp
