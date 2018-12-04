@@ -1,6 +1,11 @@
 Plugin('RT::Extension::PretixApi');
 
-Set($Pretix_Api_Auth_Token, 'u1uo6eklpf2c6mw11g69x4dbzk3mifq09u6thhw5g5t3todzv0umrfxhalqklg0s');
+Set($Pretix_Api_Auth_Token, {
+'icinga' => 'c37kgx2ejqg14vompevekhardqh08o7delcwj08w1yy71ihohvvzrwzx19ap1l7z',
+'nes'    => 'u1uo6eklpf2c6mw11g69x4dbzk3mifq09u6thhw5g5t3todzv0umrfxhalqklg0s',
+'b1'     => 'gby7f3bic4aq6buy4ymzngbhotmr8w7oyd3czbt03zl4sw15m307zsl9mrq1t89l'
+}); # Must be a hash
+
 Set($Pretix_Api_Base_URI, 'https://tickets.netways.de/api/v1');
 Set($Pretix_Sender_Regexp, qr{^tickets\@netways\.de$});
 
