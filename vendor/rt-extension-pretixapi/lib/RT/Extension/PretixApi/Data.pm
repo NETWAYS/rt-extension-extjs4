@@ -28,13 +28,25 @@ if ($CACHE_DISABLED) {
 
 sub new {
     my $classname = shift;
+    my $org = lc(shift // '');
+
     my $type = ref $classname || $classname;
 
+    unless (ref $AUTH_TOKEN eq 'HASH') {
+        die('Pretix API Error: AUTH_TOKEN configuration must be a HASH');
+    }
+
+    unless (exists $AUTH_TOKEN->{$org}) {
+        die("Pretix API Error: Org '$org' not found in AUTH_TOKEN");
+    }
+
+    RT->Logger->debug(sprintf('Pretix API, base="%s", org="%s", token="%s"', $BASE_URI, $org, $AUTH_TOKEN->{$org}));
 
     my $self = bless {
         BASE_URI   => $BASE_URI,
-        AUTH_TOKEN => $AUTH_TOKEN
+        AUTH_TOKEN => $AUTH_TOKEN->{$org}
     }, $type;
+
 
     $self->{'cache'} = Cache::FileCache->new({
         'namespace' => 'pretix',
@@ -59,8 +71,8 @@ sub request {
     my $self = shift;
     my $uri = shift;
 
-    my $request = HTTP::Request->new(GET => $BASE_URI . $uri);
-    $request->header(Authorization => 'Token ' . $AUTH_TOKEN);
+    my $request = HTTP::Request->new(GET => $self->{BASE_URI} . $uri);
+    $request->header(Authorization => 'Token ' . $self->{AUTH_TOKEN});
 
     return $request;
 }

@@ -16,9 +16,9 @@ our @EXPORT_OK = qw(
 
 );
 
-our $VERSION = '0.9.0';
+our $VERSION = '0.9.1';
 
-our $AUTH_TOKEN = RT->Config->Get('Pretix_Api_Auth_Token') // '';
+our $AUTH_TOKEN = RT->Config->Get('Pretix_Api_Auth_Token') // {};
 
 die('$Pretix_Api_Auth_Token not configured') unless ($AUTH_TOKEN);
 
