@@ -126,8 +126,6 @@ sub Prepare  {
         return 0;
     }
 
-    my $api = RT::Extension::PretixApi::Data->new();
-
     if ($self->TicketObj->Subject =~ m/order has been placed: ([\w\d]{5})/i) {
         my $order_code = $1;
 
@@ -142,6 +140,8 @@ sub Prepare  {
                 if ($attachment->Content =~ m/https?:\/\/[^\/]+\/control\/event\/([^\/]+)\/([^\/]+)\/orders\/$order_code/) {
                     my $organizer = $1;
                     my $event = $2;
+
+                    my $api = RT::Extension::PretixApi::Data->new($organizer);
 
                     if ($QUEUE_DEFAULT) {
                         my $qdefault = RT::Queue->new(RT->SystemUser);

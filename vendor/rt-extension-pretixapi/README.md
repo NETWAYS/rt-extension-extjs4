@@ -183,8 +183,13 @@ If the event is a sub event, the ticket is moved here. Format is queue name or i
 ```perl
 Plugin('RT::Extension::PretixApi');
 
-Set($PretixApi_Auth_Token, 'XXX');
+Set($PretixApi_Auth_Token, {
+  'organizer1' => 'XXX',
+  'organizer2' => 'YYY' 
+}); # Names must be lowercase
+
 Set($PretixApi_Base_URI, 'https://tickets.foo.bar/api/v1');
+
 Set($PretixSender_Regexp, qr{^tickets\@foo\.bar$});
 ```
 
