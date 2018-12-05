@@ -30,6 +30,9 @@ our $QUEUE_DEFAULT = RT->Config->Get('Pretix_Queue_Default') // '';
 
 our $QUEUE_SUB_EVENT = RT->Config->Get('Pretix_Queue_SubEvent') // '';
 
+
+our $QUEUE_TOP_TICKET_IGNORE_QUEUE = RT->Config->Get('Pretix_Top_Ticket_Ignore_Queue') // 1;
+
 sub _process_ticket_data {
     my $self = shift;
     my $config = shift;
@@ -246,7 +249,11 @@ sub Prepare  {
 sub Commit {
     my $self = shift;
 
-    if ($self->{'_queue'} && $self->{'_queue'} != $self->TicketObj->Queue) {
+    if ($QUEUE_TOP_TICKET_IGNORE_QUEUE) {
+        RT->Logger->debug('Pretix: Ignore queue change for top ticket (Pretix_Top_Ticket_Ignore_Queue=1)');
+    }
+
+    if ($self->{'_queue'} && $self->{'_queue'} != $self->TicketObj->Queue && ! $QUEUE_TOP_TICKET_IGNORE_QUEUE) {
         $self->TicketObj->SetQueue($self->{'_queue'});
     }
 
