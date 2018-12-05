@@ -97,6 +97,10 @@ order
 event
 twitter
 voucher
+date_from
+date_from_iso
+date_to
+date_to_iso
 ```
 
 This field names can be used in a template to fill ticket fields:
@@ -109,7 +113,7 @@ This field names can be used in a template to fill ticket fields:
   'twitter' => 'cf.Twitter',
   'company' => 'cf.Firma',
   'voucher' => 'cf.Sponsoringcode',
-  'order' => 'cf.Order'
+  'order'   => 'cf.Order'
 }
 ```
 
@@ -178,6 +182,11 @@ The order or attendee tickets are moved to this queue. Format is queue name or i
 
 If the event is a sub event, the ticket is moved here. Format is queue name or its id.
 
+**$Pretix_Top_Ticket_Ignore_Queue**
+
+Leave the top-ticket in the originating queue. Defaults to ```1```. Set to ```0``` if you want to 
+move the ticket to the new target ($Pretix_Queue_Default or $Pretix_Queue_SubEvent).
+
 ### Example
 
 ```perl
@@ -191,6 +200,10 @@ Set($PretixApi_Auth_Token, {
 Set($PretixApi_Base_URI, 'https://tickets.foo.bar/api/v1');
 
 Set($PretixSender_Regexp, qr{^tickets\@foo\.bar$});
+
+Set($Pretix_Top_Subject_Format, '{$event_name} | A new order has been placed {$order}');
+
+Set($Pretix_Attendee_Subject_Format, '{$event_name} | {$date_from} (TN: {$name}), Order Code: {$order}');
 ```
 
 ### Technical note

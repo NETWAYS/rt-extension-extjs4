@@ -15,4 +15,4 @@ Set($Pretix_Queue_SubEvent, 54); # TM Training
 Set($Pretix_Twitter_QuestionId, 'twitter');
 
 Set($Pretix_Top_Subject_Format, '{$event_name} | A new order has been placed {$order}');
-Set($Pretix_Attendee_Subject_Format, '{$event_name} | {$date_from} (TN: {$name}), Order Code: {$order}');
+Set($Pretix_Attendee_Subject_Format, '{$event_name} | {$date_from_iso} (TN: {$name}), Order Code: {$order}');

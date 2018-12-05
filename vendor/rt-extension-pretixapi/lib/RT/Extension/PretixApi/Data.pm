@@ -10,6 +10,7 @@ use LWP::UserAgent;
 use HTTP::Request;
 use JSON::MaybeXS qw(decode_json);
 use Storable qw(freeze thaw);
+use Date::Parse;
 
 our $USER_AGENT = RT->Config->Get('Pretix_User_Agent')
     // RT->Config->Get('rtname') . '/' . $RT::Extension::PretixApi::VERSION;
@@ -248,6 +249,9 @@ sub get_order {
             $position_append->{'date_to'} = $event_ref->{'date_to'};
         }
 
+        $position_append->{'date_from_iso'} = $self->format_date_iso($position_append->{'date_from'});
+        $position_append->{'date_to_iso'} = $self->format_date_iso($position_append->{'date_to'});
+
         push @positions, $position_append;
     }
 
@@ -257,6 +261,17 @@ sub get_order {
 
     return $out;
 
+}
+
+sub format_date_iso {
+    my $self = shift;
+    my $strdate = shift;
+    my $intdate = str2time($strdate);
+    my $date = RT::Date->new(RT->SystemUser);
+
+    $date->Unix($intdate);
+
+    return $date->Strftime('%Y-%m-%d');
 }
 
 
