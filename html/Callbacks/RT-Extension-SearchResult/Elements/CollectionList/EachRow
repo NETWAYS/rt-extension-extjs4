@@ -1,0 +1,30 @@
+<%INIT>
+# Ensure that our override only affects records of the RT::Ticket object.
+# There's no garantuee that $Record is inherited from RT::Record as base class.
+return if not $Record->isa('RT::Ticket');
+
+my $status = $Record->Status;
+
+#use Data::Dumper;
+#$RT::Logger->warn(Dumper($Record->Status));
+my @additionalClasses;
+
+# specify the CSS classes, set by reference
+if (RT->Config->Get('SearchResult_StatusBackgroundColor')) {
+  push @additionalClasses, "status".loc($status);
+}
+
+# Use helper from Ticket_Local.pm
+my $BGColorClass = $Record->getHighlight("rowclass");
+
+if (defined($BGColorClass)) {
+  push @additionalClasses, $BGColorClass;
+}
+
+$$Classes = join(' ', @additionalClasses);
+
+</%INIT>
+<%ARGS>
+$Record => undef
+$Classes => ''
+</%ARGS>
