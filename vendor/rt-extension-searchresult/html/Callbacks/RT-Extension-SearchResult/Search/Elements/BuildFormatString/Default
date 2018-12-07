@@ -1,0 +1,11 @@
+<%INIT>
+# Enable Icon
+push @{$Fields}, 'Icon';
+
+# Enable Preview
+push @{$Fields}, 'Preview' if RT->Config->Get('SearchResult_PreviewEnabled');
+
+</%INIT>
+<%ARGS>
+$Fields => undef
+</%ARGS>
