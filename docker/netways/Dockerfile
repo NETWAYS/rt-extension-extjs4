@@ -19,7 +19,6 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
 
 RUN rt4-install-extensions.sh \
   rt-action-changeowner \
-  rt-action-setowner \
   rt-extension-actitime \
   rt-extension-addservicedata \
   rt-extension-create-external \
