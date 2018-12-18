@@ -37,7 +37,9 @@ RUN rt4-install-extensions.sh \
   rtx-action-subjectandevent \
   rt-extension-calendarinvitation \
   rt-extension-pretixapi \
-  rt-extension-searchfields
+  rt-extension-searchfields \
+  rt-extension-searchresult \
+  rt-extension-fontawesome
 
 RUN sed -i -e "s/localhost\.localdomain/`cat /etc/mailname`/g" /etc/postfix/main.cf
 

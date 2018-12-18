@@ -10,3 +10,5 @@ Plugin('RT::Extension::CalendarInvitation');
 Plugin('RT::Extension::SearchFields');
 
 Plugin('RTx::Action::SubjectAndEvent'); # Frozen
+
+Plugin('RT::Extension::FontAwesome');
