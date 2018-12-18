@@ -14,7 +14,6 @@ RUN chmod 755 /opt/rt4/etc/RT_SiteConfig.pm \
   && chmod 755 /usr/local/sbin/icinga-cron-resolve-automails.sh
 
 RUN rt4-install-extensions.sh \
-  rt-action-setowner \
   rt-action-changeowner \
   rt-extension-addservicedata \
   rt-extension-create-external \
