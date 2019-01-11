@@ -171,7 +171,7 @@ requires 'Date::Holidays';
 requires 'Storable';
 requires 'Cache::FileCache';
 requires 'JSON::MaybeXS';
-
+requires 'SOAP::Lite';
 
 # RT::Authen::ExternalAuth
 requires 'Net::SSLeay';
