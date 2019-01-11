@@ -172,6 +172,7 @@ requires 'Storable';
 requires 'Cache::FileCache';
 requires 'JSON::MaybeXS';
 requires 'SOAP::Lite';
+requires 'HTTP::Cookies';
 
 # RT::Authen::ExternalAuth
 requires 'Net::SSLeay';
