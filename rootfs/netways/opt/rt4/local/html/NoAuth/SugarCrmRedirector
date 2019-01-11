@@ -1,0 +1,104 @@
+<%init>
+    my $sugar_user = RT->Config->Get('NETWAYS_SugarCrm_User');
+    my $sugar_pass = RT->Config->Get('NETWAYS_SugarCrm_Pass');
+    my $sugar_base = RT->Config->Get('NETWAYS_SugarCrm_Base');
+
+    my $sugar_account_base = $sugar_base
+        . '/index.php'
+        . '?module=Accounts&action=DetailView&record=';
+
+    unless ($sugar_user && $sugar_pass && $sugar_base) {
+        die('Configuration error. Please set NETWAYS_SugarCrm_User, NETWAYS_SugarCrm_Pass, NETWAYS_SugarCrm_Base');
+    }
+
+    unless ($globalId) {
+        die('Parameter "globalId=&lt;int&gt;" is missing!');
+    }
+
+    my $cookie_jar = HTTP::Cookies->new();
+    my $soap = SOAP::Lite->new()->on_action( sub { no warnings; join '/', @_ } )
+        ->service($sugar_base . '/soap.php?wsdl')
+        ->proxy($sugar_base . '/soap.php', cookie_jar => $cookie_jar);
+
+    my $login = $soap->call(
+        SOAP::Data->name('login'),
+        SOAP::Data->name('user_auth')->value({
+            'user_name' => $sugar_user,
+            'password'  => $sugar_pass
+        }),
+        SOAP::Data->name('application_name')->value('rt4netways'),
+        SOAP::Data->name('URI')
+    );
+
+    assert_soap_error($login);
+
+    my $login_id = $login->result()->{id};
+
+    my $account = $soap->call(
+        SOAP::Data->name('get_entry_list'),
+        SOAP::Data->name('session')->value($login_id),
+        SOAP::Data->name('module_name')->value('Accounts'),
+
+        SOAP::Data->name('query')->value("accounts_cstm.net_global_id_c='$globalId'"),
+        SOAP::Data->name('order_by')->value('accounts.name ASC'),
+        SOAP::Data->name('offset')->value(0),
+        SOAP::Data->name('select_fields')->value(['net_global_id_c', 'shortname_c', 'name', 'id']),
+
+        SOAP::Data->name('max_results')->value(1),
+        SOAP::Data->name('deleted')->value(0)
+    );
+
+    assert_soap_error($account);
+    assert_soap_result($account);
+
+    my $account_entry = sugar_result_hash($account, 1);
+    my $account_id = $account_entry->{id};
+
+    if (defined $account_id) {
+        $m->redirect($sugar_account_base . $account_id);
+    }
+</%init>
+<%once>
+    use HTTP::Cookies;
+    use SOAP::Lite;
+    use warnings;
+
+    use Data::Dumper;
+
+    sub assert_soap_error {
+        my $som = shift;
+        die ('SOAP Error') if ($som->fault());
+        my $error = $som->result()->{error};
+        if ($error->{number} > 0) {
+            die('Login Error: ' . $error->{description});
+        }
+    }
+
+    sub assert_soap_result {
+        my $som = shift;
+        unless ($som->result()->{result_count} > 0) {
+            die('No results found');
+        }
+    }
+
+    sub sugar_result_hash {
+        my $som = shift;
+        my $first = shift // 0;
+
+        unless ($som->result()->{'result_count'} > 0) {
+            return undef;
+        }
+
+        my @data = ();
+        for my $entry (@{ $som->result()->{'entry_list'} }) {
+            push @data, { map {$_->{'name'} => $_->{'value'}} @{ $entry->{'name_value_list'} } };
+            if ($first) {
+                return $data[0];
+            }
+        }
+        return \@data;
+    }
+</%once>
+<%args>
+    $globalId => undef;
+</%args>

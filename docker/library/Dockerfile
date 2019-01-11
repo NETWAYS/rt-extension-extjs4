@@ -99,7 +99,8 @@ RUN apt-get clean && apt-get update \
     libfile-cache-perl \
     libencode-detect-perl \
     libencode-hanextra-perl \
-    
+    libsoap-lite-perl \
+    libhttp-cookies-perl \
   && rm -rf lib/apt/lists/*
 
 ADD rootfs/generic/opt/rt4-build/cpanfile ${RT_BUILD_DIR}/cpanfile
