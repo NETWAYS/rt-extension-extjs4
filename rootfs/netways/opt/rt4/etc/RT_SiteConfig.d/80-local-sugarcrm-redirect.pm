@@ -2,7 +2,7 @@
 
 # Location: local/html/NoAuth/SugarCrmRedirector
 # Based on this example: https://discourse.netways.de/t/sugarcrm-soap-schnittstelle/208
-# Call is: http://10.211.55.32/NoAuth/SugarCrmRedirector?globalId=10533
+# Call is: https://rt.netways.de/NoAuth/SugarCrmRedirector?globalId=__CustomField__
 
 Set($NETWAYS_SugarCrm_User, 'netbot');
 Set($NETWAYS_SugarCrm_Pass, '5RrdYxY66SM');
