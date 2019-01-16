@@ -2,7 +2,7 @@ Plugin('RT::Extension::SearchResult');
 
 Set($SearchResult_HighlightOnLastUpdatedByCondition, [{
   'conditions' => { 'groups' => [ 'NETWAYS' ] },
-  'color'      => 'yellow-dark',
+  'color'      => 'yellow-light',
   'icon'       => 'fa-exclamation-circle'
 }]);
 
