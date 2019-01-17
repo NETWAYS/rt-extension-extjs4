@@ -61,3 +61,11 @@ icinga-privacy: |"/opt/rt4/bin/rt-mailgate
             --queue 'Privacy'
             --action correspond
             --url http://localhost"
+
+icinga-billing: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 'Icinga Billing'
+            --action correspond
+            --url http://localhost"
+
+
