@@ -1,5 +1,4 @@
 Plugin('RT::Extension::ExtractCustomFieldValues');
-Plugin('RT::Extension::CreateLinkedTickets');
 Plugin('RT::Extension::QueueCategories');
 Plugin('RT::Action::ChangeOwner');
 Plugin('RT::Extension::DBCustomField');
