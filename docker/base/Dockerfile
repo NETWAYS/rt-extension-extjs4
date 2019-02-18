@@ -1,5 +1,5 @@
 # base machine
-FROM debian:jessie
+FROM debian:stretch-backports
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ
@@ -8,8 +8,6 @@ ARG LANG
 ENV DEBIAN_FRONTEND ${DEBIAN_FRONTEND:-noninteractive}
 ENV TZ ${TZ:-UTC}
 ENV LANG ${LANG:-C}
-
-COPY ./rootfs/generic/etc/apt/sources.list /etc/apt/sources.list
 
 RUN apt-get update \
   && apt-get dist-upgrade -u -y \

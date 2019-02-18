@@ -8,8 +8,8 @@ ENV RT_BUILD_DIR ${RT_BUILD_DIR:-/opt/rt4-build}
 RUN apt-get clean && apt-get update \
   && apt-get install -y --no-install-recommends \
     cpanminus \
-    libmysqlclient-dev \
-    libmysqlclient18 \
+    libmariadbclient-dev \
+    libmariadbclient18 \
     \
     libhtml-mason-perl \
     libapache-session-perl \
@@ -101,8 +101,10 @@ RUN apt-get clean && apt-get update \
     libencode-hanextra-perl \
     libsoap-lite-perl \
     libhttp-cookies-perl \
+    libredis-perl \
+    libmodule-install-perl \
   && rm -rf lib/apt/lists/*
 
 ADD rootfs/generic/opt/rt4-build/cpanfile ${RT_BUILD_DIR}/cpanfile
 
-RUN cpanm --force --notest --installdeps ${RT_BUILD_DIR}
+RUN cpanm --notest --installdeps ${RT_BUILD_DIR}

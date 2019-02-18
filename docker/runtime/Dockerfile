@@ -17,12 +17,12 @@ RUN apt-get update \
     cron \
     rsyslog \
     apache2 \
-    apache2-mpm-prefork \
     libapache2-mod-perl2 \
     logrotate \
     nfs-common \
     less \
     vim \
+    redis-server \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./rootfs/generic/etc/supervisor/conf.d/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
@@ -32,6 +32,7 @@ COPY ./rootfs/generic/etc/apache2/conf-available/netways-ldap.conf /etc/apache2/
 COPY ./rootfs/generic/etc/ldap/ldap.conf /etc/ldap/ldap.conf
 COPY ./rootfs/generic/etc/cron.d/rt4-cron /etc/cron.d/rt4-cron
 COPY ./rootfs/generic/usr/local/sbin/update-postfix-tables.sh /usr/local/sbin/update-postfix-tables.sh
+COPY ./rootfs/generic/etc/redis/redis.conf /etc/redis/redis.conf
 
 COPY ./rootfs/generic/etc/postfix/ /etc/postfix/
 COPY ./rootfs/generic/etc/aliases /etc/aliases
