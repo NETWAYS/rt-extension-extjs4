@@ -11,5 +11,12 @@ Set(@MasonParameters, (
        },
        # preloads => ['/Elements/*']
 ));
-Set($WebSessionClass, "Apache::Session::File");
+
 Set($WebSecureCookies, 1);
+
+Set($WebSessionClass, "Apache::Session::Redis");
+
+Set(%WebSessionProperties,
+    server => '127.0.0.1:6379',
+    name   => 'rt4netways'
+);
