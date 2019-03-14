@@ -1,4 +1,4 @@
-** Icinga Camp Berlin 2019 - March - icinga.com ** 
-** Meet us at CLT 2019 – March - chemnitzer.linux-tage.de ** 
+** Meet us at CLT 2019 - March - chemnitzer.linux-tage.de ** 
 ** OSDC 2019 - May - osdc.de ** 
-** NETWAYS Web Services - nws.netways.de ** 
+** Open Source Camp 2019 | #3 Ansible - May - opensourcecamp.de **
+** NETWAYS Web Services - nws.netways.de **
