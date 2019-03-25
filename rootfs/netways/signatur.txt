@@ -1,4 +1,4 @@
-** Meet us at CLT 2019 - March - chemnitzer.linux-tage.de ** 
 ** OSDC 2019 - May - osdc.de ** 
 ** Open Source Camp 2019 | #3 Ansible - May - opensourcecamp.de **
+** OSMC 2019 - November - osmc.de **
 ** NETWAYS Web Services - nws.netways.de **
