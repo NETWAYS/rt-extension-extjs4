@@ -103,8 +103,14 @@ RUN apt-get clean && apt-get update \
     libhttp-cookies-perl \
     libredis-perl \
     libmodule-install-perl \
+    libemail-address-perl \
+    libemail-address-list-perl \
   && rm -rf lib/apt/lists/*
 
 ADD rootfs/generic/opt/rt4-build/cpanfile ${RT_BUILD_DIR}/cpanfile
 
-RUN cpanm --notest --installdeps ${RT_BUILD_DIR}
+RUN cpanm \
+  --mirror https://cpan.metacpan.org/ \
+  --notest \
+  --installdeps ${RT_BUILD_DIR}
+
