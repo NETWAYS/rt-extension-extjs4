@@ -1,7 +1,8 @@
+.github/ISSUE_TEMPLATE.md
+.mailmap
+AUTHORS
 doc/new-ticket.png
 doc/stats.png
-html/Callbacks/RT-Extension-QueueCategories/Elements/QueueSummaryByLifecycle/Filter
-html/Callbacks/RT-Extension-QueueCategories/Elements/QueueSummaryByStatus/Filter
 html/Elements/QueueSummaryByLifecycle
 html/Elements/QueueSummaryByStatus
 html/Elements/RT-Extension-QueueCategories-Tools
@@ -25,3 +26,4 @@ MANIFEST			This list of files
 META.yml
 README
 README.md
+RELEASE.md
