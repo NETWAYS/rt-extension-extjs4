@@ -186,6 +186,8 @@ requires 'CSS::Minifier::XS';
 requires 'HTML::FormatText::WithLinks::AndTables', '0.06';
 requires 'Data::Page::Pageset';
 requires 'Scope::Upper';
+requires 'Email::Address', '1.912';
+requires 'Email::Address::List', '0.06';
 
 # RT 4.6
 requires 'Encode::Detect::Detector';
