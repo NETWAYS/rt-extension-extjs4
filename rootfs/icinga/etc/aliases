@@ -4,67 +4,67 @@ postmaster:    root
 # TICKET ID
 icinga-rt:      |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'General'
+            --queue 1
             --action correspond
             --url http://localhost"
 
 icinga-xrt:     |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'General'
+            --queue 1
             --action comment
             --url http://localhost"
 
 icinga-events:  |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Events'
+            --queue 5
             --action correspond
             --url http://localhost"
 
 icinga-partner: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Partner'
+            --queue 9
             --action correspond
             --url http://localhost"
 
 icinga-shop:    |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Shop'
+            --queue 7
             --action correspond
             --url http://localhost"
 
 icinga-support: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Support'
+            --queue 11
             --action correspond
             --url http://localhost"
 
 icinga-sales: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Sales'
+            --queue 12
             --action correspond
             --url http://localhost"
 
 icinga-automail: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Automail'
+            --queue 13
             --action correspond
             --url http://localhost"
 
 icinga-infrastructure: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Infrastructure'
+            --queue 14
             --action correspond
             --url http://localhost"
 
 icinga-privacy: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Privacy'
+            --queue 15
             --action correspond
             --url http://localhost"
 
 icinga-billing: |"/opt/rt4/bin/rt-mailgate
             --extension ticket
-            --queue 'Icinga Billing'
+            --queue 17
             --action correspond
             --url http://localhost"
 
