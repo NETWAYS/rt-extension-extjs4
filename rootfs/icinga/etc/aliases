@@ -68,4 +68,9 @@ icinga-billing: |"/opt/rt4/bin/rt-mailgate
             --action correspond
             --url http://localhost"
 
+icinga-project: |"/opt/rt4/bin/rt-mailgate
+            --extension ticket
+            --queue 19
+            --action correspond
+            --url http://localhost"
 
