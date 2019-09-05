@@ -17,6 +17,7 @@ RUN apt-get clean && apt-get update \
     libregexp-common-perl \
     libdbi-perl \
     libdbix-searchbuilder-perl \
+    libdbd-mariadb-perl \
     libtext-template-perl \
     liblog-dispatch-perl \
     liblocale-maketext-fuzzy-perl \
