@@ -1,0 +1,14 @@
+use warnings;
+use strict;
+
+our @ScripConditions = (
+    {
+        Name                 => 'On TimeWorked Change',      # loc
+        Description          => 'When TimeWorked Change',    # loc
+        ApplicableTransTypes => 'Any',
+        ExecModule           => 'TimeWorkedChange',
+    },
+);
+
+
+1;

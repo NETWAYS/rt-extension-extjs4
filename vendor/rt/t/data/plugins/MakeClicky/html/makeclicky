@@ -1,0 +1,9 @@
+<%args>
+$content => ""
+$html => 0
+</%args>
+<%init>
+$m->comp("/Elements/MakeClicky", content => \$content, html => $html);
+$m->out($content);
+$m->abort;
+</%init>
