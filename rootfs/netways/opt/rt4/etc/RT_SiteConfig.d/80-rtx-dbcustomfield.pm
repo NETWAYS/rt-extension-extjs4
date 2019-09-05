@@ -6,14 +6,14 @@ Set($DBCustomField_Suggestion_Limit, 10);
 # Connections
 Set($DBCustomField_Connections, {
 	'sugarcrm' => {
-		'dsn'		=> 'DBI:mysql:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
+		'dsn'		=> 'DBI:MariaDB:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;',
 		'username'	=> 'sugarcrm',
 		'password'	=> '5qk8LiDqsVgq',
 		'autoconnect'	=> 1
 	},
 
 	'rt4' => {
-       		'dsn' 		=> 'DBI:mysql:database=rt4_net_support;host=mysql1.adm.netways.de;port=3306;mysql_enable_utf8=1',
+       		'dsn' 		=> 'DBI:MariaDB:database=rt4_net_support;host=mysql1.adm.netways.de;port=3306;',
 	        'username' 	=> 'reporting',
 	        'password' 	=> 'Yee3IeSh',
 	        'autoconnect' 	=> 1

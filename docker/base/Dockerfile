@@ -1,5 +1,5 @@
 # base machine
-FROM debian:stretch-backports
+FROM debian:buster-backports
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ

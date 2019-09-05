@@ -30,11 +30,11 @@ diag "add 'qwe', 'ASD', '0' and ' foo ' as values to the CF";
 {
     foreach my $value(qw(qwe ASD 0), 'foo') {
         $m->submit_form(
-            form_name => "AddCustomFieldValue",
+            form_name => "ModifyCustomField",
             fields => {
                 "CustomField-". $cfid ."-Value-new-Name" => $value,
             },
-            button => 'AddValue',
+            button => 'Update',
         );
         $m->content_contains("Custom field value $value added", 'added a value to the CF' ); # or diag $m->content;
         my $v = $value;

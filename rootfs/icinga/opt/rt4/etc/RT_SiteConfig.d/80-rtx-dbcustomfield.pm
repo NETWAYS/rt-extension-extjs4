@@ -6,13 +6,13 @@ Set($DBCustomField_Suggestion_Limit, 10);
 # Connections
 Set($DBCustomField_Connections, {
 	'sugarcrm' => {
-		'dsn'		=> 'DBI:mysql:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;mysql_enable_utf8=1',
+		'dsn'		=> 'DBI:MariaDB:database=sugarcrm;host=mysql2.adm.netways.de;port=3306;',
 		'username'	=> 'icinga-rt',
 		'password'	=> 'rm9QsrnRf8ZRbH936IoW'
 	},
 
 	'partnerportal' => {
-        'dsn' => 'DBI:mysql:database=partnerportal;host=mysql.icinga.netways.de;port=3306;mysql_enable_utf8=1',
+        'dsn' => 'DBI:MariaDB:database=partnerportal;host=mysql.icinga.netways.de;port=3306;',
         'username' => 'rt4_partnerportal',
         'password' => '3m3xEuC3aqCRQAuxfpko'
     }

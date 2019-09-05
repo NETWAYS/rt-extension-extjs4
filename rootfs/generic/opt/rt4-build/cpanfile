@@ -122,9 +122,8 @@ requires 'FCGI::ProcManager';
 # Modperl2
 requires 'Apache::DBI';
 
-# MySQL
-# Avoid bug with utf8 encoding: https://issues.bestpractical.com/Ticket/Display.html?id=32670
-requires 'DBD::mysql', '== 4.041';
+requires 'DBD::mysql';
+requires 'DBD::MariaDB';
 
 # SQLite
 requires 'DBD::SQLite', '1.00';

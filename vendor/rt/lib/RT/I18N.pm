@@ -66,9 +66,6 @@ use base 'Locale::Maketext::Fuzzy';
 use MIME::Entity;
 use MIME::Head;
 use File::Glob;
-use Encode::HanExtra;
-use Encode::Guess;
-use Encode::Detect::Detector;
 
 # I decree that this project's first language is English.
 
@@ -509,10 +506,12 @@ sub _FindOrGuessCharset {
 
 =head2 _GuessCharset STRING
 
-Use L<Encode::Guess> and L<Encode::Detect::Detector> to try to figure it out
-the string's encoding.
+use Encode::Guess to try to figure it out the string's encoding.
 
 =cut
+
+use constant HAS_ENCODE_GUESS => Encode::Guess->require;
+use constant HAS_ENCODE_DETECT => Encode::Detect::Detector->require;
 
 sub _GuessCharset {
     my $fallback = _CanonicalizeCharset('iso-8859-1');
@@ -529,17 +528,31 @@ sub _GuessCharset {
 
     if ( $encodings[0] eq '*' ) {
         shift @encodings;
-        my $charset = Encode::Detect::Detector::detect( $_[0] );
-        if ( $charset ) {
-            $RT::Logger->debug("Encode::Detect::Detector guessed encoding: $charset");
-            return _CanonicalizeCharset( Encode::resolve_alias( $charset ) );
-        } else {
-            $RT::Logger->debug("Encode::Detect::Detector failed to guess encoding");
+        if ( HAS_ENCODE_DETECT ) {
+            my $charset = Encode::Detect::Detector::detect( $_[0] );
+            if ( $charset ) {
+                $RT::Logger->debug("Encode::Detect::Detector guessed encoding: $charset");
+                return _CanonicalizeCharset( Encode::resolve_alias( $charset ) );
+            }
+            else {
+                $RT::Logger->debug("Encode::Detect::Detector failed to guess encoding");
+            }
+        }
+        else {
+            $RT::Logger->error(
+                "You requested to guess encoding, but we couldn't"
+                ." load Encode::Detect::Detector module"
+            );
         }
     }
 
     unless ( @encodings ) {
         $RT::Logger->warning("No EmailInputEncodings set except '*', fallback to $fallback");
+        return $fallback;
+    }
+
+    unless ( HAS_ENCODE_GUESS ) {
+        $RT::Logger->error("We couldn't load Encode::Guess module, fallback to $fallback");
         return $fallback;
     }
 
@@ -594,6 +607,12 @@ sub _CanonicalizeCharset {
     elsif ( $charset eq 'euc-cn' ) {
         # gbk is superset of gb2312/euc-cn so it's safe
         return 'gbk';
+    }
+    elsif ( $charset =~ /^(?:(?:big5(-1984|-2003|ext|plus))|cccii|unisys|euc-tw|gb18030|(?:cns11643-\d+))$/ ) {
+        unless ( Encode::HanExtra->require ) {
+            RT->Logger->error("Please install Encode::HanExtra to handle $charset");
+        }
+        return $charset;
     }
     else {
         return $charset;

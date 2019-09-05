@@ -4,6 +4,9 @@ use warnings;
 
 use RT::Test tests => 16;
 
+use constant HAS_ENCODE_GUESS => Encode::Guess->require;
+use constant HAS_ENCODE_DETECT => Encode::Detect::Detector->require;
+
 my $string = "\x{442}\x{435}\x{441}\x{442} \x{43f}\x{43e}\x{434}\x{434}\x{435}\x{440}\x{436}\x{43a}\x{430}";
 
 sub guess {
@@ -13,6 +16,7 @@ sub guess {
 
 RT->Config->Set(EmailInputEncodings => qw(*));
 SKIP: {
+    skip "No Encode::Detect", 3 unless HAS_ENCODE_DETECT;
     guess('utf-8', $string);
     guess('cp1251', $string);
     guess('koi8-r', $string);
@@ -20,6 +24,7 @@ SKIP: {
 
 RT->Config->Set(EmailInputEncodings => qw(UTF-8 cp1251 koi8-r));
 SKIP: {
+    skip "No Encode::Guess", 4 unless HAS_ENCODE_GUESS;
     guess('utf-8', $string);
     guess('cp1251', $string);
     guess('windows-1251', $string, 'cp1251');
@@ -31,6 +36,7 @@ SKIP: {
 
 RT->Config->Set(EmailInputEncodings => qw(UTF-8 koi8-r cp1251));
 SKIP: {
+    skip "No Encode::Guess", 3 unless HAS_ENCODE_GUESS;
     guess('utf-8', $string);
     guess('koi8-r', $string);
     {
@@ -43,6 +49,7 @@ SKIP: {
 RT->Config->Set(EmailInputEncodings => qw(UTF-8 windows-1251 koi8-r));
 RT->Config->PostLoadCheck;
 SKIP: {
+    skip "No Encode::Guess", 3 unless HAS_ENCODE_GUESS;
     guess('utf-8', $string);
     guess('cp1251', $string);
     {
@@ -53,6 +60,7 @@ SKIP: {
 
 RT->Config->Set(EmailInputEncodings => qw(* UTF-8 cp1251 koi8-r));
 SKIP: {
+    skip "No Encode::Detect", 3 unless HAS_ENCODE_DETECT;
     guess('utf-8', $string);
     guess('cp1251', $string);
     guess('koi8-r', $string);

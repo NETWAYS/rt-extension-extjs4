@@ -70,13 +70,27 @@ sub AccessToken {
 sub Init {
     my $self = shift;
 
-    if (not File::Dropbox->require) {
-        RT->Logger->error("Required module File::Dropbox is not installed");
-        return;
-    } elsif (not $self->AccessToken) {
-        RT->Logger->error("Required option 'AccessToken' not provided for Dropbox external storage. See the documentation for " . __PACKAGE__ . " for setting up this integration.");
-        return;
+    {
+        # suppress given/warn is experimental warnings from File::Dropbox 0.6
+        # https://rt.cpan.org/Ticket/Display.html?id=108107
+
+        my $original_warn_handler = $SIG{__WARN__};
+        local $SIG{__WARN__} = sub {
+            return if $_[0] =~ /(given|when) is experimental/;
+
+            # Avoid reporting this anonymous call frame as the source of the warning.
+            goto &$original_warn_handler;
+        };
+
+        if (not File::Dropbox->require) {
+            RT->Logger->error("Required module File::Dropbox is not installed");
+            return;
+        } elsif (not $self->AccessToken) {
+            RT->Logger->error("Required option 'AccessToken' not provided for Dropbox external storage. See the documentation for " . __PACKAGE__ . " for setting up this integration.");
+            return;
+        }
     }
+
 
     my $dropbox = File::Dropbox->new(
         oauth2       => 1,
@@ -170,7 +184,7 @@ Choose B<Dropbox API app> as the type of app.
 
 =item 4.
 
-Choose B<App Folder> for the Type of Access; your application only needs access to files it creates.
+Choose B<Yes>, your application only needs access to files it creates.
 
 =item 5.
 
@@ -178,13 +192,9 @@ Enter a descriptive name -- C<Request Tracker files> is fine.
 
 =item 6.
 
-Check the checkbox for B<Terms and Conditions> (if present) and then click C<Create App>.
-
-=item 7.
-
 Under C<Generated access token>, click the C<Generate> button.
 
-=item 8.
+=item 7.
 
 Copy the provided value into your F<RT_SiteConfig.pm> file as the
 C<AccessToken>:

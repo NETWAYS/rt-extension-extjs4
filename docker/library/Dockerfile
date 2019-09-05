@@ -4,18 +4,20 @@ FROM rt4/base
 ARG RT_BUILD_DIR
 
 ENV RT_BUILD_DIR ${RT_BUILD_DIR:-/opt/rt4-build}
+ENV DBD_MYSQL_CONFIG /usr/bin/mariadb_config
 
 RUN apt-get clean && apt-get update \
   && apt-get install -y --no-install-recommends \
     cpanminus \
-    libmariadbclient-dev \
-    libmariadbclient18 \
+    libmariadb-dev \
+    libmariadb3 \
     \
     libhtml-mason-perl \
     libapache-session-perl \
     libregexp-common-perl \
     libdbi-perl \
     libdbix-searchbuilder-perl \
+    libdbd-mariadb-perl \
     libtext-template-perl \
     liblog-dispatch-perl \
     liblocale-maketext-fuzzy-perl \
@@ -24,7 +26,7 @@ RUN apt-get clean && apt-get update \
     libmime-types-perl \
     libmailtools-perl \
     libtext-wrapper-perl \
-    libtime-modules-perl \
+    libtime-parsedate-perl \
     libtext-autoformat-perl \
     libtext-wikiformat-perl \
     libhtml-scrubber-perl \

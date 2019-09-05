@@ -1,13 +1,9 @@
 use strict;
 use warnings;
 
-use RT::Test nodb => 1, tests => undef;
+use RT::Test nodb => 1, tests => 6;
 use RT::Interface::Web; # This gets us HTML::Mason::Commands
 use Test::LongString;
-
-sub scrub_html {
-    return HTML::Mason::Commands::ScrubHTML(shift);
-}
 
 {
     my $html = 'This is a test of <span style="color: rgb(255, 0, 0); ">color</span> and <span style="font-size: 18px; "><span style="font-family: Georgia, serif; ">font</span></span> and <em><u><strike><strong>boldness</strong></strike></u></em>.';
@@ -43,10 +39,7 @@ sub scrub_html {
     is_string(scrub_html($html), $expected, "outlook html");
 }
 
-{
-    my $html = q[</td></tr></table><table><td>Some content here</table>An unclosed <b>bold<b> tag.];
-    my $expected = q[<table><tbody><tr><td>Some content here</td></tr></tbody></table>An unclosed <b>bold<b> tag.</b></b>];
-    is_string(scrub_html($html), $expected, "Unbalanced tags get balanced");
+sub scrub_html {
+    return HTML::Mason::Commands::ScrubHTML(shift);
 }
 
-done_testing;
