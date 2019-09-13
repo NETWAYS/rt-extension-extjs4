@@ -1,5 +1,5 @@
 # libraries
-FROM rt4/base
+FROM net-docker-registry.adm.netways.de:5000/rt4/base
 
 ARG RT_BUILD_DIR
 

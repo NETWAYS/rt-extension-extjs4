@@ -1,4 +1,4 @@
-version: '2'
+version: "2.1"
 
 services:
   base:
@@ -60,6 +60,10 @@ services:
       - TZ=Europe/Berlin
       - LANG=de_DE.UTF-8
       - LC_ALL=de_DE
+    ports:
+      - "8025:25"
+      - "8080:80"
+      - "8443:443"
 
   icinga:
     extends:
@@ -73,6 +77,10 @@ services:
       - TZ=Europe/Berlin
       - LANG=de_DE.UTF-8
       - LC_ALL=de_DE
+    ports:
+      - "8025:25"
+      - "8080:80"
+      - "8443:443"
 
   devkit:
     extends:
@@ -82,3 +90,7 @@ services:
       dockerfile: ./docker/devkit/Dockerfile
     image: "$RT_BUILD_NS/rt4devkit"
     container_name: rt4devkit
+    ports:
+      - "8025:25"
+      - "8080:80"
+      - "8443:443"

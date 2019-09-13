@@ -1,4 +1,4 @@
-FROM rt4/library
+FROM net-docker-registry.adm.netways.de:5000/rt4/library
 
 ARG RT_BUILD_DIR
 ARG RT_CONFIG_DIR
