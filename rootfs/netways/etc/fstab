@@ -1,2 +1,0 @@
-# RT Backup Share
-10.10.0.232:/nfs_exports/rt-tickets /opt/rt4/var/data/RT-Shredder nfs4 rw,auto
