@@ -1,4 +1,4 @@
-FROM rt4/source
+FROM net-docker-registry.adm.netways.de:5000/rt4/source
 
 ARG POSTFIX_MAILNAME
 ARG POSTFIX_MAILER_TYPE

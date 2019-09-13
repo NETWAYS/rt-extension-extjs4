@@ -1,4 +1,4 @@
-FROM rt4/runtime
+FROM net-docker-registry.adm.netways.de:5000/rt4/runtime
 
 ARG RT_SOURCE
 
