@@ -106,5 +106,5 @@ Set ($DBCustomField_Queries, {
 # Query to CF mapping
 Set($DBCustomField_Fields, {
 	'Client'          => 'companies',
-	'PartnerCustomer' => 'partner_customer'
+	'Customer'        => 'partner_customer'
 });
