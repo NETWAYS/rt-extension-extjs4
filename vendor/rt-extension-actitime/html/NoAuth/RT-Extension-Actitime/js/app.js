@@ -1,3 +1,7 @@
+// Disable cache for resource requirements
+Ext.Loader.setConfig({
+    disableCaching: false
+});
 
 Ext.application({
     name: 'Actitime',
