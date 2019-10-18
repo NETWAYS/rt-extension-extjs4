@@ -7,6 +7,7 @@ docker run \
   -p 25:25 \
   -p 80:80 \
   -p 443:443 \
+  -p 8080:8080 \
   -e "LANG=de_DE.UTF-8" \
   -e "LC_ALL=de_DE" \
   -v /home/rt/rt4-mason-data:/opt/rt4/var/mason_data \

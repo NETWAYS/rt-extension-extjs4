@@ -26,7 +26,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./rootfs/generic/etc/supervisor/conf.d/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+COPY ./rootfs/generic/etc/apache2/ports.conf /etc/apache2/ports.conf
 COPY ./rootfs/generic/etc/apache2/sites-available/rt.conf /etc/apache2/sites-available/rt.conf
+COPY ./rootfs/generic/etc/apache2/sites-available/status.conf /etc/apache2/sites-available/status.conf
+COPY ./rootfs/generic/etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-avilable/mpm_prefork.conf
 COPY ./rootfs/generic/etc/apache2/ssl/ /etc/apache2/ssl/
 COPY ./rootfs/generic/etc/apache2/conf-available/netways-ldap.conf /etc/apache2/conf-available/netways-ldap.conf
 COPY ./rootfs/generic/etc/ldap/ldap.conf /etc/ldap/ldap.conf
@@ -42,8 +45,8 @@ RUN /usr/local/sbin/update-postfix-tables.sh
 
 RUN /usr/sbin/adduser www-data rt
 RUN /usr/sbin/a2dismod mpm_event
-RUN /usr/sbin/a2enmod mpm_prefork ssl ldap authnz_ldap rewrite expires headers \
-	&& /usr/sbin/a2ensite rt \
+RUN /usr/sbin/a2enmod mpm_prefork ssl ldap authnz_ldap rewrite expires headers status \
+	&& /usr/sbin/a2ensite rt status \
 	&& /usr/sbin/a2enconf netways-ldap \
 	&& /usr/sbin/a2dissite 000-default
 

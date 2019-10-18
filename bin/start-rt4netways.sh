@@ -10,6 +10,7 @@ docker run \
   -p 25:25 \
   -p 80:80 \
   -p 443:443 \
+  -p 8080:8080 \
   -v /home/rt/signatur:/signatur \
   -v /home/rt/gpg:/opt/rt4/var/data/gpg \
   -v /home/rt/smime:/opt/rt4/var/data/smime \
