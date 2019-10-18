@@ -17,4 +17,4 @@ docker run \
   -v /home/rt/rt4-mason-data:/opt/rt4/var/mason_data \
   -v /home/rt/rt4-session-data:/opt/rt4/var/session_data \
   -v /home/rt/postfix-spool:/var/spool/postfix \
-  rt4/rt4netways
+  net-docker-registry.adm.netways.de:5000/rt4/rt4netways
