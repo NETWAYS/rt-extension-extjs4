@@ -1667,8 +1667,8 @@ html/NoAuth/ext-4-gpl/docs/source/Item.html
 html/NoAuth/ext-4-gpl/docs/source/Item2.html
 html/NoAuth/ext-4-gpl/docs/source/ItemSelector.css.html
 html/NoAuth/ext-4-gpl/docs/source/ItemSelector.html
-html/NoAuth/ext-4-gpl/docs/source/Json.html
 html/NoAuth/ext-4-gpl/docs/source/JSON.html
+html/NoAuth/ext-4-gpl/docs/source/Json.html
 html/NoAuth/ext-4-gpl/docs/source/Json2.html
 html/NoAuth/ext-4-gpl/docs/source/Json3.html
 html/NoAuth/ext-4-gpl/docs/source/JSON3.html
@@ -5461,3 +5461,4 @@ inc/YAML/Tiny.pm
 lib/RTx/ExtJS4.pm
 Makefile.PL
 MANIFEST			This list of files
+META.yml
