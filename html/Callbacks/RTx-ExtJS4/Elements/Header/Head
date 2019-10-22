@@ -5,7 +5,7 @@
     Ext.scopeResetCSS = true;
 
     Ext.Loader.setConfig({
-      enabled: true,
+      enabled: false,
       disableCaching: false
     });
 </script>
@@ -30,5 +30,4 @@ if ($config && $config =~ m/^default|debug$/) {
 }
 
 RT->Logger->debug('ExtJS include style: '. $type);
-
 </%once>
