@@ -1,4 +1,0 @@
-/^X-Spam-Flag:.YES/ DISCARD spam
-/^Subject: \*\*\*SPAM\*\*\*/ DISCARD
-/^Subject: VIRUS \([^)]*\) IN MAIL TO YOU \(from/ DISCARD
-/^Subject: smsgate$/ DISCARD

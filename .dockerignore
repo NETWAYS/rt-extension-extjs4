@@ -1,9 +1,0 @@
-.idea
-.env
-.git
-.gitignore
-Makefile
-README.md
-bin
-compose
-docker-compose.yml

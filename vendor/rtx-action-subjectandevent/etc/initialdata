@@ -1,6 +1,0 @@
-@ScripActions = ({
-    Name        => 'Parse event subscription eMail',
-    Description => 'Determine firstname, surname and package (if given) and include them in the subject',
-    ExecModule  => 'SubjectAndEvent',
-    Argument    => ''
-});

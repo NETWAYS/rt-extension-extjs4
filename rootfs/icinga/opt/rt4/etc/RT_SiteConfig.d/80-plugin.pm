@@ -1,9 +1,0 @@
-Plugin('RT::Extension::ExtractCustomFieldValues');
-Plugin('RT::Extension::QueueCategories');
-Plugin('RT::Action::ChangeOwner');
-Plugin('RT::Extension::DBCustomField');
-Plugin('RT::Extension::HistoryComponent');
-Plugin('RT::Extension::UserSearch');
-Plugin('RT::Extension::AddServiceData');
-Plugin('RT::Extension::CalendarInvitation');
-Plugin('RT::Extension::SearchFields');

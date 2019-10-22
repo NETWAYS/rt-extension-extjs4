@@ -1,4 +1,0 @@
-<& /Ticket/Elements/RT-Extension-UpdateHistory, Ticket => $Ticket &>
-<%ARGS>
-	$Ticket
-</%ARGS>
