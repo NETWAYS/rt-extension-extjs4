@@ -1,16 +1,16 @@
 <link rel="stylesheet" type="text/css" href="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/resources/css/ext-all-scoped.css">
 <script type="text/javascript" src="<% RT->Config->Get('WebPath') %>/NoAuth/ext-4-gpl/<% $map->{$type} %>"></script>
+
 <script type="text/javascript">
-Ext.scopeResetCSS = true;
+    Ext.scopeResetCSS = true;
+
+    Ext.Loader.setConfig({
+      enabled: true,
+      disableCaching: false
+    });
 </script>
 
 <style type="text/css">
-    .extjs-frame * {		
-        /* Fix for custom clearing */
-        /* overflow: hidden; */
-        /* Deactivated for 4.1 */
-    }
-    
     .metadata {
         min-height: 20px;
     }
